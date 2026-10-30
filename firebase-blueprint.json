@@ -1,0 +1,137 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account profile participating in a shared couple hub",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique user identifier" },
+        "email": { "type": "string", "description": "User email address" },
+        "name": { "type": "string", "description": "User display name or nickname" },
+        "gender": { "type": "string", "description": "User gender (female, male, other)" },
+        "customPronoun": { "type": "string", "description": "Custom pronoun if gender is other" },
+        "avatarColor": { "type": "string", "description": "Tailwind avatar background color class" },
+        "hubId": { "type": "string", "description": "ID of the shared couple hub the user belongs to" },
+        "role": { "type": "string", "description": "User role in hub: owner or partner" },
+        "createdAt": { "type": "string", "description": "Account ISO creation timestamp" }
+      },
+      "required": ["id", "email", "name", "gender", "hubId"]
+    },
+    "SharedHub": {
+      "title": "SharedHub",
+      "description": "Shared hub representing the couple's private space with unique invite code",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique hub identifier" },
+        "name": { "type": "string", "description": "Name of the couple's hub" },
+        "inviteCode": { "type": "string", "description": "Shareable invite code for the partner (e.g. DUO-1234)" },
+        "memberUids": { "type": "array", "description": "Array of member user IDs with access to this hub" },
+        "members": { "type": "array", "description": "Member preview profiles" },
+        "createdAt": { "type": "string", "description": "Hub ISO creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Hub ISO last updated timestamp" }
+      },
+      "required": ["id", "name", "inviteCode", "memberUids"]
+    },
+    "CalendarEvent": {
+      "title": "CalendarEvent",
+      "description": "Calendar activity or plan scheduled in the couple's hub",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique event identifier" },
+        "hubId": { "type": "string", "description": "ID of parent hub" },
+        "title": { "type": "string", "description": "Event title" },
+        "category": { "type": "string", "description": "Category identifier (market, dinner_date, maintenance, pets, grocery_errand, other)" },
+        "emoji": { "type": "string", "description": "Event display emoji" },
+        "startDate": { "type": "string", "description": "Scheduled date in YYYY-MM-DD format" },
+        "startTime": { "type": "string", "description": "Start time in HH:MM format" },
+        "endTime": { "type": "string", "description": "End time in HH:MM format" },
+        "locationName": { "type": "string", "description": "Location name" },
+        "address": { "type": "string", "description": "Physical address" },
+        "assignedTo": { "type": "string", "description": "Assigned partner: both, him, her" },
+        "notes": { "type": "string", "description": "Detailed notes or checklist notes" },
+        "tasks": { "type": "array", "description": "Array of checklist tasks" },
+        "photoCount": { "type": "number", "description": "Number of attached photo memories" },
+        "photos": { "type": "array", "description": "Attached photo URLs" },
+        "createdAt": { "type": "string", "description": "ISO timestamp created" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp updated" }
+      },
+      "required": ["id", "hubId", "title", "category", "startDate", "assignedTo"]
+    },
+    "DayStayInfo": {
+      "title": "DayStayInfo",
+      "description": "Overnight stay status (Hers / His / Home) and couple notes for a given calendar date",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "description": "Date string in YYYY-MM-DD format" },
+        "hubId": { "type": "string", "description": "ID of parent hub" },
+        "stayAt": { "type": "string", "description": "Stay location key: her_home, his_home, our_home, other" },
+        "label": { "type": "string", "description": "Short label for stay" },
+        "notes": { "type": "string", "description": "Shared couple day notes" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp updated" }
+      },
+      "required": ["date", "hubId", "stayAt"]
+    },
+    "PlanTemplate": {
+      "title": "PlanTemplate",
+      "description": "Quick activity template managed by the couple",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique template identifier" },
+        "hubId": { "type": "string", "description": "ID of parent hub" },
+        "name": { "type": "string", "description": "Template name" },
+        "emoji": { "type": "string", "description": "Template emoji" },
+        "category": { "type": "string", "description": "Default category" },
+        "defaultTitle": { "type": "string", "description": "Default activity title" },
+        "defaultStartTime": { "type": "string", "description": "Default start time" },
+        "defaultEndTime": { "type": "string", "description": "Default end time" },
+        "defaultLocationName": { "type": "string", "description": "Default location name" },
+        "defaultNotes": { "type": "string", "description": "Default notes" },
+        "checklist": { "type": "array", "description": "Default checklist items" },
+        "order": { "type": "number", "description": "Display order index" }
+      },
+      "required": ["id", "hubId", "name", "category", "defaultTitle"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Real-time chat message sent between partners in their shared hub",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message identifier" },
+        "hubId": { "type": "string", "description": "ID of parent hub" },
+        "senderId": { "type": "string", "description": "ID of sending user" },
+        "senderName": { "type": "string", "description": "Name of sender" },
+        "senderAvatar": { "type": "string", "description": "Avatar color of sender" },
+        "text": { "type": "string", "description": "Message text" },
+        "timestamp": { "type": "string", "description": "Readable time" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["id", "hubId", "senderId", "senderName", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/hubs/{hubId}": {
+      "schema": "SharedHub",
+      "description": "Couple shared hub documents containing member list and invite code"
+    },
+    "/hubs/{hubId}/events/{eventId}": {
+      "schema": "CalendarEvent",
+      "description": "Isolated shared calendar events for the couple"
+    },
+    "/hubs/{hubId}/stays/{date}": {
+      "schema": "DayStayInfo",
+      "description": "Overnight stay status for each calendar date"
+    },
+    "/hubs/{hubId}/templates/{templateId}": {
+      "schema": "PlanTemplate",
+      "description": "Shared activity plan templates"
+    },
+    "/hubs/{hubId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Shared chat messages between partners in the hub"
+    }
+  }
+}

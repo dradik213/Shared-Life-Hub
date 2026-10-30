@@ -1,0 +1,10 @@
+{
+  "name": "DuoSync & Pop-Up Hub",
+  "description": "Shared couple calendar, grocery & home packing sync, market pop-up inventory, expense tracking, and event memories.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
