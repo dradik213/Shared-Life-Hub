@@ -93,7 +93,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
     user2Theme 
   } = useAuth();
   const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
-  const [collapsedTaskSections, setCollapsedTaskSections] = useState<Record<string, boolean>>({});
+  const [expandedTaskSections, setExpandedTaskSections] = useState<Record<string, boolean>>({});
   const [dayNotes, setDayNotes] = useState(stays[selectedDate]?.notes || '');
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
   const [newTaskAssignees, setNewTaskAssignees] = useState<Record<string, 'both' | 'him' | 'her'>>({});
@@ -142,7 +142,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   };
 
   const toggleTaskSection = (eventId: string) => {
-    setCollapsedTaskSections((prev) => ({
+    setExpandedTaskSections((prev) => ({
       ...prev,
       [eventId]: !prev[eventId],
     }));
@@ -299,92 +299,6 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   return (
     <div className="space-y-4">
       
-      {/* Schedule Page Utility Bar: Overnight Stay Slider & Icon-Only Photos */}
-      <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] border border-[#e4ded5] dark:border-[#2d3139] rounded-xl p-2.5 sm:p-3 shadow-2xs flex items-center justify-between gap-2.5 transition-colors">
-        {/* Overnight Stay Slider: Hers (Left) / Home (Center) / His (Right) */}
-        <div className="flex items-center gap-2 bg-[#f5f1e8] dark:bg-[#202329] px-2.5 py-1 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs">
-          <Home className="w-3.5 h-3.5 text-stone-500" />
-          <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400 hidden xs:inline">Stay:</span>
-          
-          <div className="flex items-center gap-1.5 bg-[#ede8df]/70 dark:bg-[#1a1d22] px-2 py-0.5 rounded-md border border-[#e4ded5] dark:border-[#2d3139]">
-            {/* Left Partner Initial */}
-            <button
-              type="button"
-              onClick={() => onUpdateStay(selectedDate, currentStay === 'her_home' ? 'our_home' : 'her_home')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                currentStay === 'her_home'
-                  ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
-              }`}
-              title={`Stay at ${partner1DisplayName}'s (click again for Home)`}
-              aria-label={`Stay at ${partner1DisplayName}'s`}
-            >
-              {partner1Initial}
-            </button>
-
-            {/* 3-Position Slider Switch: Left=Partner 1 Initial, Center=Home, Right=Partner 2 Initial */}
-            <button
-              type="button"
-              role="switch"
-              aria-label={`Overnight stay: ${currentStay === 'our_home' ? 'Home (Center)' : currentStay === 'her_home' ? partner1DisplayName : partner2DisplayName}`}
-              onClick={handleCycleStay}
-              className={`relative inline-flex h-5 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
-                currentStay === 'her_home'
-                  ? user1Theme.sliderTrack
-                  : currentStay === 'his_home'
-                  ? user2Theme.sliderTrack
-                  : 'bg-stone-700 dark:bg-stone-600 ring-1 ring-stone-500/50'
-              }`}
-              title={`Current Stay: ${currentStay === 'our_home' ? 'Home (Center)' : currentStay === 'her_home' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
-            >
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
-                  currentStay === 'her_home'
-                    ? 'translate-x-0.5'
-                    : currentStay === 'his_home'
-                    ? 'translate-x-[30px]'
-                    : 'translate-x-[16px] ring-1 ring-stone-400/50'
-                }`}
-              />
-            </button>
-
-            {/* Right Partner Initial */}
-            <button
-              type="button"
-              onClick={() => onUpdateStay(selectedDate, currentStay === 'his_home' ? 'our_home' : 'his_home')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                currentStay === 'his_home'
-                  ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
-              }`}
-              title={`Stay at ${partner2DisplayName}'s (click again for Home)`}
-              aria-label={`Stay at ${partner2DisplayName}'s`}
-            >
-              {partner2Initial}
-            </button>
-          </div>
-        </div>
-
-        {/* Icon-Only Photo Button: kept just the icon to the right of the slider for stay */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onOpenFridgePhotos}
-            className="relative p-2 rounded-lg bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-200 border border-[#e4ded5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
-            title={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
-            aria-label={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
-          >
-            <Camera className="w-4 h-4 text-stone-600 dark:text-stone-400" />
-            {photoCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex min-w-[15px] h-[15px] px-1 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 text-[9px] font-bold shadow-xs">
-                {photoCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
       {/* Copy feedback toast if any */}
       {copyFeedback && (
         <div className="p-2.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2 border border-emerald-300 dark:border-emerald-800">
@@ -393,20 +307,20 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
         </div>
       )}
 
-      {/* Unified Backlog Tasks Banner: Google Tasks + Unfinished Checklist Items */}
+      {/* Unified Backlog Tasks: Compact Collapsible Pill */}
       {allBacklogTasks.length > 0 && (
-        <div className="rounded-xl border border-amber-300 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 overflow-hidden text-xs transition-colors">
+        <div className="rounded-lg border border-amber-300 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 overflow-hidden text-xs transition-colors">
           <button
             type="button"
             onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-            className="w-full p-2.5 px-3 flex items-center justify-between text-left hover:bg-amber-100/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
+            className="w-full py-1.5 px-3 flex items-center justify-between text-left hover:bg-amber-100/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-semibold">
+            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-semibold text-xs">
               <RotateCcw className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span>{allBacklogTasks.length} Tasks in Backlog (Google Tasks & Unfinished Checklist Items)</span>
+              <span>{allBacklogTasks.length} Tasks in Backlog</span>
             </div>
             <div className="flex items-center gap-1 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-              <span>{showRolloverDrawer ? 'Hide' : 'Review & Add to Day'}</span>
+              <span>{showRolloverDrawer ? 'Hide' : 'Review & Add'}</span>
               {showRolloverDrawer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
           </button>
@@ -542,14 +456,14 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                             toggleTaskSection(evt.id);
                           }}
                           className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 px-2 py-0.5 rounded border border-black/5 dark:border-white/10 cursor-pointer transition-colors"
-                          title={collapsedTaskSections[evt.id] ? "Expand checklist tasks" : "Collapse checklist tasks"}
+                          title={expandedTaskSections[evt.id] ? "Collapse checklist tasks" : "Expand checklist tasks"}
                         >
                           <CheckCircle2 className={`w-3.5 h-3.5 ${allTasksDone ? 'text-emerald-600' : 'text-stone-500'}`} />
                           <span>{completedCount} of {tasks.length} tasks done</span>
-                          {collapsedTaskSections[evt.id] ? (
-                            <ChevronDown className="w-3 h-3 text-stone-500" />
-                          ) : (
+                          {expandedTaskSections[evt.id] ? (
                             <ChevronUp className="w-3 h-3 text-stone-500" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-stone-500" />
                           )}
                         </button>
                       )}
@@ -669,23 +583,23 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                           toggleTaskSection(evt.id);
                         }}
                         className="w-full flex items-center justify-between text-xs cursor-pointer select-none group text-left"
-                        title={collapsedTaskSections[evt.id] ? 'Expand checklist tasks' : 'Collapse checklist tasks'}
+                        title={expandedTaskSections[evt.id] ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                       >
                         <span className="font-bold uppercase tracking-wider text-stone-800 dark:text-stone-200 font-mono text-[11px] flex items-center gap-1.5 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors">
                           <CheckCircle2 className="w-3.5 h-3.5 text-stone-500" />
                           <span>Checklist Tasks ({completedCount}/{tasks.length})</span>
-                          {collapsedTaskSections[evt.id] ? (
-                            <ChevronDown className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                          ) : (
+                          {expandedTaskSections[evt.id] ? (
                             <ChevronUp className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
                           )}
                         </span>
                         <span className="text-[10px] text-stone-500 dark:text-stone-400">
-                          {collapsedTaskSections[evt.id] ? 'Click to show tasks' : 'Toggle slider as completed'}
+                          {expandedTaskSections[evt.id] ? 'Click to hide tasks' : 'Click to show tasks'}
                         </span>
                       </button>
 
-                      {!collapsedTaskSections[evt.id] && (
+                      {expandedTaskSections[evt.id] && (
                         <>
                           {tasks.length > 0 ? (
                             <div className="space-y-1.5">

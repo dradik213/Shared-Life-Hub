@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Home, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
 import { CATEGORY_CONFIG, formatDateToYMD, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
-import { getMoonPhase } from '../utils/astronomyUtils';
 import { useAuth } from '../context/AuthContext';
 import { TaskToggleSlider } from './TaskToggleSlider';
 
@@ -38,12 +37,12 @@ export const WeekView: React.FC<WeekViewProps> = ({
   sortDirection = 'none',
 }) => {
   const { partner1Label, partner2Label, user1Theme, user2Theme } = useAuth();
-  const [collapsedEventIds, setCollapsedEventIds] = useState<Record<string, boolean>>({});
+  const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
   const [expandedTaskIds, setExpandedTaskIds] = useState<Record<string, boolean>>({});
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
 
   const toggleEvent = (eventId: string) => {
-    setCollapsedEventIds((prev) => ({
+    setExpandedEventIds((prev) => ({
       ...prev,
       [eventId]: !prev[eventId],
     }));
@@ -144,12 +143,6 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       >
                         {col.dayNum}
                       </span>
-                      <span
-                        title={`${getMoonPhase(col.date).name} (${getMoonPhase(col.date).illumination}% lit) · ${getMoonPhase(col.date).quoteTip}`}
-                        className="text-xs opacity-70 hover:opacity-100 select-none cursor-help"
-                      >
-                        {getMoonPhase(col.date).emoji}
-                      </span>
                     </div>
                   </div>
 
@@ -176,7 +169,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     const cfg = CATEGORY_CONFIG[evt.category];
                     const tasks = evt.tasks || [];
                     const completedCount = tasks.filter((t) => t.completed).length;
-                    const isEventCollapsed = collapsedEventIds[evt.id] === true;
+                    const isEventExpanded = expandedEventIds[evt.id] === true;
                     const isTasksExpanded = expandedTaskIds[evt.id] === true;
 
                     return (
@@ -214,9 +207,9 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                 toggleEvent(evt.id);
                               }}
                               className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
-                              title={isEventCollapsed ? 'Expand event details' : 'Collapse event details'}
+                              title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
                             >
-                              {isEventCollapsed ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
+                              {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                             </button>
                             {onDeleteEvent && (
                               <button
@@ -235,7 +228,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         </div>
 
                         {/* Secondary details row (when not collapsed) */}
-                        {!isEventCollapsed && (
+                        {isEventExpanded && (
                           <div className="mt-1 space-y-0.5 pt-1 border-t border-black/5 dark:border-white/10">
                             <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
                               {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}

@@ -25,9 +25,12 @@ import {
   MessageSquare,
   AlertCircle,
   CheckCircle2,
-  Layers
+  Layers,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { CalendarEvent, CalendarViewMode, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
+import { CalendarEvent, CalendarViewMode, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
 import { SelectedDaySummaryWidget } from './SelectedDaySummaryWidget';
@@ -71,6 +74,9 @@ interface CalendarHeaderProps {
   selectedDate?: string;
   events?: CalendarEvent[];
   stays?: Record<string, DayStayInfo>;
+  onUpdateStay?: (date: string, location: StayLocation) => void;
+  onOpenFridgePhotos?: () => void;
+  photoCount?: number;
 }
 
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
@@ -104,6 +110,9 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   selectedDate,
   events,
   stays,
+  onUpdateStay,
+  onOpenFridgePhotos,
+  photoCount = 0,
 }) => {
   const { 
     currentUser, 
@@ -112,17 +121,20 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
     coupleViewLabel, 
     partner1Label, 
     partner2Label, 
-    partner1Initial,
-    partner2Initial,
-    partner1DisplayName,
-    partner2DisplayName,
+    partner1Initial, 
+    partner2Initial, 
+    partner1DisplayName, 
+    partner2DisplayName, 
     user1Theme, 
     user2Theme, 
     logout, 
     switchUser 
   } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isFilterSortOpen, setIsFilterSortOpen] = useState(false);
   const categoryKeys: EventCategory[] = ['market', 'dinner_date', 'maintenance', 'pets', 'grocery_errand', 'other'];
+
+  const activeFilterCount = (categoryFilter !== 'all' ? 1 : 0) + (sortOption !== 'time' ? 1 : 0);
 
   // Sum of critical notifications across all tabs or fallback to chat + tasks
   const totalNotifications = totalHeartNotifications ?? (
@@ -424,8 +436,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </div>
       </div>
 
-      {/* Middle Row: Selected Day Pulse & Summary Widget - Below daily schedule selection area and above activity type & sort filter */}
-      {viewMode !== 'admin' && selectedDate && events && stays && (
+      {/* Middle Row: Selected Day Pulse & Summary Widget - Hidden on Reflection and Admin views */}
+      {viewMode !== 'admin' && viewMode !== 'reflection' && selectedDate && events && stays && (
         <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#e5e0d8] dark:border-[#2d3139] pt-1.5 pb-0.5">
           <SelectedDaySummaryWidget
             selectedDate={selectedDate}
@@ -433,112 +445,143 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             stays={stays}
             onFilterCategory={onCategoryFilterChange}
             categoryFilter={categoryFilter}
+            onUpdateStay={onUpdateStay}
+            onOpenFridgePhotos={onOpenFridgePhotos}
+            photoCount={photoCount}
           />
         </div>
       )}
 
-      {/* Secondary Bar: Dynamic Navigation (Day/Week/Month/All Time) & Categories with Matching Background Colors */}
-      <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-3 text-sm">
-        
-        {/* Top-left Navigation: Stays consistent, functions based on user view (Month, Week, Day, All Time) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="flex items-center border border-[#e2ddd5] dark:border-[#353943] rounded-lg overflow-hidden bg-white dark:bg-[#202329] shadow-2xs shrink-0">
+      {/* Secondary Bar: Dynamic Navigation (Day/Week/Month/All Time) & Filter & Sort toggle */}
+      {viewMode !== 'admin' && (
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-3 text-sm">
+          
+          {/* Top-left Navigation: Stays consistent, functions based on user view (Month, Week, Day, All Time) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
+            <div className="flex items-center border border-[#e2ddd5] dark:border-[#353943] rounded-lg overflow-hidden bg-white dark:bg-[#202329] shadow-2xs shrink-0">
+              <button
+                type="button"
+                onClick={onPrev}
+                aria-label="Previous period"
+                className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors cursor-pointer shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                aria-label="Next period"
+                className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors border-l border-[#e2ddd5] dark:border-[#353943] cursor-pointer shrink-0"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={onPrev}
-              aria-label="Previous period"
-              className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors cursor-pointer shrink-0"
+              onClick={onToday}
+              className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              aria-label="Next period"
-              className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors border-l border-[#e2ddd5] dark:border-[#353943] cursor-pointer shrink-0"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={onToday}
-            className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
-          >
-            Today
-          </button>
-
-          <span className="text-sm font-semibold text-stone-900 dark:text-stone-100 tracking-tight ml-1 sm:ml-2">
-            {navLabel}
-          </span>
-
-          {/* 3-Position Partner Slider: to the right of the date using initials for both partners */}
-          <div className="flex items-center gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-0.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs ml-1 sm:ml-2 shrink-0">
-            <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">View:</span>
-            <button
-              type="button"
-              onClick={() => onPartnerFilterChange(partnerFilter === 'her' ? 'all' : 'her')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                partnerFilter === 'her'
-                  ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
-              }`}
-              title={`Filter by ${partner1DisplayName} (click again for Both)`}
-              aria-label={`Filter by ${partner1DisplayName}`}
-            >
-              {partner1Initial}
+              Today
             </button>
 
-            {/* 3-Position Slider switch */}
-            <button
-              type="button"
-              role="switch"
-              aria-label={`Partner filter: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName}`}
-              onClick={() => {
-                if (partnerFilter === 'her') onPartnerFilterChange('all');
-                else if (partnerFilter === 'all') onPartnerFilterChange('him');
-                else onPartnerFilterChange('her');
-              }}
-              className={`relative inline-flex h-5 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
-                partnerFilter === 'her'
-                  ? user1Theme.sliderTrack
-                  : partnerFilter === 'him'
-                  ? user2Theme.sliderTrack
-                  : 'bg-stone-300 dark:bg-stone-600 ring-1 ring-stone-400/50 dark:ring-stone-500/50'
-              }`}
-              title={`Current: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
-            >
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
+            <span className="text-sm font-semibold text-stone-900 dark:text-stone-100 tracking-tight ml-1 sm:ml-2">
+              {navLabel}
+            </span>
+
+            {/* 3-Position Partner Slider: to the right of the date using initials for both partners */}
+            <div className="flex items-center gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-0.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs ml-1 sm:ml-2 shrink-0">
+              <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">View:</span>
+              <button
+                type="button"
+                onClick={() => onPartnerFilterChange(partnerFilter === 'her' ? 'all' : 'her')}
+                className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
                   partnerFilter === 'her'
-                    ? 'translate-x-0.5'
-                    : partnerFilter === 'him'
-                    ? 'translate-x-[30px]'
-                    : 'translate-x-[16px] ring-1 ring-stone-400/50'
+                    ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
+                    : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
                 }`}
-              />
-            </button>
+                title={`Filter by ${partner1DisplayName} (click again for Both)`}
+                aria-label={`Filter by ${partner1DisplayName}`}
+              >
+                {partner1Initial}
+              </button>
 
+              {/* 3-Position Slider switch */}
+              <button
+                type="button"
+                role="switch"
+                aria-label={`Partner filter: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName}`}
+                onClick={() => {
+                  if (partnerFilter === 'her') onPartnerFilterChange('all');
+                  else if (partnerFilter === 'all') onPartnerFilterChange('him');
+                  else onPartnerFilterChange('her');
+                }}
+                className={`relative inline-flex h-5 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                  partnerFilter === 'her'
+                    ? user1Theme.sliderTrack
+                    : partnerFilter === 'him'
+                    ? user2Theme.sliderTrack
+                    : 'bg-stone-300 dark:bg-stone-600 ring-1 ring-stone-400/50 dark:ring-stone-500/50'
+                }`}
+                title={`Current: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
+                    partnerFilter === 'her'
+                      ? 'translate-x-0.5'
+                      : partnerFilter === 'him'
+                      ? 'translate-x-[30px]'
+                      : 'translate-x-[16px] ring-1 ring-stone-400/50'
+                  }`}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onPartnerFilterChange(partnerFilter === 'him' ? 'all' : 'him')}
+                className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                  partnerFilter === 'him'
+                    ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
+                    : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
+                }`}
+                title={`Filter by ${partner2DisplayName} (click again for Both)`}
+                aria-label={`Filter by ${partner2DisplayName}`}
+              >
+                {partner2Initial}
+              </button>
+            </div>
+          </div>
+
+          {/* Right side: Compact Filter & Sort Button (hidden on reflection view) */}
+          {viewMode !== 'reflection' && (
             <button
               type="button"
-              onClick={() => onPartnerFilterChange(partnerFilter === 'him' ? 'all' : 'him')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                partnerFilter === 'him'
-                  ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
+              onClick={() => setIsFilterSortOpen(!isFilterSortOpen)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                isFilterSortOpen || activeFilterCount > 0
+                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
+                  : 'bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 border-[#e2ddd5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#2a2e36]'
               }`}
-              title={`Filter by ${partner2DisplayName} (click again for Both)`}
-              aria-label={`Filter by ${partner2DisplayName}`}
+              title="Toggle Category Filter & Sort Options"
             >
-              {partner2Initial}
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filter & Sort</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+              {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
-          </div>
-        </div>
+          )}
 
-        {/* Filter controls: Compact Icon-Only Category Chip Bar + Sort Dropdown */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 max-w-full">
+        </div>
+      )}
+
+      {/* Collapsible Category Filter & Sort Toolbar Row */}
+      {isFilterSortOpen && viewMode !== 'reflection' && viewMode !== 'admin' && (
+        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2 bg-stone-50/90 dark:bg-[#1a1d22]/90 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
           {/* Categories: Compact Icon-Only Chip Bar with Tooltips */}
           <div className="flex items-center gap-1 shrink-0" role="toolbar" aria-label="Category filters">
             {/* "All" Category Icon Chip */}
@@ -623,8 +666,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             </button>
           </div>
         </div>
-
-      </div>
+      )}
     </header>
   );
 };

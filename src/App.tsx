@@ -851,6 +851,18 @@ function CalendarApp() {
         selectedDate={selectedDate}
         events={events}
         stays={stays}
+        onUpdateStay={handleUpdateStay}
+        onOpenFridgePhotos={() => setIsFridgePhotosOpen(true)}
+        photoCount={(() => {
+          try {
+            const saved = localStorage.getItem('hub_fridge_photos');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              return Array.isArray(parsed) ? parsed.filter((p: any) => p.date === selectedDate).length : 0;
+            }
+          } catch (e) {}
+          return 0;
+        })()}
       />
 
       {/* Main Content Area: generous wide layout filling high-resolution and widescreen displays */}

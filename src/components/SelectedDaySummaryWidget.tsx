@@ -24,9 +24,10 @@ import {
   CloudSnow,
   CloudDrizzle,
   CloudFog,
-  X
+  X,
+  Camera
 } from 'lucide-react';
-import { CalendarEvent, DayStayInfo, EventCategory } from '../types/calendar';
+import { CalendarEvent, DayStayInfo, EventCategory, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, formatDateToYMD, formatUsTime } from '../utils/calendarUtils';
 import { getMoonPhase, getDailyInspiration, MoonPhaseInfo } from '../utils/astronomyUtils';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +38,7 @@ import {
   getSavedLocation, 
   saveLocation, 
   fetchLiveForecast, 
-  searchLocations,
+  searchLocations, 
   DEFAULT_LOCATION 
 } from '../services/liveWeatherService';
 
@@ -47,6 +48,9 @@ interface SelectedDaySummaryWidgetProps {
   stays: Record<string, DayStayInfo>;
   onFilterCategory?: (cat: EventCategory | 'all') => void;
   categoryFilter?: EventCategory | 'all';
+  onUpdateStay?: (date: string, location: StayLocation) => void;
+  onOpenFridgePhotos?: () => void;
+  photoCount?: number;
 }
 
 const COLLAPSED_STORAGE_KEY = 'duosync_day_widget_collapsed';
@@ -57,6 +61,9 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
   stays,
   onFilterCategory,
   categoryFilter,
+  onUpdateStay,
+  onOpenFridgePhotos,
+  photoCount = 0,
 }) => {
   const { 
     currentUser, 
@@ -309,32 +316,43 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
       className="my-1.5 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white/95 dark:bg-[#1a1d22]/95 shadow-2xs transition-all duration-200 overflow-hidden"
     >
       {/* Top Header / Bar */}
-      <div className="p-2.5 sm:p-3 bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] border-b border-[#e6e1d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-2.5">
+      <div className={`bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] ${!isCollapsed ? 'border-b border-[#e6e1d8] dark:border-[#2d3139]' : ''} flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 transition-all`}>
         
-        {/* Left: Day Title (Day of Week only) & Overnight Stay Badges */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-2">
+        {/* Left: Day Title (Day of Week only) & Overnight Stay Badges + Fridge Photos button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-sm font-bold text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-1.5">
               <span className="font-serif capitalize">{dayOfWeekName}</span>
               {isToday && (
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
+                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
                   Today
                 </span>
               )}
             </h2>
           </div>
 
-          {/* Overnight Stay badge */}
+          {/* Interactive Overnight Stay badge */}
           {stayInfo && (
-            <div 
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs transition-colors ${
+            <button 
+              type="button"
+              onClick={() => {
+                if (!onUpdateStay) return;
+                const nextStay: StayLocation =
+                  stayInfo.stayAt === 'her_home'
+                    ? 'our_home'
+                    : stayInfo.stayAt === 'our_home'
+                    ? 'his_home'
+                    : 'her_home';
+                onUpdateStay(selectedDate, nextStay);
+              }}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs transition-all cursor-pointer hover:opacity-90 active:scale-95 ${
                 stayInfo.stayAt === 'our_home'
                   ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
                   : stayInfo.stayAt === 'her_home'
                   ? user1Theme.badgeBg
                   : user2Theme.badgeBg
               }`}
-              title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
+              title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label} (Click to toggle)`}
             >
               <Home className="w-3 h-3" />
               <span>
@@ -344,7 +362,25 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                   ? `Stay: ${partner1Label}`
                   : `Stay: ${partner2Label}`}
               </span>
-            </div>
+            </button>
+          )}
+
+          {/* Compact Fridge Photos button */}
+          {onOpenFridgePhotos && (
+            <button
+              type="button"
+              onClick={onOpenFridgePhotos}
+              className="relative p-1 rounded-md bg-stone-100 dark:bg-[#252830] hover:bg-stone-200 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-200 border border-[#e4ded5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
+              title={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
+              aria-label="Fridge Photos"
+            >
+              <Camera className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
+              {photoCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex min-w-[13px] h-[13px] px-0.5 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 text-[8px] font-bold shadow-xs">
+                  {photoCount}
+                </span>
+              )}
+            </button>
           )}
         </div>
 
@@ -394,11 +430,12 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
           <button
             type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 rounded-md border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#252830] text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#2e323c] cursor-pointer transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#252830] text-xs font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#2e323c] cursor-pointer transition-colors"
             title={isCollapsed ? 'Expand Weather & Astronomy Cards' : 'Collapse Top Area'}
             aria-expanded={!isCollapsed}
           >
-            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+            <span className="text-[11px]">{isCollapsed ? 'Details' : 'Close'}</span>
+            {isCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
           </button>
         </div>
       </div>

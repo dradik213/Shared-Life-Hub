@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Home, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
 import { CATEGORY_CONFIG, getMonthMatrix, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
-import { getMoonPhase } from '../utils/astronomyUtils';
 import { useAuth } from '../context/AuthContext';
 
 interface MonthViewProps {
@@ -41,11 +40,11 @@ export const MonthView: React.FC<MonthViewProps> = ({
   sortDirection = 'none',
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
-  const [collapsedEventIds, setCollapsedEventIds] = useState<Record<string, boolean>>({});
+  const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
   const [expandedTaskIds, setExpandedTaskIds] = useState<Record<string, boolean>>({});
 
   const toggleEvent = (eventId: string) => {
-    setCollapsedEventIds((prev) => ({
+    setExpandedEventIds((prev) => ({
       ...prev,
       [eventId]: !prev[eventId],
     }));
@@ -99,7 +98,6 @@ export const MonthView: React.FC<MonthViewProps> = ({
           const isSelected = selectedDate === cell.dateStr;
           const dayEvents = sortEventsForDay(eventsByDate[cell.dateStr] || [], sortOption, sortDirection);
           const stayInfo = stays[cell.dateStr];
-          const moon = getMoonPhase(cell.date);
 
           return (
             <div
@@ -165,7 +163,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
               {/* Desktop View: Full rich expandable event pills with inline tasks */}
               <div className="hidden md:block">
-                {/* Day Header Row: Day number + Moon phase + Stay location indicator ("Hers" / "His" / "Home") */}
+                {/* Day Header Row: Day number + Stay location indicator ("Hers" / "His" / "Home") */}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-1">
                     {/* Fixed hover issue: in night view, day number stays bright white on hover */}
@@ -180,14 +178,6 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     >
                       {cell.dayNum}
                     </span>
-                    {cell.isCurrentMonth && (
-                      <span
-                        title={`${moon.name} (${moon.illumination}% lit) · ${moon.quoteTip}`}
-                        className="text-xs opacity-65 group-hover:opacity-100 hover:scale-110 transition-all select-none cursor-help"
-                      >
-                        {moon.emoji}
-                      </span>
-                    )}
                   </div>
 
                   {/* Overnight indicator: Home icon and color coding background without text */}
@@ -213,7 +203,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     const cfg = CATEGORY_CONFIG[evt.category];
                     const tasks = evt.tasks || [];
                     const completedTasks = tasks.filter((t) => t.completed).length;
-                    const isEventCollapsed = collapsedEventIds[evt.id] === true;
+                    const isEventExpanded = expandedEventIds[evt.id] === true;
                     const isTasksExpanded = expandedTaskIds[evt.id] === true;
 
                     return (
@@ -251,15 +241,15 @@ export const MonthView: React.FC<MonthViewProps> = ({
                                 toggleEvent(evt.id);
                               }}
                               className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
-                              title={isEventCollapsed ? 'Expand event details' : 'Collapse event details'}
+                              title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
                             >
-                              {isEventCollapsed ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
+                              {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                             </button>
                           </div>
                         </div>
 
                         {/* Secondary details row (when not collapsed) */}
-                        {!isEventCollapsed && (
+                        {isEventExpanded && (
                           <div className="mt-1 space-y-0.5 pt-0.5 border-t border-black/5 dark:border-white/10">
                             <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
                               {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}

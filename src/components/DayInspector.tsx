@@ -74,7 +74,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   const [showRolloverDrawer, setShowRolloverDrawer] = useState(false);
   const [dayNotes, setDayNotes] = useState(stayInfo?.notes || '');
   const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
-  const [collapsedTaskSections, setCollapsedTaskSections] = useState<Record<string, boolean>>({});
+  const [expandedTaskSections, setExpandedTaskSections] = useState<Record<string, boolean>>({});
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
   const [packoutEvent, setPackoutEvent] = useState<CalendarEvent | null>(null);
   const [posEvent, setPosEvent] = useState<CalendarEvent | null>(null);
@@ -82,12 +82,12 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   const toggleEventExpanded = (eventId: string) => {
     setExpandedEventIds((prev) => ({
       ...prev,
-      [eventId]: prev[eventId] === undefined ? false : !prev[eventId],
+      [eventId]: !prev[eventId],
     }));
   };
 
   const toggleTaskSection = (eventId: string) => {
-    setCollapsedTaskSections((prev) => ({
+    setExpandedTaskSections((prev) => ({
       ...prev,
       [eventId]: !prev[eventId],
     }));
@@ -464,8 +464,8 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 // Formatted partner label
                 const partnerLabel = evt.assignedTo === 'her' ? partner1Label : evt.assignedTo === 'him' ? partner2Label : 'Both';
                 const eventEmoji = evt.emoji || cfg.emoji;
-                const isExpanded = expandedEventIds[evt.id] !== false; // default open
-                const isTasksCollapsed = collapsedTaskSections[evt.id] === true;
+                const isExpanded = expandedEventIds[evt.id] === true;
+                const isTasksExpanded = expandedTaskSections[evt.id] === true;
 
                 return (
                   <div
@@ -503,10 +503,10 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                                 toggleTaskSection(evt.id);
                               }}
                               className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors"
-                              title={isTasksCollapsed ? 'Expand checklist tasks' : 'Collapse checklist tasks'}
+                              title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                             >
                               <span>{completedCount}/{tasks.length}</span>
-                              {isTasksCollapsed ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
+                              {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                             </button>
                           )}
                         </div>
@@ -617,22 +617,22 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                               toggleTaskSection(evt.id);
                             }}
                             className="w-full flex items-center justify-between text-xs cursor-pointer select-none group text-left"
-                            title={isTasksCollapsed ? 'Expand checklist tasks' : 'Collapse checklist tasks'}
+                            title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                           >
                             <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wide flex items-center gap-1.5 group-hover:text-stone-900 dark:group-hover:text-stone-200 transition-colors">
                               <span>Checklist Tasks ({completedCount}/{tasks.length})</span>
-                              {isTasksCollapsed ? (
-                                <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                              ) : (
+                              {isTasksExpanded ? (
                                 <ChevronUp className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                              ) : (
+                                <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
                               )}
                             </span>
                             <span className="text-[10px] text-stone-400">
-                              {isTasksCollapsed ? 'Click to show tasks' : 'Toggle slider for status'}
+                              {isTasksExpanded ? 'Toggle slider for status' : 'Click to show tasks'}
                             </span>
                           </button>
 
-                          {!isTasksCollapsed && (
+                          {isTasksExpanded && (
                             <>
                               {/* Individual Tasks List with Slider Switcher */}
                               {tasks.length > 0 ? (
