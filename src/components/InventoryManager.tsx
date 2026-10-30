@@ -98,15 +98,66 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
 
   const printAreaRef = useRef<HTMLDivElement>(null);
 
+  // Category inline rename state
+  const [renamingCategory, setRenamingCategory] = useState<string | null>(null);
+  const [renameInput, setRenameInput] = useState<string>('');
+
   const showStatus = (msg: string) => {
     setStatusMessage(msg);
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
   // Auto-generate SKU when category or price changes (unless manually edited)
+  // Collision-proof: parses trailing sequence numbers -(\d+)$ from existing SKUs in the category and uses maxSeq + 1
   const computeNextSku = (cat: string, priceStr: string) => {
     const existingInCat = products.filter((p) => p.category.toLowerCase() === cat.trim().toLowerCase());
-    return generateAutoSku(cat, priceStr, existingInCat.length + 1);
+    let maxSeq = 0;
+    for (const p of existingInCat) {
+      if (p.sku) {
+        const match = p.sku.match(/-(\d+)$/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        }
+      }
+    }
+    const nextSeq = maxSeq + 1;
+    return generateAutoSku(cat, priceStr, nextSeq);
+  };
+
+  const handleRenameCategory = (oldCat: string, newCatRaw: string) => {
+    const newCat = newCatRaw.trim();
+    if (!newCat || newCat === oldCat) {
+      setRenamingCategory(null);
+      return;
+    }
+    // Update categories
+    const updatedCategories = categories.map((c) => (c === oldCat ? newCat : c));
+    if (!updatedCategories.includes(newCat)) {
+      updatedCategories.push(newCat);
+    }
+    setCategories(updatedCategories);
+    try {
+      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(updatedCategories));
+    } catch (e) {}
+
+    // Update all products in products and localStorage
+    const updatedProducts = products.map((p) => {
+      if (p.category === oldCat) {
+        return {
+          ...p,
+          category: newCat,
+          name: p.name.startsWith(oldCat) ? p.name.replace(oldCat, newCat) : p.name
+        };
+      }
+      return p;
+    });
+    setProducts(updatedProducts);
+    saveMasterInventory(updatedProducts);
+    setRenamingCategory(null);
+    showStatus(`Renamed "${oldCat}" to "${newCat}" across all products`);
   };
 
   const handleOpenAdd = (preselectedCategory?: string) => {
@@ -453,11 +504,56 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
               >
                 {/* Category Header Strip */}
                 <div className="px-4 py-3 bg-stone-50/90 dark:bg-[#252830] border-b border-[#e4ded5] dark:border-[#353943] flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                    <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-                      {categoryName}
-                    </h3>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                    {renamingCategory === categoryName ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleRenameCategory(categoryName, renameInput);
+                        }}
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <input
+                          type="text"
+                          value={renameInput}
+                          onChange={(e) => setRenameInput(e.target.value)}
+                          autoFocus
+                          className="px-2 py-0.5 text-xs font-semibold rounded border border-amber-400 dark:border-amber-500 bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-hidden"
+                        />
+                        <button
+                          type="submit"
+                          className="px-2 py-0.5 text-[11px] font-bold rounded bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRenamingCategory(null)}
+                          className="px-1.5 py-0.5 text-[11px] rounded bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="inline-flex items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                          {categoryName}
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRenamingCategory(categoryName);
+                            setRenameInput(categoryName);
+                          }}
+                          title={`Rename ${categoryName}`}
+                          className="inline-flex items-center gap-1 text-[11px] text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 px-1.5 py-0.5 rounded hover:bg-stone-200/60 dark:hover:bg-stone-700/60 transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Rename</span>
+                        </button>
+                      </div>
+                    )}
                     <span className="text-stone-400">·</span>
                     <span className="text-xs text-stone-600 dark:text-stone-400">
                       <strong>{categoryQuantity}</strong> items in inventory

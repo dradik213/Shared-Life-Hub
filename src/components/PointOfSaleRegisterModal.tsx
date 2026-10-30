@@ -23,6 +23,8 @@ import {
 import { CalendarEvent, InventoryProduct, MarketPackoutItem, MarketSaleRecord } from '../types/calendar';
 import { 
   loadMasterInventory, 
+  saveMasterInventory,
+  deductSalesFromMasterInventory,
   generateSimpleQrSvg, 
   playScannerBeep 
 } from '../utils/barcodeUtils';
@@ -54,7 +56,7 @@ export const PointOfSaleRegisterModal: React.FC<PointOfSaleRegisterModalProps> =
   onClose,
   onCompleteSale
 }) => {
-  const [masterInventory] = useState<InventoryProduct[]>(() => loadMasterInventory());
+  const [masterInventory, setMasterInventory] = useState<InventoryProduct[]>(() => loadMasterInventory());
   
   // Available items in booth: from packout or master catalog (memoized to prevent infinite render loops)
   const boothItems = useMemo(() => {
@@ -301,6 +303,18 @@ export const PointOfSaleRegisterModal: React.FC<PointOfSaleRegisterModalProps> =
     });
 
     setActiveInventory(updatedInventory);
+
+    // Deduct sold units from Master Inventory (localStorage: duosync_master_inventory_v1)
+    const updatedMaster = deductSalesFromMasterInventory(
+      cart.map((c) => ({
+        productId: c.productId,
+        sku: masterInventory.find((p) => p.id === c.productId || p.barcode === c.barcode)?.sku,
+        barcode: c.barcode,
+        quantity: c.quantity
+      }))
+    );
+    setMasterInventory(updatedMaster);
+
     const newRevenue = currentRevenue + cartTotal;
 
     playScannerBeep(true);

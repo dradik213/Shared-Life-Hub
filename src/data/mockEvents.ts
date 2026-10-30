@@ -361,9 +361,72 @@ export const INITIAL_EVENTS: CalendarEvent[] = [
       targetRevenue: 450,
       actualRevenue: 412,
       inventory: [
-        { productId: 'prod-001', name: 'Handcrafted Ceramic Speckled Mug', barcode: '890123456701', price: 28.00, category: 'Crafts', quantityPacked: 12, quantitySold: 8 },
-        { productId: 'prod-002', name: 'Autumn Spiced Soy Candle (8oz)', barcode: '890123456702', price: 20.00, category: 'Candles', quantityPacked: 15, quantitySold: 9 },
-        { productId: 'prod-003', name: 'Laser-Cut Walnut Wood Coaster (Set of 4)', barcode: '890123456703', price: 24.00, category: 'Woodwork', quantityPacked: 8, quantitySold: 4 }
+        { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', barcode: '794820103', price: 35.00, category: 'Hoodies & Sweatshirts', quantityPacked: 8, quantitySold: 4 },
+        { productId: 'prod-1', name: 'Shirts ($20)', barcode: '794820101', price: 20.00, category: 'Shirts', quantityPacked: 12, quantitySold: 7 },
+        { productId: 'prod-4', name: 'Hats & Beanies ($18)', barcode: '794820104', price: 18.00, category: 'Hats & Beanies', quantityPacked: 8, quantitySold: 2 },
+        { productId: 'prod-5', name: 'Totes & Bags ($15)', barcode: '794820105', price: 15.00, category: 'Totes & Bags', quantityPacked: 8, quantitySold: 3 },
+        { productId: 'prod-2', name: 'Shirts ($8)', barcode: '794820102', price: 8.00, category: 'Shirts', quantityPacked: 10, quantitySold: 2 },
+        { productId: 'prod-6', name: 'Stickers & Pins ($5)', barcode: '794820106', price: 5.00, category: 'Stickers & Pins', quantityPacked: 20, quantitySold: 7 }
+      ],
+      sales: [
+        {
+          id: 'sale-nov07-01',
+          timestamp: '2026-11-07T10:15:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 120.00,
+          tax: 0,
+          total: 120.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov07-02',
+          timestamp: '2026-11-07T11:42:00Z',
+          items: [
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 106.00,
+          tax: 0,
+          total: 106.00,
+          paymentMethod: 'cash',
+          cashTendered: 110.00,
+          changeDue: 4.00
+        },
+        {
+          id: 'sale-nov07-03',
+          timestamp: '2026-11-07T13:10:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 115.00,
+          tax: 0,
+          total: 115.00,
+          paymentMethod: 'venmo'
+        },
+        {
+          id: 'sale-nov07-04',
+          timestamp: '2026-11-07T14:35:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 71.00,
+          tax: 0,
+          total: 71.00,
+          paymentMethod: 'card'
+        }
       ]
     },
     tasks: [
@@ -745,9 +808,75 @@ export const INITIAL_EVENTS: CalendarEvent[] = [
       targetRevenue: 600,
       actualRevenue: 580,
       inventory: [
-        { productId: 'prod-001', name: 'Handcrafted Ceramic Speckled Mug', barcode: '890123456701', price: 28.00, category: 'Crafts', quantityPacked: 15, quantitySold: 11 },
-        { productId: 'prod-002', name: 'Autumn Spiced Soy Candle (8oz)', barcode: '890123456702', price: 20.00, category: 'Candles', quantityPacked: 18, quantitySold: 14 },
-        { productId: 'prod-004', name: 'Botanical Linen Tea Towel (Set of 2)', barcode: '890123456704', price: 22.00, category: 'Textiles', quantityPacked: 10, quantitySold: 6 }
+        { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', barcode: '794820103', price: 35.00, category: 'Hoodies & Sweatshirts', quantityPacked: 10, quantitySold: 6 },
+        { productId: 'prod-1', name: 'Shirts ($20)', barcode: '794820101', price: 20.00, category: 'Shirts', quantityPacked: 15, quantitySold: 10 },
+        { productId: 'prod-4', name: 'Hats & Beanies ($18)', barcode: '794820104', price: 18.00, category: 'Hats & Beanies', quantityPacked: 8, quantitySold: 3 },
+        { productId: 'prod-5', name: 'Totes & Bags ($15)', barcode: '794820105', price: 15.00, category: 'Totes & Bags', quantityPacked: 10, quantitySold: 4 },
+        { productId: 'prod-2', name: 'Shirts ($8)', barcode: '794820102', price: 8.00, category: 'Shirts', quantityPacked: 8, quantitySold: 2 },
+        { productId: 'prod-6', name: 'Stickers & Pins ($5)', barcode: '794820106', price: 5.00, category: 'Stickers & Pins', quantityPacked: 25, quantitySold: 8 }
+      ],
+      sales: [
+        {
+          id: 'sale-nov14-01',
+          timestamp: '2026-11-14T10:30:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 140.00,
+          tax: 0,
+          total: 140.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov14-02',
+          timestamp: '2026-11-14T12:15:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 4, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 196.00,
+          tax: 0,
+          total: 196.00,
+          paymentMethod: 'venmo'
+        },
+        {
+          id: 'sale-nov14-03',
+          timestamp: '2026-11-14T13:50:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 2, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 3, unitPrice: 5.00 }
+          ],
+          subtotal: 156.00,
+          tax: 0,
+          total: 156.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov14-04',
+          timestamp: '2026-11-14T15:20:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 1, unitPrice: 20.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 88.00,
+          tax: 0,
+          total: 88.00,
+          paymentMethod: 'cash',
+          cashTendered: 100.00,
+          changeDue: 12.00
+        }
       ]
     },
     tasks: [
@@ -1202,9 +1331,74 @@ export const INITIAL_EVENTS: CalendarEvent[] = [
       targetRevenue: 550,
       actualRevenue: 520,
       inventory: [
-        { productId: 'prod-002', name: 'Autumn Spiced Soy Candle (8oz)', barcode: '890123456702', price: 20.00, category: 'Candles', quantityPacked: 20, quantitySold: 16 },
-        { productId: 'prod-003', name: 'Laser-Cut Walnut Wood Coaster (Set of 4)', barcode: '890123456703', price: 24.00, category: 'Woodwork', quantityPacked: 12, quantitySold: 8 },
-        { productId: 'prod-005', name: 'Handcrafted Wooden Ornament (Set of 3)', barcode: '890123456705', price: 18.00, category: 'Holiday', quantityPacked: 15, quantitySold: 11 }
+        { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', barcode: '794820103', price: 35.00, category: 'Hoodies & Sweatshirts', quantityPacked: 10, quantitySold: 6 },
+        { productId: 'prod-1', name: 'Shirts ($20)', barcode: '794820101', price: 20.00, category: 'Shirts', quantityPacked: 12, quantitySold: 8 },
+        { productId: 'prod-4', name: 'Hats & Beanies ($18)', barcode: '794820104', price: 18.00, category: 'Hats & Beanies', quantityPacked: 6, quantitySold: 3 },
+        { productId: 'prod-5', name: 'Totes & Bags ($15)', barcode: '794820105', price: 15.00, category: 'Totes & Bags', quantityPacked: 8, quantitySold: 4 },
+        { productId: 'prod-2', name: 'Shirts ($8)', barcode: '794820102', price: 8.00, category: 'Shirts', quantityPacked: 6, quantitySold: 2 },
+        { productId: 'prod-6', name: 'Stickers & Pins ($5)', barcode: '794820106', price: 5.00, category: 'Stickers & Pins', quantityPacked: 15, quantitySold: 4 }
+      ],
+      sales: [
+        {
+          id: 'sale-nov22-01',
+          timestamp: '2026-11-22T11:30:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 120.00,
+          tax: 0,
+          total: 120.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov22-02',
+          timestamp: '2026-11-22T12:45:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 }
+          ],
+          subtotal: 171.00,
+          tax: 0,
+          total: 171.00,
+          paymentMethod: 'venmo'
+        },
+        {
+          id: 'sale-nov22-03',
+          timestamp: '2026-11-22T14:15:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 2, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 154.00,
+          tax: 0,
+          total: 154.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov22-04',
+          timestamp: '2026-11-22T15:30:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 1, unitPrice: 20.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 75.00,
+          tax: 0,
+          total: 75.00,
+          paymentMethod: 'cash',
+          cashTendered: 80.00,
+          changeDue: 5.00
+        }
       ]
     },
     tasks: [
@@ -1538,10 +1732,79 @@ export const INITIAL_EVENTS: CalendarEvent[] = [
       targetRevenue: 950,
       actualRevenue: 915,
       inventory: [
-        { productId: 'prod-001', name: 'Handcrafted Ceramic Speckled Mug', barcode: '890123456701', price: 28.00, category: 'Crafts', quantityPacked: 24, quantitySold: 19 },
-        { productId: 'prod-002', name: 'Autumn Spiced Soy Candle (8oz)', barcode: '890123456702', price: 20.00, category: 'Candles', quantityPacked: 30, quantitySold: 25 },
-        { productId: 'prod-005', name: 'Handcrafted Wooden Ornament (Set of 3)', barcode: '890123456705', price: 18.00, category: 'Holiday', quantityPacked: 25, quantitySold: 20 },
-        { productId: 'prod-003', name: 'Laser-Cut Walnut Wood Coaster (Set of 4)', barcode: '890123456703', price: 24.00, category: 'Woodwork', quantityPacked: 15, quantitySold: 12 }
+        { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', barcode: '794820103', price: 35.00, category: 'Hoodies & Sweatshirts', quantityPacked: 16, quantitySold: 11 },
+        { productId: 'prod-1', name: 'Shirts ($20)', barcode: '794820101', price: 20.00, category: 'Shirts', quantityPacked: 20, quantitySold: 14 },
+        { productId: 'prod-4', name: 'Hats & Beanies ($18)', barcode: '794820104', price: 18.00, category: 'Hats & Beanies', quantityPacked: 10, quantitySold: 5 },
+        { productId: 'prod-5', name: 'Totes & Bags ($15)', barcode: '794820105', price: 15.00, category: 'Totes & Bags', quantityPacked: 10, quantitySold: 6 },
+        { productId: 'prod-2', name: 'Shirts ($8)', barcode: '794820102', price: 8.00, category: 'Shirts', quantityPacked: 10, quantitySold: 5 },
+        { productId: 'prod-6', name: 'Stickers & Pins ($5)', barcode: '794820106', price: 5.00, category: 'Stickers & Pins', quantityPacked: 20, quantitySold: 6 }
+      ],
+      sales: [
+        {
+          id: 'sale-nov27-01',
+          timestamp: '2026-11-27T10:45:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 3, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 4, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 243.00,
+          tax: 0,
+          total: 243.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov27-02',
+          timestamp: '2026-11-27T12:30:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 3, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 4, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 2, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 2, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 257.00,
+          tax: 0,
+          total: 257.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov27-03',
+          timestamp: '2026-11-27T14:15:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 3, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 2, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 239.00,
+          tax: 0,
+          total: 239.00,
+          paymentMethod: 'venmo'
+        },
+        {
+          id: 'sale-nov27-04',
+          timestamp: '2026-11-27T16:00:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 176.00,
+          tax: 0,
+          total: 176.00,
+          paymentMethod: 'cash',
+          cashTendered: 180.00,
+          changeDue: 4.00
+        }
       ]
     },
     tasks: [
@@ -1589,9 +1852,77 @@ export const INITIAL_EVENTS: CalendarEvent[] = [
       targetRevenue: 750,
       actualRevenue: 720,
       inventory: [
-        { productId: 'prod-001', name: 'Handcrafted Ceramic Speckled Mug', barcode: '890123456701', price: 28.00, category: 'Crafts', quantityPacked: 18, quantitySold: 15 },
-        { productId: 'prod-002', name: 'Autumn Spiced Soy Candle (8oz)', barcode: '890123456702', price: 20.00, category: 'Candles', quantityPacked: 22, quantitySold: 18 },
-        { productId: 'prod-004', name: 'Botanical Linen Tea Towel (Set of 2)', barcode: '890123456704', price: 22.00, category: 'Textiles', quantityPacked: 12, quantitySold: 9 }
+        { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', barcode: '794820103', price: 35.00, category: 'Hoodies & Sweatshirts', quantityPacked: 12, quantitySold: 8 },
+        { productId: 'prod-1', name: 'Shirts ($20)', barcode: '794820101', price: 20.00, category: 'Shirts', quantityPacked: 16, quantitySold: 12 },
+        { productId: 'prod-4', name: 'Hats & Beanies ($18)', barcode: '794820104', price: 18.00, category: 'Hats & Beanies', quantityPacked: 8, quantitySold: 4 },
+        { productId: 'prod-5', name: 'Totes & Bags ($15)', barcode: '794820105', price: 15.00, category: 'Totes & Bags', quantityPacked: 10, quantitySold: 6 },
+        { productId: 'prod-2', name: 'Shirts ($8)', barcode: '794820102', price: 8.00, category: 'Shirts', quantityPacked: 8, quantitySold: 1 },
+        { productId: 'prod-6', name: 'Stickers & Pins ($5)', barcode: '794820106', price: 5.00, category: 'Stickers & Pins', quantityPacked: 15, quantitySold: 6 }
+      ],
+      sales: [
+        {
+          id: 'sale-nov28-01',
+          timestamp: '2026-11-28T10:15:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 188.00,
+          tax: 0,
+          total: 188.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov28-02',
+          timestamp: '2026-11-28T12:00:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 3, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 4, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-2', name: 'Shirts ($8)', category: 'Shirts', sku: 'SHIRTS-8-01', quantity: 1, unitPrice: 8.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 2, unitPrice: 5.00 }
+          ],
+          subtotal: 236.00,
+          tax: 0,
+          total: 236.00,
+          paymentMethod: 'card'
+        },
+        {
+          id: 'sale-nov28-03',
+          timestamp: '2026-11-28T13:45:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 2, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 3, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 2, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 183.00,
+          tax: 0,
+          total: 183.00,
+          paymentMethod: 'venmo'
+        },
+        {
+          id: 'sale-nov28-04',
+          timestamp: '2026-11-28T15:30:00Z',
+          items: [
+            { productId: 'prod-3', name: 'Hoodies & Sweatshirts ($35)', category: 'Hoodies & Sweatshirts', sku: 'HOODIE-35-01', quantity: 1, unitPrice: 35.00 },
+            { productId: 'prod-1', name: 'Shirts ($20)', category: 'Shirts', sku: 'SHIRTS-20-01', quantity: 2, unitPrice: 20.00 },
+            { productId: 'prod-4', name: 'Hats & Beanies ($18)', category: 'Hats & Beanies', sku: 'HATS-18-01', quantity: 1, unitPrice: 18.00 },
+            { productId: 'prod-5', name: 'Totes & Bags ($15)', category: 'Totes & Bags', sku: 'TOTES-15-01', quantity: 1, unitPrice: 15.00 },
+            { productId: 'prod-6', name: 'Stickers & Pins ($5)', category: 'Stickers & Pins', sku: 'STICKER-5-01', quantity: 1, unitPrice: 5.00 }
+          ],
+          subtotal: 113.00,
+          tax: 0,
+          total: 113.00,
+          paymentMethod: 'cash',
+          cashTendered: 120.00,
+          changeDue: 7.00
+        }
       ]
     },
     tasks: [

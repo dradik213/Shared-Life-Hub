@@ -115,6 +115,31 @@ function CalendarApp() {
             if (!seenIds.has(evt.id) && !seenKeys.has(key)) {
               seenIds.add(evt.id);
               seenKeys.add(key);
+
+              // Hydrate marketDetails from INITIAL_EVENTS if cached November mock market event has missing/empty inventory or sales, or legacy products
+              const initialMatch = INITIAL_EVENTS.find((ie) => ie.id === evt.id);
+              if (initialMatch?.marketDetails && (evt.category === 'market' || evt.id.includes('market'))) {
+                const needsInventoryHydration =
+                  !evt.marketDetails?.inventory ||
+                  evt.marketDetails.inventory.length === 0 ||
+                  evt.marketDetails.inventory.some((inv: any) => typeof inv.productId === 'string' && inv.productId.startsWith('prod-00'));
+                const needsSalesHydration =
+                  !evt.marketDetails?.sales || evt.marketDetails.sales.length === 0;
+
+                if (needsInventoryHydration || needsSalesHydration) {
+                  evt.marketDetails = {
+                    ...initialMatch.marketDetails,
+                    ...evt.marketDetails,
+                    inventory: needsInventoryHydration
+                      ? initialMatch.marketDetails.inventory
+                      : evt.marketDetails?.inventory,
+                    sales: needsSalesHydration
+                      ? initialMatch.marketDetails.sales
+                      : evt.marketDetails?.sales
+                  };
+                }
+              }
+
               deduped.push(evt);
             }
           }

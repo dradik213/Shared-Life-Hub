@@ -127,6 +127,34 @@ export function saveMasterInventory(items: InventoryProduct[]): void {
   }
 }
 
+/**
+ * Deducts sold items from master inventory (localStorage: duosync_master_inventory_v1).
+ * Decrements defaultStock (clamped to Math.max(0, item.defaultStock - soldQty))
+ * matching by productId, sku, or barcode.
+ */
+export function deductSalesFromMasterInventory(
+  soldItems: Array<{ productId?: string; sku?: string; barcode?: string; quantity: number }>
+): InventoryProduct[] {
+  const currentMaster = loadMasterInventory();
+  const updatedMaster = currentMaster.map((mItem) => {
+    const matched = soldItems.find(
+      (s) =>
+        (s.productId && s.productId === mItem.id) ||
+        (mItem.sku && s.sku && s.sku === mItem.sku) ||
+        (mItem.barcode && s.barcode && s.barcode === mItem.barcode)
+    );
+    if (matched && matched.quantity > 0) {
+      return {
+        ...mItem,
+        defaultStock: Math.max(0, (mItem.defaultStock || 0) - matched.quantity)
+      };
+    }
+    return mItem;
+  });
+  saveMasterInventory(updatedMaster);
+  return updatedMaster;
+}
+
 // Generate unique barcode numeric/alphanumeric string
 export function generateBarcode(): string {
   // 9-digit Code-128 compliant readable barcode
