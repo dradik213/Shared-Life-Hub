@@ -98,6 +98,31 @@ export const MonthView: React.FC<MonthViewProps> = ({
             : sortEventsForDay(rawEvents, sortOption, sortDirection);
           const stayInfo = stays[cell.dateStr];
 
+          let dayNumColorClass = '';
+          if (stayInfo && cell.isCurrentMonth) {
+            if (stayInfo.stayAt === 'her_home') {
+              dayNumColorClass = user1Theme.badgeBg;
+            } else if (stayInfo.stayAt === 'his_home') {
+              dayNumColorClass = user2Theme.badgeBg;
+            } else if (stayInfo.stayAt === 'our_home') {
+              dayNumColorClass = 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700';
+            } else {
+              dayNumColorClass = 'bg-stone-200/80 text-stone-800 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
+            }
+
+            if (cell.isToday) {
+              dayNumColorClass += ' ring-2 ring-stone-900 dark:ring-white ring-offset-1 font-extrabold shadow-2xs';
+            }
+          } else {
+            if (cell.isToday) {
+              dayNumColorClass = 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold';
+            } else if (cell.isCurrentMonth) {
+              dayNumColorClass = 'text-stone-800 dark:text-stone-200 group-hover:text-stone-950 dark:group-hover:text-white';
+            } else {
+              dayNumColorClass = 'text-stone-400 dark:text-stone-600';
+            }
+          }
+
           return (
             <div
               key={cell.dateStr}
@@ -108,34 +133,14 @@ export const MonthView: React.FC<MonthViewProps> = ({
                   : 'bg-[#fcfaf6] dark:bg-[#1d2026] hover:bg-[#f6f2ea] dark:hover:bg-[#23272e] text-stone-800 dark:text-stone-200'
               } ${isSelected ? 'ring-2 ring-stone-900 dark:ring-stone-100 ring-inset z-10 bg-[#f5f0e6] dark:bg-[#262a32]' : ''}`}
             >
-              {/* Top Row: Day number (left) + colored Stay Initial badge (right) */}
+              {/* Top Row: Day number directly colored with Stay partner's theme */}
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-xs sm:text-sm md:text-base font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center transition-colors ${
-                    cell.isToday
-                      ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold'
-                      : cell.isCurrentMonth
-                      ? 'text-stone-800 dark:text-stone-200 group-hover:text-stone-950 dark:group-hover:text-white'
-                      : 'text-stone-400 dark:text-stone-600'
-                  }`}
+                  title={stayInfo && cell.isCurrentMonth ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : 'Both'}` : undefined}
+                  className={`text-xs sm:text-sm md:text-base font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center transition-colors ${dayNumColorClass}`}
                 >
                   {cell.dayNum}
                 </span>
-
-                {stayInfo && cell.isCurrentMonth && (
-                  <span
-                    title={`Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
-                    className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[9px] sm:text-[11px] md:text-xs font-bold rounded flex items-center justify-center uppercase shadow-2xs ${
-                      stayInfo.stayAt === 'our_home'
-                        ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 border border-stone-800'
-                        : stayInfo.stayAt === 'her_home'
-                        ? user1Theme.badgeBg
-                        : user2Theme.badgeBg
-                    }`}
-                  >
-                    {stayInfo.stayAt === 'our_home' ? `${partner1Initial}&${partner2Initial}` : stayInfo.stayAt === 'her_home' ? partner1Initial : partner2Initial}
-                  </span>
-                )}
               </div>
 
               {/* Bottom Row: Clean event count badge (no dots or emojis) */}

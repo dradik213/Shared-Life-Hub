@@ -154,9 +154,14 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
     setDayNotes(stayInfo?.notes || '');
   }, [selectedDate, stayInfo?.notes]);
 
-  // Format date cleanly without repeating day-of-week already shown in top bar
+  // Format date cleanly with separate day name and month/year heading
   const [y, m, d] = selectedDate.split('-').map(Number);
   const dateObj = new Date(y, m - 1, d);
+  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  const monthYearHeading = dateObj.toLocaleDateString('en-US', {
+    month: 'short',
+    year: 'numeric'
+  });
   const dateHeading = dateObj.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -267,17 +272,39 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   return (
     <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] shadow-md overflow-hidden flex flex-col h-full transition-colors">
       
-      {/* Header Bar - tight, streamlined spacing without redundant moon mention */}
+      {/* Header Bar */}
       <div className="px-3.5 py-2.5 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm sm:text-base font-serif font-bold text-stone-900 dark:text-stone-100 truncate">
-              {dateHeading}
+        <div className="min-w-0 flex items-center gap-2">
+          {(() => {
+            const dayPillStayColor = 
+              currentStay === 'her_home'
+                ? user1Theme.badgeBg
+                : currentStay === 'his_home'
+                ? user2Theme.badgeBg
+                : currentStay === 'our_home'
+                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
+                : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
+
+            return (
+              <button
+                type="button"
+                onClick={handleCycleStay}
+                title={`Stay: ${currentStay === 'her_home' ? partner1Label : currentStay === 'his_home' ? partner2Label : `${partner1Label} & ${partner2Label}`} (Click to change stay)`}
+                className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
+              >
+                <span>{dayName}</span>
+                <span className="font-mono text-xs">{d}</span>
+              </button>
+            );
+          })()}
+          <div className="min-w-0">
+            <h2 className="text-xs sm:text-sm font-serif font-bold text-stone-900 dark:text-stone-100 truncate">
+              {monthYearHeading}
             </h2>
+            <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate">
+              {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'} planned
+            </span>
           </div>
-          <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
-            {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'} planned
-          </span>
         </div>
 
         <div className="flex items-center gap-1.5">

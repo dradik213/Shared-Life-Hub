@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Home, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
-import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
+import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatDateToYMD, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
 import { TaskToggleSlider } from './TaskToggleSlider';
@@ -23,6 +23,7 @@ interface WeekViewProps {
   expandedTaskSections?: Record<string, boolean>;
   onToggleExpandEvent?: (eventId: string) => void;
   onToggleExpandTasks?: (eventId: string) => void;
+  onUpdateStay?: (dateStr: string, stayAt: StayLocation) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
@@ -43,6 +44,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   expandedTaskSections: propsExpandedTaskSections,
   onToggleExpandEvent,
   onToggleExpandTasks,
+  onUpdateStay,
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
   const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
@@ -160,38 +162,53 @@ export const WeekView: React.FC<WeekViewProps> = ({
               <div>
                 {/* Column Day Header */}
                 <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
-                  <div>
-                    <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider block font-mono">
-                      {col.dayName}
-                    </span>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span
-                        className={`text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center ${
-                          col.isToday
-                            ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold'
-                            : 'text-stone-900 dark:text-stone-100'
-                        }`}
+                  <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider block font-mono">
+                    {col.dayName}
+                  </span>
+                  {(() => {
+                    let weekDayNumColor = '';
+                    if (stayInfo) {
+                      if (stayInfo.stayAt === 'her_home') {
+                        weekDayNumColor = user1Theme.badgeBg;
+                      } else if (stayInfo.stayAt === 'his_home') {
+                        weekDayNumColor = user2Theme.badgeBg;
+                      } else if (stayInfo.stayAt === 'our_home') {
+                        weekDayNumColor = 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700';
+                      } else {
+                        weekDayNumColor = 'bg-stone-200/80 text-stone-800 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
+                      }
+
+                      if (col.isToday) {
+                        weekDayNumColor += ' ring-2 ring-stone-900 dark:ring-white ring-offset-1 font-extrabold shadow-2xs';
+                      }
+                    } else {
+                      if (col.isToday) {
+                        weekDayNumColor = 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold';
+                      } else {
+                        weekDayNumColor = 'text-stone-900 dark:text-stone-100';
+                      }
+                    }
+
+                    return (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          if (onUpdateStay) {
+                            e.stopPropagation();
+                            const cycle: StayLocation[] = ['our_home', 'her_home', 'his_home', 'travel'];
+                            const currentStay: StayLocation = stayInfo?.stayAt || 'our_home';
+                            const currentIndex = cycle.indexOf(currentStay);
+                            const nextStay = cycle[(currentIndex + 1) % cycle.length];
+                            onUpdateStay(col.dateStr, nextStay);
+                          }
+                        }}
+                        title={stayInfo ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : 'Away'}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
+                        className={`text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center transition-all cursor-pointer ${weekDayNumColor}`}
                       >
                         {col.dayNum}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Overnight indicator: colored Partner Initial badge */}
-                  {stayInfo && (
-                    <div
-                      title={`Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
-                      className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold transition-colors shadow-2xs ${
-                        stayInfo.stayAt === 'our_home'
-                          ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 border border-stone-800'
-                          : stayInfo.stayAt === 'her_home'
-                          ? user1Theme.badgeBg
-                          : user2Theme.badgeBg
-                      }`}
-                    >
-                      {stayInfo.stayAt === 'our_home' ? `${partner1Initial}&${partner2Initial}` : stayInfo.stayAt === 'her_home' ? partner1Initial : partner2Initial}
-                    </div>
-                  )}
+                      </button>
+                    );
+                  })()}
                 </div>
 
                 {/* Day events with subtle category color coding */}

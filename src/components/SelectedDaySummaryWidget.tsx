@@ -306,48 +306,45 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
       {/* Top Header / Bar - Single Un-squished Horizontal Row */}
       <div className={`bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] ${isDropdownOpen ? 'border-b border-[#e6e1d8] dark:border-[#2d3139]' : ''} flex items-center justify-between gap-2 px-3 py-2 flex-nowrap transition-all`}>
         
-        {/* Left side: Day name, Stay badge, & Fridge Photos button */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          <h2 className="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-1.5 truncate">
-            <span className="font-serif capitalize truncate">{dayOfWeekName}</span>
-            {isToday && (
-              <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs shrink-0">
-                Today
-              </span>
-            )}
-          </h2>
+        {/* Left side: Colored Day name pill & Fridge Photos button */}
+        <div className="flex items-center gap-2 min-w-0">
+          {(() => {
+            const dayPillStayColor = 
+              stayInfo?.stayAt === 'her_home'
+                ? user1Theme.badgeBg
+                : stayInfo?.stayAt === 'his_home'
+                ? user2Theme.badgeBg
+                : stayInfo?.stayAt === 'our_home'
+                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
+                : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
 
-          {/* Interactive Overnight Stay badge: Stay: K / Stay: Katherine, Stay: D / Stay: Dustin, or Stay: K&D */}
-          {stayInfo && (
-            <button 
-              type="button"
-              onClick={() => {
-                if (!onUpdateStay) return;
-                const nextStay: StayLocation =
-                  stayInfo.stayAt === 'her_home'
-                    ? 'our_home'
-                    : stayInfo.stayAt === 'our_home'
-                    ? 'his_home'
-                    : 'her_home';
-                onUpdateStay(selectedDate, nextStay);
-              }}
-              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs transition-all cursor-pointer hover:opacity-90 active:scale-95 whitespace-nowrap shrink-0 ${
-                stayInfo.stayAt === 'our_home'
-                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
-                  : stayInfo.stayAt === 'her_home'
-                  ? user1Theme.badgeBg
-                  : user2Theme.badgeBg
-              }`}
-              title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'K&D' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label} (Click to toggle)`}
-            >
-              <span className="sm:hidden">
-                {stayInfo.stayAt === 'our_home' ? 'Stay: K&D' : stayInfo.stayAt === 'her_home' ? `Stay: ${partner1Initial}` : `Stay: ${partner2Initial}`}
-              </span>
-              <span className="hidden sm:inline">
-                {stayInfo.stayAt === 'our_home' ? 'Stay: K&D' : stayInfo.stayAt === 'her_home' ? `Stay: ${partner1Label}` : `Stay: ${partner2Label}`}
-              </span>
-            </button>
-          )}
+            const handleCycleStay = () => {
+              if (!onUpdateStay) return;
+              const nextStay: StayLocation =
+                stayInfo?.stayAt === 'her_home'
+                  ? 'our_home'
+                  : stayInfo?.stayAt === 'our_home'
+                  ? 'his_home'
+                  : 'her_home';
+              onUpdateStay(selectedDate, nextStay);
+            };
+
+            return (
+              <button
+                type="button"
+                onClick={onUpdateStay ? handleCycleStay : undefined}
+                title={stayInfo ? `Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
+                className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
+              >
+                <span className="font-serif capitalize">{dayOfWeekName}</span>
+                {isToday && (
+                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
+                    Today
+                  </span>
+                )}
+              </button>
+            );
+          })()}
 
           {/* Compact Fridge Photos button */}
           {onOpenFridgePhotos && (
