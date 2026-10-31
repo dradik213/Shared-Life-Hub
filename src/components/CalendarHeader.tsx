@@ -539,7 +539,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* 1. Partner View 3-position slider */}
             <div className="flex items-center gap-1 sm:gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-1 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs shrink-0">
-              <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Partner:</span>
+              <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 whitespace-nowrap">Partner View:</span>
               <button
                 type="button"
                 onClick={() => onPartnerFilterChange(partnerFilter === 'her' ? 'all' : 'her')}
@@ -697,7 +697,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                 title="Reset all filters and sorting to default"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>Reset</span>
+                <span>Reset Filters</span>
               </button>
             )}
           </div>

@@ -337,7 +337,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
         </div>
       </div>
 
-      <div className="p-3 overflow-y-auto space-y-3 flex-1">
+      <div className="p-3 overflow-y-auto space-y-3 flex-1 pb-24">
         
         {/* Overnight Stay Selector with 3-position initials slider and center Home (compact, no redundant spacing) */}
         <div className="flex items-center justify-between bg-[#f5f1e8] dark:bg-[#202329] px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs">
