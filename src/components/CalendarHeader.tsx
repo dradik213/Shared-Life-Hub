@@ -28,7 +28,8 @@ import {
   Layers,
   SlidersHorizontal,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  RotateCcw
 } from 'lucide-react';
 import { CalendarEvent, CalendarViewMode, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG } from '../utils/calendarUtils';
@@ -133,8 +134,17 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isFilterSortOpen, setIsFilterSortOpen] = useState(false);
   const categoryKeys: EventCategory[] = ['market', 'dinner_date', 'maintenance', 'pets', 'grocery_errand', 'other'];
+  const isAnyFilterActive = partnerFilter !== 'all' || categoryFilter !== 'all' || sortOption !== 'time' || sortDirection !== 'none';
+  const activeFilterCount = (partnerFilter !== 'all' ? 1 : 0) + (categoryFilter !== 'all' ? 1 : 0) + (sortOption !== 'time' ? 1 : 0) + (sortDirection !== 'none' ? 1 : 0);
 
-  const activeFilterCount = (categoryFilter !== 'all' ? 1 : 0) + (sortOption !== 'time' ? 1 : 0);
+  const handleResetFilters = () => {
+    onPartnerFilterChange('all');
+    onCategoryFilterChange('all');
+    onSortOptionChange('time');
+    if (sortDirection !== 'none') {
+      onToggleSortDirection();
+    }
+  };
 
   // Sum of critical notifications across all tabs or fallback to chat + tasks
   const totalNotifications = totalHeartNotifications ?? (
@@ -454,10 +464,10 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
 
       {/* Secondary Bar: Dynamic Navigation (Day/Week/Month/All Time) & Filter & Sort toggle */}
       {viewMode !== 'admin' && (
-        <div className="w-full max-w-[1800px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 text-sm">
+        <div className="w-full max-w-[1800px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex items-center justify-between gap-2 flex-nowrap text-sm">
           
-          {/* Top-left Navigation: Stays consistent, functions based on user view (Month, Week, Day, All Time) */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
+          {/* Top-left Navigation: < > Today + Date/Month title */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
             <div className="flex items-center border border-[#e2ddd5] dark:border-[#353943] rounded-lg overflow-hidden bg-white dark:bg-[#202329] shadow-2xs shrink-0">
               <button
                 type="button"
@@ -480,18 +490,56 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             <button
               type="button"
               onClick={onToday}
-              className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
+              className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
             >
               Today
             </button>
 
-            <span className="text-sm font-semibold text-stone-900 dark:text-stone-100 tracking-tight ml-1 sm:ml-2">
+            <span className="text-sm sm:text-base font-semibold text-stone-900 dark:text-stone-100 tracking-tight ml-1 sm:ml-2 truncate">
               {navLabel}
             </span>
+          </div>
 
-            {/* 3-Position Partner Slider: to the right of the date using initials for both partners */}
-            <div className="flex items-center gap-1 sm:gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-1.5 sm:px-2 py-0.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs ml-0.5 sm:ml-2 shrink-0">
-              <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">View:</span>
+          {/* Right side: Filter & Sort Button (always shows "Filter & Sort" + active filter pill) */}
+          {viewMode !== 'reflection' && (
+            <button
+              type="button"
+              onClick={() => setIsFilterSortOpen(!isFilterSortOpen)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs whitespace-nowrap shrink-0 ${
+                isFilterSortOpen || isAnyFilterActive
+                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
+                  : 'bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 border-[#e2ddd5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#2a2e36]'
+              }`}
+              title="Toggle Category Filter & Sort Options"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>Filter & Sort</span>
+              {partnerFilter !== 'all' ? (
+                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                  partnerFilter === 'her' ? user1Theme.badgeBg : user2Theme.badgeBg
+                }`}>
+                  {partnerFilter === 'her' ? partner1Initial : partner2Initial}
+                </span>
+              ) : activeFilterCount > 0 ? (
+                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+              {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          )}
+
+        </div>
+      )}
+
+      {/* Collapsible Category Filter & Sort Toolbar Row */}
+      {isFilterSortOpen && viewMode !== 'reflection' && viewMode !== 'admin' && (
+        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 bg-stone-50/95 dark:bg-[#1a1d22]/95 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 text-xs animate-in fade-in duration-150">
+          
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* 1. Partner View 3-position slider */}
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-1 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs shrink-0">
+              <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400">Partner:</span>
               <button
                 type="button"
                 onClick={() => onPartnerFilterChange(partnerFilter === 'her' ? 'all' : 'her')}
@@ -551,119 +599,107 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                 {partner2Initial}
               </button>
             </div>
+
+            {/* 2. Category Filter Buttons with Text Labels */}
+            <div className="flex flex-wrap items-center gap-1 shrink-0" role="toolbar" aria-label="Category filters">
+              <button
+                type="button"
+                onClick={() => onCategoryFilterChange('all')}
+                title="All Categories"
+                aria-label="All Categories"
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 ${
+                  categoryFilter === 'all'
+                    ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold shadow-2xs'
+                    : 'bg-stone-100 dark:bg-[#252830] text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] border border-stone-200/80 dark:border-[#353943]'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>All</span>
+              </button>
+
+              {categoryKeys.map((key) => {
+                const meta = CATEGORY_CONFIG[key];
+                const isSelected = categoryFilter === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => onCategoryFilterChange(key)}
+                    title={meta.label}
+                    aria-label={meta.label}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 ${getCategoryButtonClasses(
+                      key,
+                      isSelected
+                    )}`}
+                  >
+                    {getCategoryIcon(key)}
+                    <span>{meta.shortLabel || meta.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Right side: Compact Filter & Sort Button (hidden on reflection view) */}
-          {viewMode !== 'reflection' && (
-            <button
-              type="button"
-              onClick={() => setIsFilterSortOpen(!isFilterSortOpen)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
-                isFilterSortOpen || activeFilterCount > 0
-                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
-                  : 'bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 border-[#e2ddd5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#2a2e36]'
-              }`}
-              title="Toggle Category Filter & Sort Options"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filter & Sort</span>
-              {activeFilterCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-              {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-          )}
+          {/* Right side: Sort + Reset button */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Sort Dropdown + Direction Toggle Arrow Button */}
+            <div className="flex items-center gap-1.5 border-l border-[#e2ddd5] dark:border-[#353943] pl-2 shrink-0">
+              <label htmlFor="sort-select" className="text-[11px] font-mono text-stone-500 dark:text-stone-400 uppercase tracking-wider hidden sm:inline cursor-pointer">
+                Sort:
+              </label>
+              <select
+                id="sort-select"
+                value={sortOption}
+                onChange={(e) => onSortOptionChange(e.target.value as EventSortOption)}
+                className="bg-white dark:bg-[#24272f] border border-[#e2ddd5] dark:border-[#353943] text-stone-800 dark:text-stone-200 text-xs rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer shadow-2xs font-medium"
+                title="Select attribute to sort by"
+              >
+                <option value="time">Time</option>
+                <option value="category">Category</option>
+                <option value="partner">Lead</option>
+                <option value="tasks">Tasks</option>
+              </select>
 
-        </div>
-      )}
+              {/* Direction toggle arrow button */}
+              <button
+                type="button"
+                onClick={onToggleSortDirection}
+                title={
+                  sortDirection === 'none'
+                    ? `Natural order (not sorted by ${sortOption === 'time' ? 'time' : sortOption}). Click to sort ascending`
+                    : sortDirection === 'asc'
+                    ? `Sorted ascending by ${sortOption === 'time' ? 'time' : sortOption}. Click to flip descending`
+                    : `Sorted descending by ${sortOption === 'time' ? 'time' : sortOption}. Click to flip ascending`
+                }
+                className={`p-1 rounded-md border text-xs transition-all cursor-pointer flex items-center justify-center ${
+                  sortDirection === 'none'
+                    ? 'bg-white dark:bg-[#24272f] border-[#e2ddd5] dark:border-[#353943] text-stone-400 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:border-stone-400 shadow-2xs'
+                    : 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-900 dark:border-stone-100 shadow-xs font-bold ring-1 ring-stone-900 dark:ring-stone-100'
+                }`}
+                aria-label="Toggle sort order direction"
+              >
+                {sortDirection === 'none' ? (
+                  <ArrowUpDown className="w-3.5 h-3.5" />
+                ) : sortDirection === 'asc' ? (
+                  <ArrowUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ArrowDown className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
 
-      {/* Collapsible Category Filter & Sort Toolbar Row */}
-      {isFilterSortOpen && viewMode !== 'reflection' && viewMode !== 'admin' && (
-        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2 bg-stone-50/90 dark:bg-[#1a1d22]/90 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
-          {/* Categories: Compact Icon-Only Chip Bar with Tooltips */}
-          <div className="flex items-center gap-1 shrink-0" role="toolbar" aria-label="Category filters">
-            {/* "All" Category Icon Chip */}
-            <button
-              type="button"
-              onClick={() => onCategoryFilterChange('all')}
-              title="All Categories"
-              aria-label="All Categories"
-              className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center shrink-0 ${
-                categoryFilter === 'all'
-                  ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold shadow-2xs'
-                  : 'bg-stone-100 dark:bg-[#252830] text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] border border-stone-200/80 dark:border-[#353943]'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-            </button>
-
-            {categoryKeys.map((key) => {
-              const meta = CATEGORY_CONFIG[key];
-              const isSelected = categoryFilter === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => onCategoryFilterChange(key)}
-                  title={meta.label}
-                  aria-label={meta.label}
-                  className={`p-1.5 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center shrink-0 ${getCategoryButtonClasses(
-                    key,
-                    isSelected
-                  )}`}
-                >
-                  {getCategoryIcon(key)}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Sort Dropdown + Direction Toggle Arrow Button */}
-          <div className="flex items-center gap-1.5 border-l border-[#e2ddd5] dark:border-[#353943] pl-2 shrink-0">
-            <label htmlFor="sort-select" className="text-[11px] font-mono text-stone-500 dark:text-stone-400 uppercase tracking-wider hidden sm:inline cursor-pointer">
-              Sort:
-            </label>
-            <select
-              id="sort-select"
-              value={sortOption}
-              onChange={(e) => onSortOptionChange(e.target.value as EventSortOption)}
-              className="bg-white dark:bg-[#24272f] border border-[#e2ddd5] dark:border-[#353943] text-stone-800 dark:text-stone-200 text-xs rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-stone-400 cursor-pointer shadow-2xs font-medium"
-              title="Select attribute to sort by"
-            >
-              <option value="time">Time</option>
-              <option value="category">Category</option>
-              <option value="partner">Lead</option>
-              <option value="tasks">Tasks</option>
-            </select>
-
-            {/* Direction toggle arrow button */}
-            <button
-              type="button"
-              onClick={onToggleSortDirection}
-              title={
-                sortDirection === 'none'
-                  ? `Natural order (not sorted by ${sortOption === 'time' ? 'time' : sortOption}). Click to sort ascending`
-                  : sortDirection === 'asc'
-                  ? `Sorted ascending by ${sortOption === 'time' ? 'time' : sortOption}. Click to flip descending`
-                  : `Sorted descending by ${sortOption === 'time' ? 'time' : sortOption}. Click to flip ascending`
-              }
-              className={`p-1 rounded-md border text-xs transition-all cursor-pointer flex items-center justify-center ${
-                sortDirection === 'none'
-                  ? 'bg-white dark:bg-[#24272f] border-[#e2ddd5] dark:border-[#353943] text-stone-400 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:border-stone-400 shadow-2xs'
-                  : 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-900 dark:border-stone-100 shadow-xs font-bold ring-1 ring-stone-900 dark:ring-stone-100'
-              }`}
-              aria-label="Toggle sort order direction"
-            >
-              {sortDirection === 'none' ? (
-                <ArrowUpDown className="w-3.5 h-3.5" />
-              ) : sortDirection === 'asc' ? (
-                <ArrowUp className="w-3.5 h-3.5" />
-              ) : (
-                <ArrowDown className="w-3.5 h-3.5" />
-              )}
-            </button>
+            {/* Quick Reset Filters button if any filter is active */}
+            {isAnyFilterActive && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors cursor-pointer"
+                title="Reset all filters and sorting to default"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
         </div>
       )}

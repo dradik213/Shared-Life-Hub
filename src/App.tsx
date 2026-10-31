@@ -910,7 +910,7 @@ function CalendarApp() {
       />
 
       {/* Main Content Area: generous wide layout filling high-resolution and widescreen displays */}
-      <main className="flex-1 w-full max-w-[1800px] mx-auto p-3 sm:p-5 lg:p-6">
+      <main className="flex-1 w-full max-w-[1800px] mx-auto p-3 sm:p-5 lg:p-6 pb-24">
         
         {/* View Mode Switching */}
         {viewMode === 'admin' ? (
@@ -1030,25 +1030,6 @@ function CalendarApp() {
                   onToggleExpandEvent={handleToggleExpandEvent}
                   onToggleExpandTasks={handleToggleExpandTasks}
                 />
-              )}
-
-              {/* Bottom Quick-Back Bar - Only for month view */}
-              {viewMode === 'month' && (
-                <div className="mt-3 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 px-1">
-                  <p>
-                    Click any day to view details, toggle tasks, or record bullet notes.
-                  </p>
-                  {!isDayInspectorOpen && (
-                    <button
-                      type="button"
-                      onClick={() => setIsDayInspectorOpen(true)}
-                      className="font-medium text-stone-800 dark:text-stone-200 hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View Day Details</span>
-                    </button>
-                  )}
-                </div>
               )}
             </div>
 

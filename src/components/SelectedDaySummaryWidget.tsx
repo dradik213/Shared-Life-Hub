@@ -336,6 +336,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                 title={stayInfo ? `Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
                 className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
               >
+                <Home className="w-3 h-3 shrink-0 opacity-80" />
                 <span className="font-serif capitalize">{dayOfWeekName}</span>
                 {isToday && (
                   <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
@@ -365,27 +366,25 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
           )}
         </div>
 
-        {/* Right side: Single clean dropdown button combining temperature, note marker, and chevron */}
+        {/* Right side: Single clean dropdown button combining temperature and chevron */}
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setIsDropdownOpen((prev) => !prev)}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-200 whitespace-nowrap shrink-0 cursor-pointer hover:bg-stone-100 dark:hover:bg-[#2a2d36] transition-colors"
           >
+            <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>
               {dayForecast ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}` : 'Weather & Info'}
             </span>
-            {stayInfo?.notes && (
-              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">• Note</span>
-            )}
             {isDropdownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
-      {/* Main Widget Body (Expanded) - 3 tightened columns */}
+      {/* Main Widget Body (Expanded) - Responsive 3-column grid */}
       {isDropdownOpen && (
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in duration-200">
+        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 mt-2 border-t border-stone-200/70 dark:border-stone-800 animate-in fade-in duration-200">
 
           {/* Card 2: Phrase of the Day / Motivational Quote */}
           <div className="rounded-xl p-3 bg-stone-50/80 dark:bg-[#21242c] border border-stone-200/80 dark:border-[#2d3139] flex flex-col justify-between">

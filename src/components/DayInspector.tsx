@@ -292,6 +292,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 title={`Stay: ${currentStay === 'her_home' ? partner1Label : currentStay === 'his_home' ? partner2Label : `${partner1Label} & ${partner2Label}`} (Click to change stay)`}
                 className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
               >
+                <Home className="w-3 h-3 shrink-0 opacity-80" />
                 <span>{dayName}</span>
                 <span className="font-mono text-xs">{d}</span>
               </button>

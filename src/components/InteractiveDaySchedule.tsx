@@ -298,7 +298,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   const moon = getMoonPhase(new Date(sy, sm - 1, sd, 12, 0, 0));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       
       {/* Copy feedback toast if any */}
       {copyFeedback && (
