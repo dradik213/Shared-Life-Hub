@@ -413,6 +413,21 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                   <span>Weather</span>
                 </span>
               )}
+
+              {/* Spine 3: Day Note Pill (if notes exist) */}
+              {stayInfo?.notes && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsCollapsed(false);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-medium text-[11px] border border-amber-200 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors cursor-pointer"
+                  title={`Day Note: ${stayInfo.notes} (Click to view)`}
+                >
+                  <span>📝 Day Note</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -655,8 +670,8 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
         </div>
       )}
 
-      {/* Notes / Stay Preview footer bar if available */}
-      {stayInfo?.notes && (
+      {/* Notes / Stay Preview footer bar only when expanded */}
+      {!isCollapsed && stayInfo?.notes && (
         <div className="px-3 py-1.5 bg-stone-100/60 dark:bg-[#202329]/60 border-t border-stone-200 dark:border-[#2d3139] text-[11px] text-stone-700 dark:text-stone-300 flex items-center gap-2">
           <span className="font-semibold text-stone-800 dark:text-stone-200 shrink-0">Day Notes:</span>
           <span className="truncate italic">{stayInfo.notes}</span>

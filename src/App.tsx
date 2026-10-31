@@ -284,6 +284,50 @@ function CalendarApp() {
     } catch (e) {}
   };
 
+  // Lifted expand/collapse states persisted across view switching in sessionStorage
+  const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = sessionStorage.getItem('duosync_expanded_events');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {};
+  });
+
+  const [expandedTaskSections, setExpandedTaskSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = sessionStorage.getItem('duosync_expanded_tasks');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {};
+  });
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('duosync_expanded_events', JSON.stringify(expandedEventIds));
+    } catch (e) {}
+  }, [expandedEventIds]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('duosync_expanded_tasks', JSON.stringify(expandedTaskSections));
+    } catch (e) {}
+  }, [expandedTaskSections]);
+
+  const handleToggleExpandEvent = (eventId: string) => {
+    setExpandedEventIds((prev) => ({
+      ...prev,
+      [eventId]: !prev[eventId],
+    }));
+  };
+
+  const handleToggleExpandTasks = (eventId: string) => {
+    setExpandedTaskSections((prev) => ({
+      ...prev,
+      [eventId]: !prev[eventId],
+    }));
+  };
+
+
   // Chat tracking & notification markers
   const [chatMessages, setChatMessages] = useState<any[]>(() => {
     try {
@@ -931,6 +975,10 @@ function CalendarApp() {
               partnerFilter={partnerFilter}
               sortOption={sortOption}
               sortDirection={sortDirection}
+              expandedEventIds={expandedEventIds}
+              expandedTaskSections={expandedTaskSections}
+              onToggleExpandEvent={handleToggleExpandEvent}
+              onToggleExpandTasks={handleToggleExpandTasks}
             />
           </div>
         ) : (
@@ -955,6 +1003,10 @@ function CalendarApp() {
                   partnerFilter={partnerFilter}
                   sortOption={sortOption}
                   sortDirection={sortDirection}
+                  expandedEventIds={expandedEventIds}
+                  expandedTaskSections={expandedTaskSections}
+                  onToggleExpandEvent={handleToggleExpandEvent}
+                  onToggleExpandTasks={handleToggleExpandTasks}
                 />
               )}
 
@@ -973,6 +1025,10 @@ function CalendarApp() {
                   partnerFilter={partnerFilter}
                   sortOption={sortOption}
                   sortDirection={sortDirection}
+                  expandedEventIds={expandedEventIds}
+                  expandedTaskSections={expandedTaskSections}
+                  onToggleExpandEvent={handleToggleExpandEvent}
+                  onToggleExpandTasks={handleToggleExpandTasks}
                 />
               )}
 
@@ -1016,6 +1072,10 @@ function CalendarApp() {
                   onOpenFridgePhotos={() => setIsFridgePhotosOpen(true)}
                   sortOption={sortOption}
                   sortDirection={sortDirection}
+                  expandedEventIds={expandedEventIds}
+                  expandedTaskSections={expandedTaskSections}
+                  onToggleExpandEvent={handleToggleExpandEvent}
+                  onToggleExpandTasks={handleToggleExpandTasks}
                 />
               </div>
             )}

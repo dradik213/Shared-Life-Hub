@@ -15,6 +15,10 @@ interface MonthViewProps {
   partnerFilter: 'all' | 'her' | 'him';
   sortOption?: EventSortOption;
   sortDirection?: SortDirection;
+  expandedEventIds?: Record<string, boolean>;
+  expandedTaskSections?: Record<string, boolean>;
+  onToggleExpandEvent?: (eventId: string) => void;
+  onToggleExpandTasks?: (eventId: string) => void;
 }
 
 const WEEKDAYS = [
@@ -38,23 +42,38 @@ export const MonthView: React.FC<MonthViewProps> = ({
   partnerFilter,
   sortOption = 'time',
   sortDirection = 'none',
+  expandedEventIds: propsExpandedEventIds,
+  expandedTaskSections: propsExpandedTaskSections,
+  onToggleExpandEvent,
+  onToggleExpandTasks,
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
-  const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
-  const [expandedTaskIds, setExpandedTaskIds] = useState<Record<string, boolean>>({});
+  const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
+  const [localExpandedTaskIds, setLocalExpandedTaskIds] = useState<Record<string, boolean>>({});
+
+  const currentExpandedEventIds = propsExpandedEventIds ?? localExpandedEventIds;
+  const currentExpandedTaskIds = propsExpandedTaskSections ?? localExpandedTaskIds;
 
   const toggleEvent = (eventId: string) => {
-    setExpandedEventIds((prev) => ({
-      ...prev,
-      [eventId]: !prev[eventId],
-    }));
+    if (onToggleExpandEvent) {
+      onToggleExpandEvent(eventId);
+    } else {
+      setLocalExpandedEventIds((prev) => ({
+        ...prev,
+        [eventId]: !prev[eventId],
+      }));
+    }
   };
 
   const toggleTasks = (eventId: string) => {
-    setExpandedTaskIds((prev) => ({
-      ...prev,
-      [eventId]: !prev[eventId],
-    }));
+    if (onToggleExpandTasks) {
+      onToggleExpandTasks(eventId);
+    } else {
+      setLocalExpandedTaskIds((prev) => ({
+        ...prev,
+        [eventId]: !prev[eventId],
+      }));
+    }
   };
 
   const year = currentDate.getFullYear();
@@ -203,8 +222,8 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     const cfg = CATEGORY_CONFIG[evt.category];
                     const tasks = evt.tasks || [];
                     const completedTasks = tasks.filter((t) => t.completed).length;
-                    const isEventExpanded = expandedEventIds[evt.id] === true;
-                    const isTasksExpanded = expandedTaskIds[evt.id] === true;
+                    const isEventExpanded = currentExpandedEventIds[evt.id] === true;
+                    const isTasksExpanded = currentExpandedTaskIds[evt.id] === true;
 
                     return (
                       <div

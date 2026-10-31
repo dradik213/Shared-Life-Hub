@@ -12,7 +12,8 @@ import {
   Minimize2,
   X,
   Barcode,
-  ShoppingBag
+  ShoppingBag,
+  MapPin
 } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, EventTask, MarketPackoutItem, MarketSaleRecord, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, sortEventsForDay, formatTimeRange, formatDateToYMD } from '../utils/calendarUtils';
@@ -40,6 +41,10 @@ interface DayInspectorProps {
   onOpenFridgePhotos: () => void;
   sortOption?: EventSortOption;
   sortDirection?: SortDirection;
+  expandedEventIds?: Record<string, boolean>;
+  expandedTaskSections?: Record<string, boolean>;
+  onToggleExpandEvent?: (eventId: string) => void;
+  onToggleExpandTasks?: (eventId: string) => void;
 }
 
 export const DayInspector: React.FC<DayInspectorProps> = ({
@@ -60,6 +65,10 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   onOpenFridgePhotos,
   sortOption = 'time',
   sortDirection = 'none',
+  expandedEventIds: propsExpandedEventIds,
+  expandedTaskSections: propsExpandedTaskSections,
+  onToggleExpandEvent,
+  onToggleExpandTasks,
 }) => {
   const { 
     partner1Label, 
@@ -73,24 +82,37 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   } = useAuth();
   const [showRolloverDrawer, setShowRolloverDrawer] = useState(false);
   const [dayNotes, setDayNotes] = useState(stayInfo?.notes || '');
-  const [expandedEventIds, setExpandedEventIds] = useState<Record<string, boolean>>({});
-  const [expandedTaskSections, setExpandedTaskSections] = useState<Record<string, boolean>>({});
+  const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
+  const [localExpandedTaskSections, setLocalExpandedTaskSections] = useState<Record<string, boolean>>({});
+
+  const currentExpandedEventIds = propsExpandedEventIds ?? localExpandedEventIds;
+  const currentExpandedTaskSections = propsExpandedTaskSections ?? localExpandedTaskSections;
+
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
   const [packoutEvent, setPackoutEvent] = useState<CalendarEvent | null>(null);
   const [posEvent, setPosEvent] = useState<CalendarEvent | null>(null);
+  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
 
   const toggleEventExpanded = (eventId: string) => {
-    setExpandedEventIds((prev) => ({
-      ...prev,
-      [eventId]: !prev[eventId],
-    }));
+    if (onToggleExpandEvent) {
+      onToggleExpandEvent(eventId);
+    } else {
+      setLocalExpandedEventIds((prev) => ({
+        ...prev,
+        [eventId]: !prev[eventId],
+      }));
+    }
   };
 
   const toggleTaskSection = (eventId: string) => {
-    setExpandedTaskSections((prev) => ({
-      ...prev,
-      [eventId]: !prev[eventId],
-    }));
+    if (onToggleExpandTasks) {
+      onToggleExpandTasks(eventId);
+    } else {
+      setLocalExpandedTaskSections((prev) => ({
+        ...prev,
+        [eventId]: !prev[eventId],
+      }));
+    }
   };
 
   const handleSavePackout = (eventId: string, updatedInventory: MarketPackoutItem[]) => {
@@ -464,99 +486,131 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 // Formatted partner label
                 const partnerLabel = evt.assignedTo === 'her' ? partner1Label : evt.assignedTo === 'him' ? partner2Label : 'Both';
                 const eventEmoji = evt.emoji || cfg.emoji;
-                const isExpanded = expandedEventIds[evt.id] === true;
-                const isTasksExpanded = expandedTaskSections[evt.id] === true;
+                const isExpanded = currentExpandedEventIds[evt.id] === true;
+                const isTasksExpanded = currentExpandedTaskSections[evt.id] === true;
+                const partner1Initial = partner1Label ? partner1Label[0].toUpperCase() : 'K';
+                const partner2Initial = partner2Label ? partner2Label[0].toUpperCase() : 'D';
+                const initialBadge = evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`;
 
                 return (
                   <div
                     key={evt.id}
-                    className={`p-3.5 rounded-xl border border-l-4 transition-all shadow-2xs space-y-2.5 ${cfg.badgeBg} ${cfg.borderColor}`}
+                    className={`rounded-xl border border-l-4 transition-all shadow-2xs overflow-hidden ${cfg.badgeBg} ${cfg.borderColor}`}
                   >
-                    {/* Event Header with category colors */}
+                    {/* Event Header with category colors - Streamlined when collapsed */}
                     <div
                       onClick={() => toggleEventExpanded(evt.id)}
-                      className="flex items-start justify-between gap-2 cursor-pointer select-none"
+                      className="p-3 flex items-center justify-between gap-2 cursor-pointer select-none hover:opacity-95 transition-opacity"
                     >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-sm shrink-0 leading-none">{eventEmoji}</span>
-                          <h4 className={`text-sm font-bold truncate ${cfg.textColor}`}>
-                            {evt.title}
-                          </h4>
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-                            evt.assignedTo === 'her'
-                              ? user1Theme.badgeBg
-                              : evt.assignedTo === 'him'
-                              ? user2Theme.badgeBg
-                              : 'bg-white/80 dark:bg-black/40 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
-                          }`}>
-                            {partnerLabel}
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
+                        <span className="text-sm shrink-0 leading-none">{eventEmoji}</span>
+                        <h4 className={`text-sm font-bold truncate ${cfg.textColor}`}>
+                          {evt.title}
+                        </h4>
+                        {evt.startTime && (
+                          <span className="font-mono text-[11px] text-stone-500 dark:text-stone-400 flex items-center gap-1 shrink-0">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>
                           </span>
-                          <span className="text-[10px] opacity-75 font-medium">
-                            · {cfg.shortLabel}
-                          </span>
-                          {tasks.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleTaskSection(evt.id);
-                              }}
-                              className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors"
-                              title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
-                            >
-                              <span>{completedCount}/{tasks.length}</span>
-                              {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Event Time & Venue info */}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-stone-500 dark:text-stone-400 mt-0.5 pl-5">
-                          {evt.startTime && (
-                            <span className="font-mono text-[11px] flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>
-                            </span>
-                          )}
-                          {evt.locationName && (
-                            <span className="truncate">
-                              {evt.locationName}
-                            </span>
-                          )}
-                        </div>
+                        )}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                          evt.assignedTo === 'her'
+                            ? user1Theme.badgeBg
+                            : evt.assignedTo === 'him'
+                            ? user2Theme.badgeBg
+                            : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                        }`}>
+                          {initialBadge}
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        {onDeleteEvent && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {tasks.length > 0 && (
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onDeleteEvent(evt.id);
+                              toggleTaskSection(evt.id);
                             }}
-                            className="text-stone-300 dark:text-stone-600 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1 cursor-pointer"
-                            title="Remove event"
+                            className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors"
+                            title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>{completedCount}/{tasks.length}</span>
+                            {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                           </button>
                         )}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleEventExpanded(evt.id);
-                          }}
-                          className="p-1 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors cursor-pointer"
-                          title={isExpanded ? 'Collapse event details' : 'Expand event details'}
-                        >
+                        <div className="text-stone-400 p-0.5">
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
+                        </div>
                       </div>
                     </div>
 
                     {isExpanded && (
-                      <>
+                      <div className="p-3 pt-0 space-y-2.5 border-t border-black/5 dark:border-white/5">
+                        {/* Secondary metadata row: Partner, Category, Location, Delete */}
+                        <div className="flex items-center justify-between gap-2 pt-2 text-xs flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                              evt.assignedTo === 'her'
+                                ? user1Theme.badgeBg
+                                : evt.assignedTo === 'him'
+                                ? user2Theme.badgeBg
+                                : 'bg-white/80 dark:bg-black/40 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
+                            }`}>
+                              {partnerLabel}
+                            </span>
+                            <span className="text-[10px] opacity-75 font-medium">
+                              · {cfg.shortLabel}
+                            </span>
+                            {evt.locationName && (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-stone-500 dark:text-stone-400">
+                                <MapPin className="w-3 h-3 text-stone-400" />
+                                <span>{evt.locationName}</span>
+                              </span>
+                            )}
+                          </div>
+
+                          {onDeleteEvent && (
+                            confirmDeleteEventId === evt.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteEvent(evt.id);
+                                    setConfirmDeleteEventId(null);
+                                  }}
+                                  className="px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] cursor-pointer"
+                                >
+                                  Confirm?
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmDeleteEventId(null);
+                                  }}
+                                  className="text-[10px] text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDeleteEventId(evt.id);
+                                }}
+                                className="text-stone-300 dark:text-stone-600 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1 cursor-pointer"
+                                title="Remove event"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )
+                          )}
+                        </div>
+
                         {/* Multiline Event Notes with line breaks & bullets preserved */}
                         {evt.notes && (
                           <div className="text-xs text-stone-700 dark:text-stone-300 bg-[#f7f4ec] dark:bg-[#252830] p-2.5 rounded-lg border border-[#e8e3d8] dark:border-[#353943] whitespace-pre-wrap break-words leading-relaxed font-sans">
@@ -607,98 +661,100 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
 
-                        {/* Specific Event Individual Tasks Section */}
-                        <div className="pt-2 border-t border-[#f0ebe2] dark:border-[#2b2e36] space-y-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleTaskSection(evt.id);
-                            }}
-                            className="w-full flex items-center justify-between text-xs cursor-pointer select-none group text-left"
-                            title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
-                          >
-                            <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wide flex items-center gap-1.5 group-hover:text-stone-900 dark:group-hover:text-stone-200 transition-colors">
-                              <span>Checklist Tasks ({completedCount}/{tasks.length})</span>
-                              {isTasksExpanded ? (
-                                <ChevronUp className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                              )}
-                            </span>
-                            <span className="text-[10px] text-stone-400">
-                              {isTasksExpanded ? 'Toggle slider for status' : 'Click to show tasks'}
-                            </span>
-                          </button>
+                    {/* Specific Event Individual Tasks Section */}
+                    {(isExpanded || (isTasksExpanded && tasks.length > 0)) && (
+                      <div className="p-3 pt-2 border-t border-[#f0ebe2] dark:border-[#2b2e36] space-y-2 bg-white/50 dark:bg-black/20">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTaskSection(evt.id);
+                          }}
+                          className="w-full flex items-center justify-between text-xs cursor-pointer select-none group text-left"
+                          title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
+                        >
+                          <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 uppercase tracking-wide flex items-center gap-1.5 group-hover:text-stone-900 dark:group-hover:text-stone-200 transition-colors">
+                            <span>Checklist Tasks ({completedCount}/{tasks.length})</span>
+                            {isTasksExpanded ? (
+                              <ChevronUp className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                            )}
+                          </span>
+                          <span className="text-[10px] text-stone-400">
+                            {isTasksExpanded ? 'Toggle slider for status' : 'Click to show tasks'}
+                          </span>
+                        </button>
 
-                          {isTasksExpanded && (
-                            <>
-                              {/* Individual Tasks List with Slider Switcher */}
-                              {tasks.length > 0 ? (
-                                <div className="space-y-1.5">
-                                  {tasks.map((task) => (
-                                    <div
-                                      key={task.id}
-                                      className="p-2 rounded-lg bg-[#fbf9f5] dark:bg-[#252830] border border-[#e8e3d8] dark:border-[#333742] flex items-center justify-between gap-2.5 transition-colors"
-                                    >
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        {/* The Slider on/off Switch */}
-                                        <TaskToggleSlider
-                                          checked={task.completed}
-                                          onChange={(newChecked) => onToggleTask(evt.id, task.id, newChecked)}
-                                          label={task.title}
-                                        />
-                                        <span
-                                          className={`text-xs ${
-                                            task.completed
-                                              ? 'line-through text-stone-400 dark:text-stone-500'
-                                              : 'text-stone-800 dark:text-stone-200'
-                                          } truncate`}
-                                        >
-                                          {task.title}
-                                        </span>
-                                      </div>
-
-                                      <button
-                                        type="button"
-                                        onClick={() => onDeleteTaskFromEvent(evt.id, task.id)}
-                                        className="text-stone-300 dark:text-stone-600 hover:text-rose-500 transition-colors p-0.5 shrink-0 cursor-pointer"
-                                        title="Delete task"
+                        {isTasksExpanded && (
+                          <>
+                            {/* Individual Tasks List with Slider Switcher */}
+                            {tasks.length > 0 ? (
+                              <div className="space-y-1.5">
+                                {tasks.map((task) => (
+                                  <div
+                                    key={task.id}
+                                    className="p-2 rounded-lg bg-[#fbf9f5] dark:bg-[#252830] border border-[#e8e3d8] dark:border-[#333742] flex items-center justify-between gap-2.5 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      {/* The Slider on/off Switch */}
+                                      <TaskToggleSlider
+                                        checked={task.completed}
+                                        onChange={(newChecked) => onToggleTask(evt.id, task.id, newChecked)}
+                                        label={task.title}
+                                      />
+                                      <span
+                                        className={`text-xs ${
+                                          task.completed
+                                            ? 'line-through text-stone-400 dark:text-stone-500'
+                                            : 'text-stone-800 dark:text-stone-200'
+                                        } truncate`}
                                       >
-                                        <X className="w-3 h-3" />
-                                      </button>
+                                        {task.title}
+                                      </span>
                                     </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-[11px] text-stone-400 italic py-1">
-                                  No tasks created yet for this activity.
-                                </p>
-                              )}
 
-                              {/* Add Individual Task Text Box Entry Form */}
-                              <div className="pt-1">
-                                <input
-                                  type="text"
-                                  placeholder="Type task & press Enter to add..."
-                                  value={newTaskInputs[evt.id] || ''}
-                                  onChange={(e) =>
-                                    setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
-                                  }
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleCreateTask(evt.id);
-                                    }
-                                  }}
-                                  className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100 placeholder:text-stone-400"
-                                />
+                                    <button
+                                      type="button"
+                                      onClick={() => onDeleteTaskFromEvent(evt.id, task.id)}
+                                      className="text-stone-300 dark:text-stone-600 hover:text-rose-500 transition-colors p-0.5 shrink-0 cursor-pointer"
+                                      title="Delete task"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                            </>
-                          )}
-                        </div>
-                      </>
+                            ) : (
+                              <p className="text-[11px] text-stone-400 italic py-1">
+                                No tasks created yet for this activity.
+                              </p>
+                            )}
+
+                            {/* Add Individual Task Text Box Entry Form */}
+                            <div className="pt-1">
+                              <input
+                                type="text"
+                                placeholder="Type task & press Enter to add..."
+                                value={newTaskInputs[evt.id] || ''}
+                                onChange={(e) =>
+                                  setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleCreateTask(evt.id);
+                                  }
+                                }}
+                                className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100 placeholder:text-stone-400"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 );

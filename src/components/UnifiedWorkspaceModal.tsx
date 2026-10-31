@@ -66,9 +66,10 @@ export type UnifiedWorkspaceTab =
   | 'admin' 
   | 'gemini' 
   | 'tasks' 
-  | 'calendar' 
-  | 'chat' 
-  | 'gmail';
+  | 'google_sync' 
+  | 'calendar' // backward-compatible alias
+  | 'gmail'    // backward-compatible alias
+  | 'chat';
 
 export interface GmailInsightItem {
   id: string;
@@ -129,6 +130,7 @@ interface UnifiedWorkspaceModalProps {
     admin?: number;
     gemini?: number;
     tasks?: number;
+    google_sync?: number;
     calendar?: number;
     gmail?: number;
     chat?: number;
@@ -174,12 +176,17 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
     switchHub 
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<UnifiedWorkspaceTab>(initialTab);
+  const normalizeTab = (tab?: string): UnifiedWorkspaceTab => {
+    if (tab === 'calendar' || tab === 'gmail') return 'google_sync';
+    return (tab as UnifiedWorkspaceTab) || 'templates';
+  };
+
+  const [activeTab, setActiveTab] = useState<UnifiedWorkspaceTab>(() => normalizeTab(initialTab));
 
   // Sync initial tab when opened
   useEffect(() => {
     if (isOpen && initialTab) {
-      setActiveTab(initialTab);
+      setActiveTab(normalizeTab(initialTab));
     }
   }, [isOpen, initialTab]);
 
@@ -742,20 +749,18 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
     admin: tabNotifications?.admin ?? 0,
     gemini: tabNotifications?.gemini ?? 0,
     tasks: tabNotifications?.tasks ?? 0,
-    calendar: tabNotifications?.calendar ?? 0,
-    gmail: tabNotifications?.gmail ?? (gmailInsights.length > 0 ? gmailInsights.length : 0),
+    google_sync: (tabNotifications?.google_sync ?? 0) + (tabNotifications?.calendar ?? 0) + (tabNotifications?.gmail ?? (gmailInsights.length > 0 ? gmailInsights.length : 0)),
     chat: tabNotifications?.chat ?? unreadChatCount,
   };
 
-  // Tabs config - CHAT IS THE FINAL OPTION
+  // Tabs config - CHAT IS THE FINAL OPTION (Exactly 7 tabs)
   const TABS: { id: UnifiedWorkspaceTab; label: string; icon: any; badge?: number }[] = [
     { id: 'inventory', label: 'Inventory', icon: Package, badge: 0 },
     { id: 'templates', label: 'Templates', icon: Sliders, badge: notificationCounts.templates },
     { id: 'admin', label: 'Admin & Hub', icon: Settings, badge: notificationCounts.admin },
     { id: 'gemini', label: 'Gemini AI', icon: Sparkles, badge: notificationCounts.gemini },
     { id: 'tasks', label: 'Tasks & Backlog', icon: CheckSquare, badge: notificationCounts.tasks },
-    { id: 'calendar', label: 'Calendar Sync', icon: CalendarIcon, badge: notificationCounts.calendar },
-    { id: 'gmail', label: 'Gmail Insights', icon: Mail, badge: notificationCounts.gmail },
+    { id: 'google_sync', label: 'Google Sync', icon: CalendarIcon, badge: notificationCounts.google_sync },
     { id: 'chat', label: 'Partner Chat', icon: MessageSquare, badge: notificationCounts.chat },
   ];
 
@@ -1521,39 +1526,68 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
           )}
 
           {/* ========================================================
-              TAB 5: CALENDAR SYNC
+              TAB 5: GOOGLE SYNC (CALENDAR + GMAIL INSIGHTS)
              ======================================================== */}
-          {activeTab === 'calendar' && (
-            <div className="space-y-5 max-w-4xl">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+          {(activeTab === 'google_sync' || activeTab === 'calendar' || activeTab === 'gmail') && (
+            <div className="space-y-5 max-w-6xl">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#e4ded5] dark:border-[#2d3139]">
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-purple-600" />
-                    <span>Google Calendar Synchronizer</span>
+                    <span>Google Sync (Calendar & Gmail Insights)</span>
                   </h3>
                   <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Direct integration with Google Calendar to view upcoming events alongside DuoSync.
+                    Direct integration with Google Calendar to view upcoming schedules and Gmail to extract reservation details into shared calendar events.
                   </p>
                 </div>
 
-                {googleUser && (
+                {googleUser ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs">
+                      <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="font-semibold truncate max-w-[180px]">{googleUser.email || 'Connected'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleLoadGoogleCalendar();
+                        handleLoadGmail();
+                      }}
+                      disabled={isLoadingCalendar || isLoadingGmail}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-300 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isLoadingCalendar || isLoadingGmail ? 'animate-spin' : ''}`} />
+                      <span>Sync All</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignOut}
+                      className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg cursor-pointer"
+                      title="Disconnect Google Account"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={handleLoadGoogleCalendar}
-                    disabled={isLoadingCalendar}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-300 cursor-pointer"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSigningIn}
+                    className="px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer shadow-xs inline-flex items-center gap-1.5"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingCalendar ? 'animate-spin' : ''}`} />
-                    <span>Refresh Calendar</span>
+                    <span>{isSigningIn ? 'Connecting...' : 'Connect Google Account'}</span>
                   </button>
                 )}
               </div>
 
               {!googleUser ? (
                 <div className="p-8 text-center border border-dashed border-[#e4ded5] dark:border-[#2d3139] rounded-xl space-y-3">
-                  <CalendarIcon className="w-8 h-8 text-purple-400 mx-auto" />
-                  <p className="text-xs text-stone-600 dark:text-stone-400">
-                    Connect your Google account to see external calendar events and push new schedules automatically.
+                  <div className="flex justify-center gap-3">
+                    <CalendarIcon className="w-8 h-8 text-purple-400" />
+                    <Mail className="w-8 h-8 text-rose-400" />
+                  </div>
+                  <p className="text-xs text-stone-600 dark:text-stone-400 max-w-md mx-auto">
+                    Connect your Google account to automatically import upcoming calendar schedules, reservations, and deadlines from Gmail.
                   </p>
                   <button
                     type="button"
@@ -1565,133 +1599,125 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {isLoadingCalendar ? (
-                    <p className="text-xs text-stone-400 py-4 text-center">Loading Google Calendar events...</p>
-                  ) : googleCalendarEvents.length === 0 ? (
-                    <p className="text-xs text-stone-400 py-4 text-center">No upcoming events found on Google Calendar.</p>
-                  ) : (
-                    googleCalendarEvents.map((evt) => (
-                      <div
-                        key={evt.id}
-                        className="p-3 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#1f2229] shadow-2xs flex items-center justify-between gap-3 text-xs"
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+                  {/* Column 1: Google Calendar Synchronizer */}
+                  <div className="space-y-3 p-4 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-stone-50/50 dark:bg-[#1a1d22]">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                        <CalendarIcon className="w-3.5 h-3.5" />
+                        <span>Google Calendar</span>
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={handleLoadGoogleCalendar}
+                        disabled={isLoadingCalendar}
+                        className="text-[11px] font-semibold text-purple-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
                       >
-                        <div>
-                          <p className="font-bold text-stone-900 dark:text-stone-100">{evt.summary}</p>
-                          <p className="text-[11px] text-stone-500">
-                            {evt.start?.dateTime ? new Date(evt.start.dateTime).toLocaleString() : evt.start?.date}
-                          </p>
-                        </div>
-                        {evt.htmlLink && (
-                          <a
-                            href={evt.htmlLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
-                            title="Open in Google Calendar"
+                        <RefreshCw className={`w-3 h-3 ${isLoadingCalendar ? 'animate-spin' : ''}`} />
+                        <span>Refresh</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {isLoadingCalendar ? (
+                        <p className="text-xs text-stone-400 py-4 text-center">Loading events...</p>
+                      ) : googleCalendarEvents.length === 0 ? (
+                        <p className="text-xs text-stone-400 py-4 text-center">No upcoming events found on Google Calendar.</p>
+                      ) : (
+                        googleCalendarEvents.map((evt) => (
+                          <div
+                            key={evt.id}
+                            className="p-3 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#202329] shadow-2xs flex items-center justify-between gap-3 text-xs"
                           >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ========================================================
-              TAB 6: GMAIL INSIGHTS
-             ======================================================== */}
-          {activeTab === 'gmail' && (
-            <div className="space-y-5 max-w-4xl">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-rose-500" />
-                    <span>Gmail Insights</span>
-                  </h3>
-                  <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Extract reservations and deadlines into shared calendar events.
-                  </p>
-                </div>
-
-                {googleUser && (
-                  <button
-                    type="button"
-                    onClick={handleLoadGmail}
-                    disabled={isLoadingGmail}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-300 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingGmail ? 'animate-spin' : ''}`} />
-                    <span>Scan Gmail</span>
-                  </button>
-                )}
-              </div>
-
-              {!googleUser ? (
-                <div className="p-8 text-center border border-dashed border-[#e4ded5] dark:border-[#2d3139] rounded-xl space-y-3">
-                  <Mail className="w-8 h-8 text-rose-400 mx-auto" />
-                  <p className="text-xs text-stone-600 dark:text-stone-400">
-                    Connect Google to extract appointments and reservation confirmations directly from Gmail.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isSigningIn}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer"
-                  >
-                    {isSigningIn ? 'Connecting...' : 'Sign in with Google'}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {isLoadingGmail ? (
-                    <p className="text-xs text-stone-400 py-4 text-center">Scanning recent emails...</p>
-                  ) : gmailInsights.length === 0 ? (
-                    <p className="text-xs text-stone-400 py-4 text-center">No action items found in recent emails.</p>
-                  ) : (
-                    gmailInsights.map((insight) => (
-                      <div
-                        key={insight.id}
-                        className="p-3.5 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#1f2229] shadow-2xs space-y-2 text-xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-stone-900 dark:text-stone-100">{insight.subject}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                            insight.importance === 'high' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-stone-100 text-stone-700'
-                          }`}>
-                            {insight.category}
-                          </span>
-                        </div>
-                        <p className="text-stone-600 dark:text-stone-400">{insight.summary}</p>
-                        {insight.suggestedEvent && (
-                          <div className="pt-2 border-t border-stone-100 dark:border-[#2d3139] flex items-center justify-between">
-                            <span className="text-[11px] text-stone-500">
-                              Suggested: {insight.suggestedEvent.title} on {insight.suggestedEvent.startDate}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onAddEventFromAI && insight.suggestedEvent) {
-                                  onAddEventFromAI({
-                                    ...insight.suggestedEvent,
-                                    assignedTo: 'both',
-                                    tasks: [],
-                                  });
-                                  showAdminFeedback(`Scheduled "${insight.suggestedEvent.title}"!`);
-                                }
-                              }}
-                              className="text-xs font-bold text-purple-600 hover:underline cursor-pointer"
-                            >
-                              + Add to Schedule
-                            </button>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-stone-900 dark:text-stone-100 truncate">{evt.summary}</p>
+                              <p className="text-[11px] text-stone-500 font-mono">
+                                {evt.start?.dateTime ? new Date(evt.start.dateTime).toLocaleString() : evt.start?.date}
+                              </p>
+                            </div>
+                            {evt.htmlLink && (
+                              <a
+                                href={evt.htmlLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer shrink-0"
+                                title="Open in Google Calendar"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    ))
-                  )}
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Column 2: Gmail Insights */}
+                  <div className="space-y-3 p-4 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-stone-50/50 dark:bg-[#1a1d22]">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Gmail Insights</span>
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={handleLoadGmail}
+                        disabled={isLoadingGmail}
+                        className="text-[11px] font-semibold text-rose-600 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isLoadingGmail ? 'animate-spin' : ''}`} />
+                        <span>Scan Emails</span>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {isLoadingGmail ? (
+                        <p className="text-xs text-stone-400 py-4 text-center">Scanning recent emails...</p>
+                      ) : gmailInsights.length === 0 ? (
+                        <p className="text-xs text-stone-400 py-4 text-center">No action items found in recent emails.</p>
+                      ) : (
+                        gmailInsights.map((insight) => (
+                          <div
+                            key={insight.id}
+                            className="p-3 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#202329] shadow-2xs space-y-1.5 text-xs"
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="font-bold text-stone-900 dark:text-stone-100 truncate">{insight.subject}</span>
+                              <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 ${
+                                insight.importance === 'high' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300' : 'bg-stone-100 text-stone-700'
+                              }`}>
+                                {insight.category}
+                              </span>
+                            </div>
+                            <p className="text-stone-600 dark:text-stone-400 text-[11px] line-clamp-2">{insight.summary}</p>
+                            {insight.suggestedEvent && (
+                              <div className="pt-1.5 border-t border-stone-100 dark:border-[#2d3139] flex items-center justify-between gap-2">
+                                <span className="text-[10px] text-stone-500 truncate">
+                                  {insight.suggestedEvent.title} · {insight.suggestedEvent.startDate}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onAddEventFromAI && insight.suggestedEvent) {
+                                      onAddEventFromAI({
+                                        ...insight.suggestedEvent,
+                                        assignedTo: 'both',
+                                        tasks: [],
+                                      });
+                                      showAdminFeedback(`Scheduled "${insight.suggestedEvent.title}"!`);
+                                    }
+                                  }}
+                                  className="text-[11px] font-bold text-purple-600 hover:underline cursor-pointer shrink-0"
+                                >
+                                  + Schedule
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
