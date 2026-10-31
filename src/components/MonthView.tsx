@@ -115,7 +115,20 @@ export const MonthView: React.FC<MonthViewProps> = ({
       <div className="grid grid-cols-7 divide-x divide-y divide-[#e4ded5] dark:divide-[#2d3139]">
         {calendarCells.map((cell) => {
           const isSelected = selectedDate === cell.dateStr;
-          const dayEvents = sortEventsForDay(eventsByDate[cell.dateStr] || [], sortOption, sortDirection);
+          const rawEvents = eventsByDate[cell.dateStr] || [];
+          const dayEvents = sortDirection === 'none'
+            ? [...rawEvents].sort((a, b) => {
+                const timeA = a.startTime?.trim() || '';
+                const timeB = b.startTime?.trim() || '';
+                if (!timeA && timeB) return -1;
+                if (timeA && !timeB) return 1;
+                if (timeA && timeB) {
+                  const diff = timeA.localeCompare(timeB);
+                  if (diff !== 0) return diff;
+                }
+                return a.title.localeCompare(b.title);
+              })
+            : sortEventsForDay(rawEvents, sortOption, sortDirection);
           const stayInfo = stays[cell.dateStr];
 
           return (
@@ -129,7 +142,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
               } ${isSelected ? 'ring-2 ring-stone-900 dark:ring-stone-100 ring-inset z-10 bg-[#f5f0e6] dark:bg-[#262a32]' : ''}`}
             >
               {/* Mobile View: Compact cell with Day number, Stay badge letter, and category dots + event count */}
-              <div className="md:hidden flex flex-col justify-between h-full">
+              <div className="md:hidden flex flex-col justify-between h-full space-y-1">
                 <div className="flex items-center justify-between">
                   <span
                     className={`text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center ${
@@ -217,7 +230,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 </div>
 
                 {/* Events list with category background color matching */}
-                <div className="space-y-1">
+                <div className="flex flex-col space-y-1">
                   {dayEvents.slice(0, 3).map((evt) => {
                     const cfg = CATEGORY_CONFIG[evt.category];
                     const tasks = evt.tasks || [];
@@ -230,11 +243,15 @@ export const MonthView: React.FC<MonthViewProps> = ({
                         key={evt.id}
                         className={`text-[11px] p-1.5 rounded border transition-colors ${cfg.badgeBg} ${cfg.borderColor} hover:border-stone-400 dark:hover:border-stone-500`}
                       >
-                        <div className="flex items-center justify-between gap-1 leading-tight">
-                          <div className="flex items-center gap-1 min-w-0 flex-1">
-                            <span className="text-[10px] shrink-0 leading-none">{evt.emoji || cfg.emoji}</span>
-                            <span className={`font-medium truncate ${cfg.textColor}`}>
-                              {evt.title}
+                        <div
+                          title={evt.title}
+                          className="flex items-center justify-between gap-1 leading-tight"
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-500'}`} />
+                            <span className="text-xs leading-none shrink-0">{evt.emoji || cfg.emoji}</span>
+                            <span className="font-mono text-[10px] font-medium text-stone-700 dark:text-stone-300 truncate">
+                              {evt.startTime ? formatUsTime(evt.startTime) : 'All Day'}
                             </span>
                           </div>
 
@@ -269,7 +286,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
                         {/* Secondary details row (when not collapsed) */}
                         {isEventExpanded && (
-                          <div className="mt-1 space-y-0.5 pt-0.5 border-t border-black/5 dark:border-white/10">
+                          <div className="mt-1 space-y-1 pt-1 border-t border-black/5 dark:border-white/10">
+                            <div className="font-semibold text-xs text-stone-900 dark:text-stone-100 break-words leading-snug">
+                              {evt.title}
+                            </div>
                             <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
                               {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}
                             </div>

@@ -44,7 +44,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onToggleExpandEvent,
   onToggleExpandTasks,
 }) => {
-  const { partner1Label, partner2Label, user1Theme, user2Theme } = useAuth();
+  const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
   const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
   const [localExpandedTaskIds, setLocalExpandedTaskIds] = useState<Record<string, boolean>>({});
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
@@ -134,7 +134,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
         {weekDays.map((col) => {
           const isSelected = selectedDate === col.dateStr;
           const matching = filteredEvents.filter((e) => eventOccursOnDate(e, col.dateStr));
-          const dayEvents = sortEventsForDay(matching, sortOption, sortDirection);
+          const dayEvents = sortDirection === 'none'
+            ? [...matching].sort((a, b) => {
+                const timeA = a.startTime?.trim() || '';
+                const timeB = b.startTime?.trim() || '';
+                if (!timeA && timeB) return -1;
+                if (timeA && !timeB) return 1;
+                if (timeA && timeB) {
+                  const diff = timeA.localeCompare(timeB);
+                  if (diff !== 0) return diff;
+                }
+                return a.title.localeCompare(b.title);
+              })
+            : sortEventsForDay(matching, sortOption, sortDirection);
           const stayInfo = stays[col.dateStr];
 
           return (
@@ -196,15 +208,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         key={evt.id}
                         className={`p-2 rounded-lg border text-xs ${cfg.badgeBg} ${cfg.borderColor} shadow-2xs`}
                       >
-                        <div className="flex items-center justify-between gap-1 leading-tight">
+                        <div
+                          title={evt.title}
+                          className="flex items-center justify-between gap-1 leading-tight"
+                        >
                           <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-500'}`} />
                             <span className="text-xs leading-none shrink-0">{evt.emoji || cfg.emoji}</span>
-                            <span className={`font-semibold truncate leading-tight ${cfg.textColor}`}>
-                              {evt.title}
+                            <span className="font-mono text-[10px] font-medium text-stone-700 dark:text-stone-300 truncate">
+                              {evt.startTime ? formatTimeRange(evt.startTime, evt.endTime) : 'All Day'}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-0.5 shrink-0">
+                          <div className="flex items-center gap-1 shrink-0">
                             {(tasks.length > 0 || onAddTaskToEvent) && (
                               <button
                                 type="button"
@@ -219,6 +235,15 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                 {isTasksExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
                               </button>
                             )}
+                            <span className={`text-[9px] font-bold px-1 py-0.2 rounded border ${
+                              evt.assignedTo === 'her'
+                                ? user1Theme.badgeBg
+                                : evt.assignedTo === 'him'
+                                ? user2Theme.badgeBg
+                                : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                            }`}>
+                              {evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`}
+                            </span>
                             <button
                               type="button"
                               onClick={(e) => {
@@ -230,25 +255,30 @@ export const WeekView: React.FC<WeekViewProps> = ({
                             >
                               {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                             </button>
-                            {onDeleteEvent && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDeleteEvent(evt.id);
-                                }}
-                                className="p-0.5 rounded text-stone-400 hover:text-rose-500 cursor-pointer transition-colors"
-                                title="Delete event"
-                              >
-                                <Trash2 className="w-2.5 h-2.5" />
-                              </button>
-                            )}
                           </div>
                         </div>
 
                         {/* Secondary details row (when not collapsed) */}
                         {isEventExpanded && (
-                          <div className="mt-1 space-y-0.5 pt-1 border-t border-black/5 dark:border-white/10">
+                          <div className="mt-1 space-y-1 pt-1 border-t border-black/5 dark:border-white/10">
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="font-semibold text-xs text-stone-900 dark:text-stone-100 break-words leading-snug">
+                                {evt.title}
+                              </div>
+                              {onDeleteEvent && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteEvent(evt.id);
+                                  }}
+                                  className="p-0.5 rounded text-stone-400 hover:text-rose-500 cursor-pointer transition-colors shrink-0"
+                                  title="Delete event"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
                             <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
                               {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}
                             </div>
