@@ -454,7 +454,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
 
       {/* Secondary Bar: Dynamic Navigation (Day/Week/Month/All Time) & Filter & Sort toggle */}
       {viewMode !== 'admin' && (
-        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-3 text-sm">
+        <div className="w-full max-w-[1800px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 text-sm">
           
           {/* Top-left Navigation: Stays consistent, functions based on user view (Month, Week, Day, All Time) */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-wrap">
@@ -490,7 +490,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             </span>
 
             {/* 3-Position Partner Slider: to the right of the date using initials for both partners */}
-            <div className="flex items-center gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-0.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs ml-1 sm:ml-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-1.5 sm:px-2 py-0.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs ml-0.5 sm:ml-2 shrink-0">
               <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">View:</span>
               <button
                 type="button"

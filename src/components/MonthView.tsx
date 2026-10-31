@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Home, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import React from 'react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
-import { CATEGORY_CONFIG, getMonthMatrix, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
+import { getMonthMatrix, sortEventsForDay, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
 
 interface MonthViewProps {
@@ -37,44 +36,12 @@ export const MonthView: React.FC<MonthViewProps> = ({
   stays,
   selectedDate,
   onSelectDate,
-  onToggleTask,
   categoryFilter,
   partnerFilter,
   sortOption = 'time',
   sortDirection = 'none',
-  expandedEventIds: propsExpandedEventIds,
-  expandedTaskSections: propsExpandedTaskSections,
-  onToggleExpandEvent,
-  onToggleExpandTasks,
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
-  const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
-  const [localExpandedTaskIds, setLocalExpandedTaskIds] = useState<Record<string, boolean>>({});
-
-  const currentExpandedEventIds = propsExpandedEventIds ?? localExpandedEventIds;
-  const currentExpandedTaskIds = propsExpandedTaskSections ?? localExpandedTaskIds;
-
-  const toggleEvent = (eventId: string) => {
-    if (onToggleExpandEvent) {
-      onToggleExpandEvent(eventId);
-    } else {
-      setLocalExpandedEventIds((prev) => ({
-        ...prev,
-        [eventId]: !prev[eventId],
-      }));
-    }
-  };
-
-  const toggleTasks = (eventId: string) => {
-    if (onToggleExpandTasks) {
-      onToggleExpandTasks(eventId);
-    } else {
-      setLocalExpandedTaskIds((prev) => ({
-        ...prev,
-        [eventId]: !prev[eventId],
-      }));
-    }
-  };
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -135,215 +102,55 @@ export const MonthView: React.FC<MonthViewProps> = ({
             <div
               key={cell.dateStr}
               onClick={() => onSelectDate(cell.dateStr)}
-              className={`min-h-[60px] md:min-h-[135px] lg:min-h-[160px] xl:min-h-[180px] p-1 md:p-2 sm:p-2.5 transition-all cursor-pointer relative group flex flex-col justify-between ${
+              className={`min-h-[60px] sm:min-h-[84px] md:min-h-[100px] p-1.5 sm:p-2 transition-all cursor-pointer relative group flex flex-col justify-between ${
                 !cell.isCurrentMonth
                   ? 'bg-[#f3f0e8]/40 dark:bg-[#16181c]/50 text-stone-400 dark:text-stone-600'
                   : 'bg-[#fcfaf6] dark:bg-[#1d2026] hover:bg-[#f6f2ea] dark:hover:bg-[#23272e] text-stone-800 dark:text-stone-200'
               } ${isSelected ? 'ring-2 ring-stone-900 dark:ring-stone-100 ring-inset z-10 bg-[#f5f0e6] dark:bg-[#262a32]' : ''}`}
             >
-              {/* Mobile View: Compact cell with Day number, Stay badge letter, and category dots + event count */}
-              <div className="md:hidden flex flex-col justify-between h-full space-y-1">
-                <div className="flex items-center justify-between">
+              {/* Top Row: Day number (left) + colored Stay Initial badge (right) */}
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-xs sm:text-sm md:text-base font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center transition-colors ${
+                    cell.isToday
+                      ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold'
+                      : cell.isCurrentMonth
+                      ? 'text-stone-800 dark:text-stone-200 group-hover:text-stone-950 dark:group-hover:text-white'
+                      : 'text-stone-400 dark:text-stone-600'
+                  }`}
+                >
+                  {cell.dayNum}
+                </span>
+
+                {stayInfo && cell.isCurrentMonth && (
                   <span
-                    className={`text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center ${
-                      cell.isToday
-                        ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 font-bold'
-                        : cell.isCurrentMonth
-                        ? 'text-stone-800 dark:text-stone-200'
-                        : 'text-stone-400 dark:text-stone-600'
+                    title={`Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
+                    className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-[9px] sm:text-[11px] md:text-xs font-bold rounded flex items-center justify-center uppercase shadow-2xs ${
+                      stayInfo.stayAt === 'our_home'
+                        ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 border border-stone-800'
+                        : stayInfo.stayAt === 'her_home'
+                        ? user1Theme.badgeBg
+                        : user2Theme.badgeBg
                     }`}
                   >
-                    {cell.dayNum}
+                    {stayInfo.stayAt === 'our_home' ? `${partner1Initial}&${partner2Initial}` : stayInfo.stayAt === 'her_home' ? partner1Initial : partner2Initial}
                   </span>
-                  {stayInfo && cell.isCurrentMonth && (
-                    <span
-                      title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
-                      className={`w-4 h-4 rounded-xs text-[9px] font-bold flex items-center justify-center uppercase shadow-2xs ${
-                        stayInfo.stayAt === 'our_home'
-                          ? 'bg-black text-white dark:bg-stone-900 dark:text-white'
-                          : stayInfo.stayAt === 'her_home'
-                          ? user1Theme.badgeBg
-                          : user2Theme.badgeBg
-                      }`}
-                    >
-                      {stayInfo.stayAt === 'our_home' ? 'H' : stayInfo.stayAt === 'her_home' ? partner1Initial : partner2Initial}
-                    </span>
-                  )}
-                </div>
-
-                {/* Category dots + event count badge */}
-                {cell.isCurrentMonth && dayEvents.length > 0 && (
-                  <div className="mt-1 flex items-center justify-between gap-0.5">
-                    <div className="flex items-center gap-0.5 overflow-hidden">
-                      {dayEvents.slice(0, 3).map((evt) => {
-                        const cfg = CATEGORY_CONFIG[evt.category];
-                        return (
-                          <span
-                            key={evt.id}
-                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-500'}`}
-                            title={evt.title}
-                          />
-                        );
-                      })}
-                    </div>
-                    <span className="text-[9px] font-mono px-1 py-0.2 rounded-xs bg-stone-200/80 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold leading-none">
-                      {dayEvents.length}
-                    </span>
-                  </div>
                 )}
               </div>
 
-              {/* Desktop View: Full rich expandable event pills with inline tasks */}
-              <div className="hidden md:block">
-                {/* Day Header Row: Day number + Stay location indicator ("Hers" / "His" / "Home") */}
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1">
-                    {/* Fixed hover issue: in night view, day number stays bright white on hover */}
-                    <span
-                      className={`text-xs sm:text-sm font-semibold rounded-full w-6 h-6 flex items-center justify-center transition-colors ${
-                        cell.isToday
-                          ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold'
-                          : cell.isCurrentMonth
-                          ? 'text-stone-800 dark:text-stone-200 group-hover:text-stone-950 dark:group-hover:text-white'
-                          : 'text-stone-400 dark:text-stone-600'
-                      }`}
-                    >
-                      {cell.dayNum}
-                    </span>
-                  </div>
-
-                  {/* Overnight indicator: Home icon and color coding background without text */}
-                  {stayInfo && cell.isCurrentMonth && (
-                    <div
-                      title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
-                      className={`inline-flex items-center justify-center p-1 rounded transition-colors shadow-2xs ${
-                        stayInfo.stayAt === 'our_home'
-                          ? 'bg-black text-white dark:bg-stone-900 dark:text-white border border-stone-800'
-                          : stayInfo.stayAt === 'her_home'
-                          ? user1Theme.badgeBg
-                          : user2Theme.badgeBg
-                      }`}
-                    >
-                      <Home className="w-2.5 h-2.5" />
-                    </div>
-                  )}
+              {/* Bottom Row: Clean event count badge (no dots or emojis) */}
+              {cell.isCurrentMonth && dayEvents.length > 0 && (
+                <div className="mt-auto pt-1 flex items-center justify-end">
+                  {/* Mobile compact count pill */}
+                  <span className="sm:hidden text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-stone-200/90 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
+                    {dayEvents.length}
+                  </span>
+                  {/* Tablet / Desktop larger count pill */}
+                  <span className="hidden sm:inline-flex items-center text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-stone-200/80 dark:bg-stone-800/90 text-stone-700 dark:text-stone-300 font-sans">
+                    {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'}
+                  </span>
                 </div>
-
-                {/* Events list with category background color matching */}
-                <div className="flex flex-col space-y-1">
-                  {dayEvents.slice(0, 3).map((evt) => {
-                    const cfg = CATEGORY_CONFIG[evt.category];
-                    const tasks = evt.tasks || [];
-                    const completedTasks = tasks.filter((t) => t.completed).length;
-                    const isEventExpanded = currentExpandedEventIds[evt.id] === true;
-                    const isTasksExpanded = currentExpandedTaskIds[evt.id] === true;
-
-                    return (
-                      <div
-                        key={evt.id}
-                        className={`text-[11px] p-1.5 rounded border transition-colors ${cfg.badgeBg} ${cfg.borderColor} hover:border-stone-400 dark:hover:border-stone-500`}
-                      >
-                        <div
-                          title={evt.title}
-                          className="flex items-center justify-between gap-1 leading-tight"
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-500'}`} />
-                            <span className="text-xs leading-none shrink-0">{evt.emoji || cfg.emoji}</span>
-                            <span className="font-mono text-[10px] font-medium text-stone-700 dark:text-stone-300 truncate">
-                              {evt.startTime ? formatUsTime(evt.startTime) : 'All Day'}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            {tasks.length > 0 && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleTasks(evt.id);
-                                }}
-                                className="font-sans text-[9px] px-1 py-0.2 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-0.5 cursor-pointer transition-colors"
-                                title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
-                              >
-                                <span>{completedTasks}/{tasks.length}</span>
-                                {isTasksExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleEvent(evt.id);
-                              }}
-                              className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
-                              title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
-                            >
-                              {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Secondary details row (when not collapsed) */}
-                        {isEventExpanded && (
-                          <div className="mt-1 space-y-1 pt-1 border-t border-black/5 dark:border-white/10">
-                            <div className="font-semibold text-xs text-stone-900 dark:text-stone-100 break-words leading-snug">
-                              {evt.title}
-                            </div>
-                            <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
-                              {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}
-                            </div>
-                            {evt.locationName && (
-                              <div className="text-[9.5px] text-stone-600 dark:text-stone-400 truncate font-sans">
-                                {evt.locationName}
-                              </div>
-                            )}
-                            {evt.notes && (
-                              <div className="text-[9px] text-stone-500 dark:text-stone-400 truncate font-sans italic">
-                                {evt.notes}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Independent Checklist Tasks Expansion */}
-                        {isTasksExpanded && tasks.length > 0 && (
-                          <div className="mt-1 pt-1 border-t border-black/10 dark:border-white/10 space-y-0.5">
-                            {tasks.map((task) => (
-                              <div
-                                key={task.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (onToggleTask) {
-                                    onToggleTask(evt.id, task.id, !task.completed);
-                                  }
-                                }}
-                                className="flex items-center gap-1.5 text-[10px] cursor-pointer hover:opacity-80 select-none py-0.5"
-                                title={onToggleTask ? 'Click to toggle completion' : task.title}
-                              >
-                                <span className={`w-2.5 h-2.5 rounded-xs border flex items-center justify-center shrink-0 ${
-                                  task.completed ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-stone-400 dark:border-stone-500 bg-white dark:bg-black/40'
-                                }`}>
-                                  {task.completed && <Check className="w-2 h-2 stroke-[3]" />}
-                                </span>
-                                <span className={`truncate text-[9.5px] ${task.completed ? 'line-through opacity-60 text-stone-500' : 'text-stone-800 dark:text-stone-200'}`}>
-                                  {task.title}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-
-                  {dayEvents.length > 3 && (
-                    <div className="text-[10px] text-stone-500 dark:text-stone-400 font-medium px-1">
-                      + {dayEvents.length - 3} more
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           );
         })}

@@ -177,19 +177,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Overnight indicator: Home icon and color coding background without text */}
+                  {/* Overnight indicator: colored Partner Initial badge */}
                   {stayInfo && (
                     <div
-                      title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
-                      className={`inline-flex items-center justify-center p-1 rounded transition-colors shadow-2xs ${
+                      title={`Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}`}
+                      className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold transition-colors shadow-2xs ${
                         stayInfo.stayAt === 'our_home'
-                          ? 'bg-black text-white dark:bg-stone-900 dark:text-white border border-stone-800'
+                          ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950 border border-stone-800'
                           : stayInfo.stayAt === 'her_home'
                           ? user1Theme.badgeBg
                           : user2Theme.badgeBg
                       }`}
                     >
-                      <Home className="w-2.5 h-2.5" />
+                      {stayInfo.stayAt === 'our_home' ? `${partner1Initial}&${partner2Initial}` : stayInfo.stayAt === 'her_home' ? partner1Initial : partner2Initial}
                     </div>
                   )}
                 </div>
@@ -202,59 +202,71 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     const completedCount = tasks.filter((t) => t.completed).length;
                     const isEventExpanded = currentExpandedEventIds[evt.id] === true;
                     const isTasksExpanded = currentExpandedTaskIds[evt.id] === true;
+                    const partnerBadge = evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`;
 
                     return (
                       <div
                         key={evt.id}
-                        className={`p-2 rounded-lg border text-xs ${cfg.badgeBg} ${cfg.borderColor} shadow-2xs`}
+                        className={`p-2 rounded-lg border text-xs ${cfg.badgeBg} ${cfg.borderColor} shadow-2xs space-y-1.5`}
                       >
+                        {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                         <div
-                          title={evt.title}
-                          className="flex items-center justify-between gap-1 leading-tight"
+                          onClick={() => toggleEvent(evt.id)}
+                          className="cursor-pointer select-none space-y-1.5"
                         >
-                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                            <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-500'}`} />
-                            <span className="text-xs leading-none shrink-0">{evt.emoji || cfg.emoji}</span>
-                            <span className="font-mono text-[10px] font-medium text-stone-700 dark:text-stone-300 truncate">
-                              {evt.startTime ? formatTimeRange(evt.startTime, evt.endTime) : 'All Day'}
-                            </span>
+                          {/* Row 1: Full-width untruncated title */}
+                          <div className="w-full">
+                            <h4 className={`text-xs sm:text-sm font-semibold leading-snug break-words ${cfg.textColor}`}>
+                              {evt.title}
+                            </h4>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0">
-                            {(tasks.length > 0 || onAddTaskToEvent) && (
+                          {/* Row 2: Secondary info & controls */}
+                          <div className="flex items-center justify-between gap-1 leading-tight pt-0.5">
+                            {/* Left: Time + Partner Badge */}
+                            <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                              <span className="font-mono text-[10px] font-medium text-stone-700 dark:text-stone-300">
+                                {evt.startTime ? formatTimeRange(evt.startTime, evt.endTime) : 'All Day'}
+                              </span>
+                              <span className={`text-[9px] font-bold px-1 py-0.2 rounded border ${
+                                evt.assignedTo === 'her'
+                                  ? user1Theme.badgeBg
+                                  : evt.assignedTo === 'him'
+                                  ? user2Theme.badgeBg
+                                  : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                              }`}>
+                                {partnerBadge}
+                              </span>
+                            </div>
+
+                            {/* Right: Tasks Button + Chevron */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              {(tasks.length > 0 || onAddTaskToEvent) && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTasks(evt.id);
+                                  }}
+                                  className="font-sans text-[9px] px-1.5 py-0.2 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-0.5 cursor-pointer transition-colors"
+                                  title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
+                                >
+                                  <span>{completedCount}/{tasks.length}</span>
+                                  {isTasksExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleTasks(evt.id);
+                                  toggleEvent(evt.id);
                                 }}
-                                className="font-sans text-[9px] px-1.5 py-0.2 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-0.5 cursor-pointer transition-colors"
-                                title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
+                                className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
+                                title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
                               >
-                                <span>{completedCount}/{tasks.length}</span>
-                                {isTasksExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
+                                {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
                               </button>
-                            )}
-                            <span className={`text-[9px] font-bold px-1 py-0.2 rounded border ${
-                              evt.assignedTo === 'her'
-                                ? user1Theme.badgeBg
-                                : evt.assignedTo === 'him'
-                                ? user2Theme.badgeBg
-                                : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
-                            }`}>
-                              {evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleEvent(evt.id);
-                              }}
-                              className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
-                              title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
-                            >
-                              {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
-                            </button>
+                            </div>
                           </div>
                         </div>
 

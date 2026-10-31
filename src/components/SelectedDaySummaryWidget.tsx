@@ -79,14 +79,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
     user2Theme 
   } = useAuth();
   
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem(COLLAPSED_STORAGE_KEY) === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
-
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [tempUnit, setTempUnit] = useState<'F' | 'C'>('F');
   const [currentLocation, setCurrentLocation] = useState<WeatherLocation>(getSavedLocation);
   const [weatherReport, setWeatherReport] = useState<LiveWeatherReport | null>(null);
@@ -100,11 +93,6 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(COLLAPSED_STORAGE_KEY, String(isCollapsed));
-    } catch (e) {}
-  }, [isCollapsed]);
 
   // Load weather report on mount and when location changes
   useEffect(() => {
@@ -315,23 +303,21 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
       aria-label="Selected Day Summary Widget"
       className="my-1.5 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white/95 dark:bg-[#1a1d22]/95 shadow-2xs transition-all duration-200 overflow-hidden"
     >
-      {/* Top Header / Bar */}
-      <div className={`bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] ${!isCollapsed ? 'border-b border-[#e6e1d8] dark:border-[#2d3139]' : ''} flex flex-wrap items-center justify-between gap-2.5 px-3 py-2 sm:px-4 sm:py-2.5 transition-all`}>
+      {/* Top Header / Bar - Single Un-squished Horizontal Row */}
+      <div className={`bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] ${isDropdownOpen ? 'border-b border-[#e6e1d8] dark:border-[#2d3139]' : ''} flex items-center justify-between gap-2 px-3 py-2 flex-nowrap transition-all`}>
         
-        {/* Left: Day Title (Day of Week only) & Overnight Stay Badges + Fridge Photos button */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <h2 className="text-sm font-bold text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-1.5">
-              <span className="font-serif capitalize">{dayOfWeekName}</span>
-              {isToday && (
-                <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
-                  Today
-                </span>
-              )}
-            </h2>
-          </div>
+        {/* Left side: Day name, Stay badge, & Fridge Photos button */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-1.5 truncate">
+            <span className="font-serif capitalize truncate">{dayOfWeekName}</span>
+            {isToday && (
+              <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs shrink-0">
+                Today
+              </span>
+            )}
+          </h2>
 
-          {/* Interactive Overnight Stay badge */}
+          {/* Interactive Overnight Stay badge: Stay: K / Stay: Katherine, Stay: D / Stay: Dustin, or Stay: K&D */}
           {stayInfo && (
             <button 
               type="button"
@@ -345,22 +331,20 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                     : 'her_home';
                 onUpdateStay(selectedDate, nextStay);
               }}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs transition-all cursor-pointer hover:opacity-90 active:scale-95 ${
+              className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] font-semibold border shadow-2xs transition-all cursor-pointer hover:opacity-90 active:scale-95 whitespace-nowrap shrink-0 ${
                 stayInfo.stayAt === 'our_home'
                   ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
                   : stayInfo.stayAt === 'her_home'
                   ? user1Theme.badgeBg
                   : user2Theme.badgeBg
               }`}
-              title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'Our Home' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label} (Click to toggle)`}
+              title={`Stay: ${stayInfo.stayAt === 'our_home' ? 'K&D' : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label} (Click to toggle)`}
             >
-              <Home className="w-3 h-3" />
-              <span>
-                {stayInfo.stayAt === 'our_home'
-                  ? 'Stay: Home'
-                  : stayInfo.stayAt === 'her_home'
-                  ? `Stay: ${partner1Label}`
-                  : `Stay: ${partner2Label}`}
+              <span className="sm:hidden">
+                {stayInfo.stayAt === 'our_home' ? 'Stay: K&D' : stayInfo.stayAt === 'her_home' ? `Stay: ${partner1Initial}` : `Stay: ${partner2Initial}`}
+              </span>
+              <span className="hidden sm:inline">
+                {stayInfo.stayAt === 'our_home' ? 'Stay: K&D' : stayInfo.stayAt === 'her_home' ? `Stay: ${partner1Label}` : `Stay: ${partner2Label}`}
               </span>
             </button>
           )}
@@ -384,79 +368,26 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
           )}
         </div>
 
-        {/* Right: Compact stats double-spine (only when not expanded), °F/°C toggle, & Collapse toggle button */}
-        <div className="flex items-center gap-2">
-          {/* Quick Snapshot Double-Spine Cards (visible when NOT expanded) */}
-          {isCollapsed && (
-            <div 
-              onClick={() => setIsCollapsed(false)}
-              className="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300 cursor-pointer"
-              title="Click to expand weather and astronomy details"
-            >
-              {/* Spine 1: Moon */}
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-[#252830] font-medium border border-stone-200 dark:border-[#353943] hover:bg-stone-200 dark:hover:bg-[#2e323c] transition-colors">
-                <span className="text-sm leading-none">{moon.emoji}</span>
-                <span className="hidden sm:inline font-sans">{moon.name} ({moon.illumination}%)</span>
-              </span>
-
-              {/* Spine 2: Radar Weather */}
-              {isWithinHorizon && dayForecast ? (
-                <span 
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-900/60 hover:bg-amber-100 transition-colors"
-                  title={`Live Radar for ${currentLocation.name}: High ${formatTemp(dayForecast.highTemp)}, Low ${formatTemp(dayForecast.lowTemp)}`}
-                >
-                  {renderWeatherIcon(dayForecast.hourly[1]?.iconName || 'Sun', 'w-3 h-3')}
-                  <span>{formatTemp(dayForecast.highTemp)} / {formatTemp(dayForecast.lowTemp)}</span>
-                </span>
-              ) : (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-[#252830] text-[11px] border border-stone-200 dark:border-[#353943]">
-                  <span>Weather</span>
-                </span>
-              )}
-
-              {/* Spine 3: Day Note Pill (if notes exist) */}
-              {stayInfo?.notes && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsCollapsed(false);
-                  }}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50/90 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 font-medium text-[11px] border border-amber-200 dark:border-amber-900/60 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors cursor-pointer"
-                  title={`Day Note: ${stayInfo.notes} (Click to view)`}
-                >
-                  <span>📝 Day Note</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* °F / °C Switcher */}
+        {/* Right side: Single clean dropdown button combining temperature, note marker, and chevron */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
-            onClick={() => setTempUnit((prev) => (prev === 'F' ? 'C' : 'F'))}
-            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md border border-[#e2ddd5] dark:border-[#353943] bg-stone-100 dark:bg-[#252830] text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] cursor-pointer"
-            title="Toggle Temperature Unit (°F / °C)"
+            onClick={() => setIsDropdownOpen((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-200 whitespace-nowrap shrink-0 cursor-pointer hover:bg-stone-100 dark:hover:bg-[#2a2d36] transition-colors"
           >
-            °{tempUnit}
-          </button>
-
-          {/* Expand / Collapse toggle */}
-          <button
-            type="button"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#252830] text-xs font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#2e323c] cursor-pointer transition-colors"
-            title={isCollapsed ? 'Expand Weather & Astronomy Cards' : 'Collapse Top Area'}
-            aria-expanded={!isCollapsed}
-          >
-            <span className="text-[11px]">{isCollapsed ? 'Details' : 'Close'}</span>
-            {isCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+            <span>
+              {dayForecast ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}` : 'Weather & Info'}
+            </span>
+            {stayInfo?.notes && (
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">• Note</span>
+            )}
+            {isDropdownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
       {/* Main Widget Body (Expanded) - 3 tightened columns */}
-      {!isCollapsed && (
+      {isDropdownOpen && (
         <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in duration-200">
 
           {/* Card 2: Phrase of the Day / Motivational Quote */}
@@ -552,13 +483,23 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                   <Thermometer className="w-3 h-3 text-amber-500" />
                   <span>Course of Day Weather</span>
                 </span>
-                <span className="text-xs font-bold text-stone-900 dark:text-stone-100">
-                  {isWithinHorizon && dayForecast
-                    ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}`
-                    : diffDays > 14
-                    ? 'Beyond 14d radar'
-                    : 'Past Date'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTempUnit((prev) => (prev === 'F' ? 'C' : 'F'))}
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#252830] text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#2e323c] cursor-pointer"
+                    title="Toggle Temperature Unit (°F / °C)"
+                  >
+                    °{tempUnit}
+                  </button>
+                  <span className="text-xs font-bold text-stone-900 dark:text-stone-100">
+                    {isWithinHorizon && dayForecast
+                      ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}`
+                      : diffDays > 14
+                      ? 'Beyond 14d radar'
+                      : 'Past Date'}
+                  </span>
+                </div>
               </div>
 
               {/* Status Badge: Open-Meteo Live API */}
@@ -670,8 +611,8 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
         </div>
       )}
 
-      {/* Notes / Stay Preview footer bar only when expanded */}
-      {!isCollapsed && stayInfo?.notes && (
+      {/* Notes / Stay Preview footer bar only when dropdown is open */}
+      {isDropdownOpen && stayInfo?.notes && (
         <div className="px-3 py-1.5 bg-stone-100/60 dark:bg-[#202329]/60 border-t border-stone-200 dark:border-[#2d3139] text-[11px] text-stone-700 dark:text-stone-300 flex items-center gap-2">
           <span className="font-semibold text-stone-800 dark:text-stone-200 shrink-0">Day Notes:</span>
           <span className="truncate italic">{stayInfo.notes}</span>

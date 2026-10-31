@@ -463,7 +463,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                     title={`${count} ${meta.label}`}
                     className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1 ${meta.badgeBg} ${meta.borderColor} ${meta.textColor}`}
                   >
-                    <span>{meta.emoji}</span>
+                    <span>{meta.shortLabel}</span>
                     <span>{count}</span>
                   </span>
                 );
@@ -485,7 +485,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
 
                 // Formatted partner label
                 const partnerLabel = evt.assignedTo === 'her' ? partner1Label : evt.assignedTo === 'him' ? partner2Label : 'Both';
-                const eventEmoji = evt.emoji || cfg.emoji;
                 const isExpanded = currentExpandedEventIds[evt.id] === true;
                 const isTasksExpanded = currentExpandedTaskSections[evt.id] === true;
                 const partner1Initial = partner1Label ? partner1Label[0].toUpperCase() : 'K';
@@ -497,50 +496,58 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                     key={evt.id}
                     className={`rounded-xl border border-l-4 transition-all shadow-2xs overflow-hidden ${cfg.badgeBg} ${cfg.borderColor}`}
                   >
-                    {/* Event Header with category colors - Streamlined when collapsed */}
+                    {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                     <div
                       onClick={() => toggleEventExpanded(evt.id)}
-                      className="p-3 flex items-center justify-between gap-2 cursor-pointer select-none hover:opacity-95 transition-opacity"
+                      className="p-3 cursor-pointer select-none hover:opacity-95 transition-opacity space-y-2"
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
-                        <span className="text-sm shrink-0 leading-none">{eventEmoji}</span>
-                        <h4 className={`text-sm font-bold truncate ${cfg.textColor}`}>
+                      {/* Row 1: Full-width untruncated title */}
+                      <div className="w-full">
+                        <h3 className={`text-xs sm:text-sm md:text-base font-semibold leading-snug break-words ${cfg.textColor}`}>
                           {evt.title}
-                        </h4>
-                        {evt.startTime && (
-                          <span className="font-mono text-[11px] text-stone-500 dark:text-stone-400 flex items-center gap-1 shrink-0">
-                            <Clock className="w-3 h-3" />
-                            <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>
-                          </span>
-                        )}
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
-                          evt.assignedTo === 'her'
-                            ? user1Theme.badgeBg
-                            : evt.assignedTo === 'him'
-                            ? user2Theme.badgeBg
-                            : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
-                        }`}>
-                          {initialBadge}
-                        </span>
+                        </h3>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {tasks.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleTaskSection(evt.id);
-                            }}
-                            className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors"
-                            title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
-                          >
-                            <span>{completedCount}/{tasks.length}</span>
-                            {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
-                          </button>
-                        )}
-                        <div className="text-stone-400 p-0.5">
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      {/* Row 2: Controls & secondary metadata */}
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        {/* Left: Time + Partner Badge */}
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          {evt.startTime && (
+                            <span className="font-mono text-[11px] sm:text-xs text-stone-600 dark:text-stone-300 flex items-center gap-1 shrink-0 font-medium">
+                              <Clock className="w-3 h-3 text-stone-400" />
+                              <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>
+                            </span>
+                          )}
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                            evt.assignedTo === 'her'
+                              ? user1Theme.badgeBg
+                              : evt.assignedTo === 'him'
+                              ? user2Theme.badgeBg
+                              : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                          }`}>
+                            {initialBadge}
+                          </span>
+                        </div>
+
+                        {/* Right: Tasks Count Button + Expand Chevron */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {tasks.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleTaskSection(evt.id);
+                              }}
+                              className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors border border-black/5 dark:border-white/5"
+                              title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
+                            >
+                              <span>{completedCount}/{tasks.length}</span>
+                              {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                            </button>
+                          )}
+                          <div className="text-stone-400 p-0.5">
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </div>
                         </div>
                       </div>
                     </div>

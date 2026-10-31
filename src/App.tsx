@@ -631,7 +631,7 @@ function CalendarApp() {
   }, [currentHub?.id]);
 
   const handleUpdateStay = (date: string, stay: StayLocation) => {
-    const label = stay === 'her_home' ? 'Hers' : stay === 'his_home' ? 'His' : stay === 'our_home' ? 'Home' : 'Away';
+    const label = stay === 'her_home' ? 'Katherine' : stay === 'his_home' ? 'Dustin' : stay === 'our_home' ? 'K&D' : 'Away';
     const updatedStay: DayStayInfo = {
       date,
       stayAt: stay,
@@ -651,7 +651,7 @@ function CalendarApp() {
     const updatedStay: DayStayInfo = {
       date,
       stayAt: stays[date]?.stayAt || 'her_home',
-      label: stays[date]?.label || 'Hers',
+      label: stays[date]?.label || 'Katherine',
       notes,
     };
     setStays((prev) => ({

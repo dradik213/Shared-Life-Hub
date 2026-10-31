@@ -221,9 +221,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     coupleViewLabel = `${userPronouns.shortLabel} & Partner`;
   }
 
-  // Consistent partner labels & initials: Katherine is 'K' ('Hers'), Dustin is 'D' ('His')
-  const partner1Label = 'Hers';
-  const partner2Label = 'His';
+  // Consistent partner labels & initials: Katherine is 'Katherine' / 'K', Dustin is 'Dustin' / 'D'
+  const partner1Label = femaleUser?.name || 'Katherine';
+  const partner2Label = maleUser?.name || 'Dustin';
   const partner1DisplayName = femaleUser?.name || 'Katherine';
   const partner2DisplayName = maleUser?.name || 'Dustin';
   const partner1Initial = femaleUser?.name?.trim().charAt(0).toUpperCase() || 'K';
