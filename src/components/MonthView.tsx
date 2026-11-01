@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection } from '../types/calendar';
-import { getMonthMatrix, sortEventsForDay, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
+import { CATEGORY_CONFIG, getMonthMatrix, sortEventsForDay, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
 
 interface MonthViewProps {
@@ -143,17 +143,19 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 </span>
               </div>
 
-              {/* Bottom Row: Clean event count badge (no dots or emojis) */}
+              {/* Bottom Row: Chronological Colored Category Dots */}
               {cell.isCurrentMonth && dayEvents.length > 0 && (
-                <div className="mt-auto pt-1 flex items-center justify-end">
-                  {/* Mobile compact count pill */}
-                  <span className="sm:hidden text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-stone-200/90 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
-                    {dayEvents.length}
-                  </span>
-                  {/* Tablet / Desktop larger count pill */}
-                  <span className="hidden sm:inline-flex items-center text-[11px] sm:text-xs font-medium px-2 py-0.5 rounded-full bg-stone-200/80 dark:bg-stone-800/90 text-stone-700 dark:text-stone-300 font-sans">
-                    {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'}
-                  </span>
+                <div className="mt-auto pt-1 flex items-center justify-center sm:justify-start gap-1 flex-wrap">
+                  {dayEvents.map((evt) => {
+                    const cfg = CATEGORY_CONFIG[evt.category] || CATEGORY_CONFIG.other;
+                    return (
+                      <span
+                        key={evt.id}
+                        title={`${evt.startTime ? `${evt.startTime} · ` : ''}${evt.title}`}
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-400'}`}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

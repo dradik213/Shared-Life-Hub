@@ -53,11 +53,11 @@ export interface LiveWeatherReport {
 }
 
 export const DEFAULT_LOCATION: WeatherLocation = {
-  name: 'Austin',
-  admin1: 'Texas',
+  name: 'Omaha',
+  admin1: 'Nebraska',
   country: 'United States',
-  latitude: 30.2672,
-  longitude: -97.7431,
+  latitude: 41.2565,
+  longitude: -95.9345,
 };
 
 const STORAGE_LOCATION_KEY = 'sharedlifehub_weather_location';
@@ -68,7 +68,12 @@ export function getSavedLocation(): WeatherLocation {
   try {
     const raw = localStorage.getItem(STORAGE_LOCATION_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed && (parsed.name === 'Austin' || !parsed.name)) {
+        saveLocation(DEFAULT_LOCATION);
+        return DEFAULT_LOCATION;
+      }
+      return parsed;
     }
   } catch (e) {
     // ignore

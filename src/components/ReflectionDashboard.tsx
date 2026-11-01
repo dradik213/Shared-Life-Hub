@@ -15,6 +15,7 @@ import {
 import { CalendarEvent, DayStayInfo } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, formatDateToYMD } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
+import { TaskToggleSlider } from './TaskToggleSlider';
 
 interface ReflectionDashboardProps {
   events: CalendarEvent[];
@@ -27,6 +28,7 @@ interface ReflectionDashboardProps {
   onNext: () => void;
   onToday: () => void;
   onNavigateToDay: (dateStr: string) => void;
+  onToggleTask?: (eventId: string, taskId: string, completed: boolean) => void;
 }
 
 export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
@@ -40,6 +42,7 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
   onNext,
   onToday,
   onNavigateToDay,
+  onToggleTask,
 }) => {
   const { partner1Label, partner2Label, partner1DisplayName, partner2DisplayName } = useAuth();
   const [aiInsights, setAiInsights] = useState<string | null>(null);
@@ -179,16 +182,27 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
   const staysWithNotes = stayEntries.filter((s) => s.notes && s.notes.trim().length > 0);
 
   // Unfinished individual tasks
-  const incompleteTasks: Array<{ title: string; eventTitle: string; date: string; assignedTo?: string }> = [];
+  const incompleteTasks: Array<{
+    taskId: string;
+    eventId: string;
+    title: string;
+    eventTitle: string;
+    date: string;
+    assignedTo?: string;
+    completed: boolean;
+  }> = [];
   filteredEvents.forEach((e) => {
     if (e.tasks) {
       e.tasks.forEach((t) => {
         if (!t.completed) {
           incompleteTasks.push({
+            taskId: t.id,
+            eventId: e.id,
             title: t.title,
             eventTitle: e.title,
             date: e.startDate,
             assignedTo: t.assignedTo || e.assignedTo,
+            completed: t.completed,
           });
         }
       });
@@ -501,19 +515,28 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
               </div>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto">
-                {incompleteTasks.map((t, i) => (
+                {incompleteTasks.map((t) => (
                   <div
-                    key={i}
+                    key={`${t.eventId}-${t.taskId}`}
                     className="p-3 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#202329] flex items-center justify-between gap-3 text-xs"
                   >
-                    <div>
-                      <div className="font-medium text-stone-800 dark:text-stone-200">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-stone-800 dark:text-stone-200 truncate">
                         {t.title}
                       </div>
-                      <div className="text-[10px] text-stone-400 mt-0.5">
+                      <div className="text-[10px] text-stone-400 mt-0.5 truncate">
                         {t.eventTitle} · {formatReadableDate(t.date)}
                       </div>
                     </div>
+                    {onToggleTask && (
+                      <div className="shrink-0">
+                        <TaskToggleSlider
+                          checked={t.completed}
+                          onChange={(val) => onToggleTask(t.eventId, t.taskId, val)}
+                          label={t.title}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

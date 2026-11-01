@@ -275,9 +275,9 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   return (
     <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] shadow-md overflow-hidden flex flex-col h-full transition-colors">
       
-      {/* Header Bar - Single Clean Row: Stay Button + Event Count on Left, Actions on Right */}
-      <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between gap-1.5">
-        <div className="min-w-0 flex items-center gap-1.5">
+      {/* Header Bar - Single Clean Row: Stay Pill + Category Breakdown Pills on Left, Day View on Right */}
+      <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between gap-1.5 flex-wrap">
+        <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
           {(() => {
             const dayPillStayColor = 
               currentStay === 'her_home'
@@ -304,12 +304,32 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
               </button>
             );
           })()}
-          <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate">
-            ({dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'})
-          </span>
+
+          {/* Compact Category Breakdown Pills */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {Object.entries(
+              dayEvents.reduce<Record<string, number>>((acc, e) => {
+                acc[e.category] = (acc[e.category] || 0) + 1;
+                return acc;
+              }, {})
+            ).map(([cat, count]) => {
+              const meta = CATEGORY_CONFIG[cat as EventCategory];
+              if (!meta) return null;
+              return (
+                <span
+                  key={cat}
+                  title={`${count} ${meta.label}`}
+                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1 ${meta.badgeBg} ${meta.borderColor} ${meta.textColor}`}
+                >
+                  <span>{meta.shortLabel}</span>
+                  <span>{count}</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           {onOpenDayView && (
             <button
               type="button"
@@ -320,32 +340,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
               Day View →
             </button>
           )}
-
-          {/* Photo Button */}
-          <button
-            type="button"
-            onClick={onOpenFridgePhotos}
-            className="relative p-1.5 rounded-lg bg-white dark:bg-[#282c34] hover:bg-stone-100 dark:hover:bg-[#313640] text-stone-700 dark:text-stone-200 border border-[#e2ddd5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
-            title={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
-            aria-label={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
-          >
-            <Camera className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
-            {photoCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex min-w-[14px] h-[14px] px-0.5 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 text-[9px] font-bold shadow-xs">
-                {photoCount}
-              </span>
-            )}
-          </button>
-
-          {/* Quick Collapse Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 p-1.5 rounded-lg hover:bg-stone-200/60 dark:hover:bg-[#2c3039] transition-colors cursor-pointer shrink-0"
-            title="Collapse Details & Expand Calendar"
-          >
-            <Minimize2 className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 
@@ -415,35 +409,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
 
         {/* Day Events & Individual Tasks List */}
         <div>
-          <div className="flex items-center justify-between mb-2.5 pb-1 border-b border-[#e4ded5] dark:border-[#2d3139]">
-            <h3 className="text-xs font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider font-mono">
-              Events & Tasks ({dayEvents.length})
-            </h3>
-
-            {/* Colorful category counts summary */}
-            <div className="flex items-center gap-1 flex-wrap">
-              {Object.entries(
-                dayEvents.reduce<Record<string, number>>((acc, e) => {
-                  acc[e.category] = (acc[e.category] || 0) + 1;
-                  return acc;
-                }, {})
-              ).map(([cat, count]) => {
-                const meta = CATEGORY_CONFIG[cat as EventCategory];
-                if (!meta) return null;
-                return (
-                  <span
-                    key={cat}
-                    title={`${count} ${meta.label}`}
-                    className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1 ${meta.badgeBg} ${meta.borderColor} ${meta.textColor}`}
-                  >
-                    <span>{meta.shortLabel}</span>
-                    <span>{count}</span>
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
           {dayEvents.length === 0 ? (
             <div className="text-center py-8 px-4 border border-dashed border-[#e4ded5] dark:border-[#353943] rounded-xl bg-[#f5f1e8]/30 dark:bg-[#1d2026]">
               <p className="text-xs text-stone-500 dark:text-stone-400 mb-1">No events scheduled for this day.</p>

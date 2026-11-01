@@ -666,9 +666,7 @@ function CalendarApp() {
     setSelectedDate(dateStr);
     const [y, m, d] = dateStr.split('-').map(Number);
     setCurrentDate(new Date(y, m - 1, d));
-    if (viewMode !== 'agenda') {
-      setIsDayInspectorOpen(true);
-    }
+    setIsDayInspectorOpen(true);
   };
 
   // Real-time synchronization of Couple Hub data (Events, Stays, Templates) across devices
@@ -1046,6 +1044,7 @@ function CalendarApp() {
               setViewMode('month');
               setIsDayInspectorOpen(true);
             }}
+            onToggleTask={handleToggleTask}
           />
         ) : viewMode === 'agenda' ? (
           /* Dedicated Interactive Colorful Day Schedule (Day View removed here per user request) */
