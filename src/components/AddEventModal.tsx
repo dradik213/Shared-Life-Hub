@@ -580,7 +580,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               onChange={(e) => setAssignedTo(e.target.value as any)}
               className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900"
             >
-              <option value="both">Both of Us (Shared)</option>
+              <option value="both">K&D (Shared)</option>
               <option value="her">{partner1Label}</option>
               <option value="him">{partner2Label}</option>
             </select>

@@ -524,7 +524,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                     ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
                     : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
                 }`}
-                title={`Filter by ${partner1DisplayName} (click again for Both)`}
+                title={`Filter by ${partner1DisplayName} (click again for K&D)`}
                 aria-label={`Filter by ${partner1DisplayName}`}
               >
                 {partner1Initial}
@@ -534,7 +534,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
               <button
                 type="button"
                 role="switch"
-                aria-label={`Partner filter: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName}`}
+                aria-label={`Partner filter: ${partnerFilter === 'all' ? 'K&D (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName}`}
                 onClick={() => {
                   if (partnerFilter === 'her') onPartnerFilterChange('all');
                   else if (partnerFilter === 'all') onPartnerFilterChange('him');
@@ -547,7 +547,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                     ? user2Theme.sliderTrack
                     : 'bg-stone-300 dark:bg-stone-600 ring-1 ring-stone-400/50 dark:ring-stone-500/50'
                 }`}
-                title={`Current: ${partnerFilter === 'all' ? 'Both (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
+                title={`Current: ${partnerFilter === 'all' ? 'K&D (Center)' : partnerFilter === 'her' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
               >
                 <span
                   aria-hidden="true"
@@ -569,7 +569,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                     ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
                     : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
                 }`}
-                title={`Filter by ${partner2DisplayName} (click again for Both)`}
+                title={`Filter by ${partner2DisplayName} (click again for K&D)`}
                 aria-label={`Filter by ${partner2DisplayName}`}
               >
                 {partner2Initial}

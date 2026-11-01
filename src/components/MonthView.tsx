@@ -136,7 +136,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
               {/* Top Row: Day number directly colored with Stay partner's theme */}
               <div className="flex items-center justify-between">
                 <span
-                  title={stayInfo && cell.isCurrentMonth ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : 'Both'}` : undefined}
+                  title={stayInfo && cell.isCurrentMonth ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : 'K&D'}` : undefined}
                   className={`text-xs sm:text-sm md:text-base font-semibold rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center transition-colors ${dayNumColorClass}`}
                 >
                   {cell.dayNum}

@@ -304,10 +304,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         {/* Secondary details row (when not collapsed) */}
                         {isEventExpanded && (
                           <div className="mt-1 space-y-1 pt-1 border-t border-black/5 dark:border-white/10">
-                            <div className="flex items-start justify-between gap-1.5">
-                              <div className="font-semibold text-xs text-stone-900 dark:text-stone-100 break-words leading-snug">
-                                {evt.title}
-                              </div>
+                            <div className="flex items-center justify-between gap-1.5">
+                              <span className="text-[10px] font-medium text-stone-600 dark:text-stone-400">
+                                {cfg.label}
+                              </span>
                               {onDeleteEvent && (
                                 <button
                                   type="button"
@@ -322,9 +322,6 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                 </button>
                               )}
                             </div>
-                            <div className="flex items-center justify-between text-[10px] text-stone-500 dark:text-stone-400 font-mono">
-                              {evt.startTime && <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>}
-                            </div>
                             {evt.locationName && (
                               <div className="text-[10px] text-stone-600 dark:text-stone-400 truncate font-sans">
                                 {evt.locationName}
@@ -338,8 +335,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
                           </div>
                         )}
 
-                        {/* Independent Checklist Tasks Expansion with TaskToggleSlider & Delete button */}
-                        {isTasksExpanded && (
+                        {/* Independent Checklist Tasks Expansion with TaskToggleSlider & Delete button, or when expanded with 0 tasks */}
+                        {(isTasksExpanded || (isEventExpanded && tasks.length === 0)) && (
                           <div className="mt-1.5 pt-1.5 border-t border-black/10 dark:border-white/10 space-y-1.5">
                             {tasks.map((task) => (
                               <div

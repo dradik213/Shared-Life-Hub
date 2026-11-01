@@ -322,9 +322,9 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
 
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col border-t border-[#e5e0d8] dark:border-[#2d3139]">
       {/* Unified Sub-Header Row: Navigation, Stay/Date Pill, Weather Dropdown, Camera, Filter & Sort */}
-      <div className="flex items-center justify-between gap-1.5 px-2.5 sm:px-6 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139]">
+      <div className="w-full flex items-center justify-between gap-1.5 px-2.5 sm:px-6 py-2">
         {/* Left side: < > Today + Date / Stay pill */}
         <div className="flex items-center gap-1.5 min-w-0">
           {onPrev && onNext && (
@@ -352,7 +352,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
             <button
               type="button"
               onClick={onToday}
-              className="text-[11px] font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
+              className="text-[11px] font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
             >
               Today
             </button>
@@ -391,11 +391,6 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
               >
                 <Home className="w-3 h-3 shrink-0 opacity-80" />
                 <span className="truncate">{shortDateLabel}</span>
-                {isToday && (
-                  <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
-                    Today
-                  </span>
-                )}
               </button>
             );
           })()}
@@ -473,7 +468,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
 
       {/* Main Widget Body (Expanded) - Responsive 3-column grid cleanly below the bar */}
       {isDropdownOpen && (
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-stone-200/70 dark:border-stone-800 bg-white/95 dark:bg-[#1a1d22]/95 animate-in fade-in duration-200">
+        <div className="w-full p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-stone-200/70 dark:border-stone-800 bg-[#fcfaf7] dark:bg-[#16181d] animate-in fade-in duration-200">
 
           {/* Card 2: Phrase of the Day / Motivational Quote */}
           <div className="rounded-xl p-3 bg-stone-50/80 dark:bg-[#21242c] border border-stone-200/80 dark:border-[#2d3139] flex flex-col justify-between">

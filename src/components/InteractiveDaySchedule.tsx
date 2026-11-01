@@ -347,7 +347,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
             const completedCount = tasks.filter((t) => t.completed).length;
             const isExpanded = Boolean(currentExpandedEventIds[evt.id]);
             const isTasksExpanded = Boolean(currentExpandedTaskSections[evt.id]);
-            const partnerLabel = evt.assignedTo === 'her' ? partner1Label : evt.assignedTo === 'him' ? partner2Label : 'Both';
+            const partnerLabel = evt.assignedTo === 'her' ? partner1Label : evt.assignedTo === 'him' ? partner2Label : 'K&D';
             const allTasksDone = tasks.length > 0 && completedCount === tasks.length;
 
             return (
@@ -414,20 +414,11 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                 {/* Expanded Details Body */}
                 {isExpanded && (
                   <div className="p-4 pt-3 border-t border-stone-200/70 dark:border-stone-800/70 bg-white/85 dark:bg-[#1a1d22]/95 space-y-4">
-                    {/* Secondary detail row: Category label, Partner label, Location */}
+                    {/* Secondary detail row: Category label & Location */}
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
-                          evt.assignedTo === 'her'
-                            ? user1Theme.badgeBg
-                            : evt.assignedTo === 'him'
-                            ? user2Theme.badgeBg
-                            : 'bg-stone-100 text-stone-800 border-stone-300 dark:bg-stone-800 dark:text-stone-200 dark:border-stone-700'
-                        }`}>
-                          {partnerLabel}
-                        </span>
-                        <span className="text-xs opacity-80 font-medium">
-                          · {cfg.shortLabel}
+                        <span className="text-xs font-medium text-stone-600 dark:text-stone-400">
+                          {cfg.shortLabel}
                         </span>
                         {evt.locationName && (
                           <span className="inline-flex items-center gap-1 text-stone-600 dark:text-stone-400">
@@ -569,104 +560,77 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                   </div>
                 )}
 
-                {/* Independent Tasks Section: Rendered if card is expanded OR if user clicked task pill */}
-                {(isExpanded || (isTasksExpanded && tasks.length > 0)) && (
+                {/* Independent Tasks Section: Rendered if user clicked task pill or card is expanded with 0 tasks */}
+                {(isTasksExpanded || (isExpanded && tasks.length === 0)) && (
                   <div className="p-4 pt-3 border-t border-stone-200/70 dark:border-stone-800/70 bg-white/95 dark:bg-[#1a1d22]/95 space-y-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTaskSection(evt.id);
-                      }}
-                      className="w-full flex items-center justify-between text-xs cursor-pointer select-none group text-left"
-                      title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
-                    >
-                      <span className="font-bold uppercase tracking-wider text-stone-800 dark:text-stone-200 font-mono text-[11px] flex items-center gap-1.5 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-stone-500" />
-                        <span>Checklist Tasks ({completedCount}/{tasks.length})</span>
-                        {isTasksExpanded ? (
-                          <ChevronUp className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                        ) : (
-                          <ChevronDown className="w-3.5 h-3.5 text-stone-400 group-hover:text-stone-600 transition-colors" />
-                        )}
-                      </span>
-                      <span className="text-[10px] text-stone-500 dark:text-stone-400">
-                        {isTasksExpanded ? 'Click to hide tasks' : 'Click to show tasks'}
-                      </span>
-                    </button>
-
-                    {isTasksExpanded && (
-                      <>
-                        {tasks.length > 0 ? (
-                          <div className="space-y-1.5">
-                            {tasks.map((task) => (
-                              <div
-                                key={task.id}
-                                className={`p-2.5 rounded-lg border flex items-center justify-between gap-3 transition-colors ${
-                                  task.completed
-                                    ? 'bg-stone-100/70 dark:bg-[#1f2229] border-stone-200 dark:border-stone-800 text-stone-400'
-                                    : 'bg-stone-50 dark:bg-[#22252c] border-stone-200/80 dark:border-stone-700/60 text-stone-800 dark:text-stone-200'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                  {/* The on/off slider switch */}
-                                  <TaskToggleSlider
-                                    checked={task.completed}
-                                    onChange={(newChecked) => onToggleTask(evt.id, task.id, newChecked)}
-                                    label={task.title}
-                                  />
-                                  <span className={`text-xs ${task.completed ? 'line-through text-stone-400 dark:text-stone-500' : 'text-stone-800 dark:text-stone-200 font-medium'} truncate`}>
-                                    {task.title}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <button
-                                    type="button"
-                                    onClick={() => onDeleteTaskFromEvent(evt.id, task.id)}
-                                    className="text-stone-300 hover:text-rose-500 p-1 cursor-pointer transition-colors"
-                                    title="Delete task"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-[11px] text-stone-400 italic py-1">
-                            No tasks created yet for this activity.
-                          </p>
-                        )}
-
-                        {/* Add individual task entry form */}
-                        <div className="pt-1 flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            placeholder="Add new checklist task & press Enter..."
-                            value={newTaskInputs[evt.id] || ''}
-                            onChange={(e) =>
-                              setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleCreateTask(evt.id);
-                              }
-                            }}
-                            className="flex-1 text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleCreateTask(evt.id)}
-                            disabled={!newTaskInputs[evt.id]?.trim()}
-                            className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 px-3 py-2 rounded-lg text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white disabled:opacity-40 transition-colors cursor-pointer"
+                    {tasks.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {tasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className={`p-2.5 rounded-lg border flex items-center justify-between gap-3 transition-colors ${
+                              task.completed
+                                ? 'bg-stone-100/70 dark:bg-[#1f2229] border-stone-200 dark:border-stone-800 text-stone-400'
+                                : 'bg-stone-50 dark:bg-[#22252c] border-stone-200/80 dark:border-stone-700/60 text-stone-800 dark:text-stone-200'
+                            }`}
                           >
-                            + Add
-                          </button>
-                        </div>
-                      </>
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              {/* The on/off slider switch */}
+                              <TaskToggleSlider
+                                checked={task.completed}
+                                onChange={(newChecked) => onToggleTask(evt.id, task.id, newChecked)}
+                                label={task.title}
+                              />
+                              <span className={`text-xs ${task.completed ? 'line-through text-stone-400 dark:text-stone-500' : 'text-stone-800 dark:text-stone-200 font-medium'} truncate`}>
+                                {task.title}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => onDeleteTaskFromEvent(evt.id, task.id)}
+                                className="text-stone-300 hover:text-rose-500 p-1 cursor-pointer transition-colors"
+                                title="Delete task"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-stone-400 italic py-1">
+                        No tasks created yet for this activity.
+                      </p>
                     )}
+
+                    {/* Add individual task entry form */}
+                    <div className="pt-1 flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Add new checklist task & press Enter..."
+                        value={newTaskInputs[evt.id] || ''}
+                        onChange={(e) =>
+                          setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleCreateTask(evt.id);
+                          }
+                        }}
+                        className="flex-1 text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleCreateTask(evt.id)}
+                        disabled={!newTaskInputs[evt.id]?.trim()}
+                        className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 px-3 py-2 rounded-lg text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white disabled:opacity-40 transition-colors cursor-pointer"
+                      >
+                        + Add
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
