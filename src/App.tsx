@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CalendarHeader } from './components/CalendarHeader';
 import { MonthView } from './components/MonthView';
 import { WeekView } from './components/WeekView';
@@ -569,6 +569,99 @@ function CalendarApp() {
     }
   };
 
+  // Horizontal touch-swipe navigation on mobile & tablet
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const isAnyModalOpen =
+      isAddModalOpen ||
+      isInviteModalOpen ||
+      isProfileModalOpen ||
+      isUnifiedWorkspaceOpen ||
+      isFridgePhotosOpen ||
+      isWorkspaceModalOpen;
+    if (isAnyModalOpen) {
+      touchStartRef.current = null;
+      return;
+    }
+    if (!['month', 'week', 'agenda'].includes(viewMode)) {
+      touchStartRef.current = null;
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < -70) {
+        handleNext();
+      } else if (dx > 70) {
+        handlePrev();
+      }
+    }
+  };
+
+  // Keyboard left/right arrow navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      if (activeEl) {
+        const tagName = activeEl.tagName.toUpperCase();
+        if (
+          tagName === 'INPUT' ||
+          tagName === 'TEXTAREA' ||
+          tagName === 'SELECT' ||
+          (activeEl as HTMLElement).isContentEditable
+        ) {
+          return;
+        }
+      }
+      const isAnyModalOpen =
+        isAddModalOpen ||
+        isInviteModalOpen ||
+        isProfileModalOpen ||
+        isUnifiedWorkspaceOpen ||
+        isFridgePhotosOpen ||
+        isWorkspaceModalOpen;
+      if (isAnyModalOpen) return;
+      if (!['month', 'week', 'agenda'].includes(viewMode)) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrev();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    viewMode,
+    isAddModalOpen,
+    isInviteModalOpen,
+    isProfileModalOpen,
+    isUnifiedWorkspaceOpen,
+    isFridgePhotosOpen,
+    isWorkspaceModalOpen,
+    handlePrev,
+    handleNext,
+  ]);
+
   const handleSelectDate = (dateStr: string) => {
     setSelectedDate(dateStr);
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -910,7 +1003,11 @@ function CalendarApp() {
       />
 
       {/* Main Content Area: generous wide layout filling high-resolution and widescreen displays */}
-      <main className="flex-1 w-full max-w-[1800px] mx-auto p-3 sm:p-5 lg:p-6 pb-24">
+      <main
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="flex-1 w-full max-w-[1800px] mx-auto p-3 sm:p-5 lg:p-6 pb-24"
+      >
         
         {/* View Mode Switching */}
         {viewMode === 'admin' ? (
@@ -1029,6 +1126,10 @@ function CalendarApp() {
                   expandedTaskSections={expandedTaskSections}
                   onToggleExpandEvent={handleToggleExpandEvent}
                   onToggleExpandTasks={handleToggleExpandTasks}
+                  onOpenDayView={(d) => {
+                    handleSelectDate(d);
+                    setViewMode('agenda');
+                  }}
                 />
               )}
             </div>
@@ -1057,6 +1158,7 @@ function CalendarApp() {
                   expandedTaskSections={expandedTaskSections}
                   onToggleExpandEvent={handleToggleExpandEvent}
                   onToggleExpandTasks={handleToggleExpandTasks}
+                  onOpenDayView={() => setViewMode('agenda')}
                 />
               </div>
             )}

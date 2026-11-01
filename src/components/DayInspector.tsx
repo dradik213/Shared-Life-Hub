@@ -45,6 +45,7 @@ interface DayInspectorProps {
   expandedTaskSections?: Record<string, boolean>;
   onToggleExpandEvent?: (eventId: string) => void;
   onToggleExpandTasks?: (eventId: string) => void;
+  onOpenDayView?: (dateStr: string) => void;
 }
 
 export const DayInspector: React.FC<DayInspectorProps> = ({
@@ -69,6 +70,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   expandedTaskSections: propsExpandedTaskSections,
   onToggleExpandEvent,
   onToggleExpandTasks,
+  onOpenDayView,
 }) => {
   const { 
     partner1Label, 
@@ -309,6 +311,17 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onOpenDayView && (
+            <button
+              type="button"
+              onClick={() => onOpenDayView(selectedDate)}
+              className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#282c34] text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#313640] transition-colors cursor-pointer"
+              title="Open full Daily Schedule"
+            >
+              Day View →
+            </button>
+          )}
+
           {/* Photo Button: compact icon-only without redundant text */}
           <button
             type="button"

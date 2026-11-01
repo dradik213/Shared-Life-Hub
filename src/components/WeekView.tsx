@@ -24,6 +24,7 @@ interface WeekViewProps {
   onToggleExpandEvent?: (eventId: string) => void;
   onToggleExpandTasks?: (eventId: string) => void;
   onUpdateStay?: (dateStr: string, stayAt: StayLocation) => void;
+  onOpenDayView?: (dateStr: string) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
@@ -45,6 +46,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onToggleExpandEvent,
   onToggleExpandTasks,
   onUpdateStay,
+  onOpenDayView,
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
   const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
@@ -131,8 +133,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
         </div>
       </div>
 
-      {/* 7 Columns Grid starting Monday, responsive columns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-[#e4ded5] dark:divide-[#2d3139]">
+      {/* 7 Columns Grid starting Monday: 1-col mobile, 2-col tablet, 7-col wide PC */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3 xl:gap-0 xl:divide-x divide-[#e4ded5] dark:divide-stone-800">
         {weekDays.map((col) => {
           const isSelected = selectedDate === col.dateStr;
           const matching = filteredEvents.filter((e) => eventOccursOnDate(e, col.dateStr));
@@ -162,9 +164,21 @@ export const WeekView: React.FC<WeekViewProps> = ({
               <div>
                 {/* Column Day Header */}
                 <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
-                  <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider block font-mono">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onOpenDayView) {
+                        onOpenDayView(col.dateStr);
+                      } else {
+                        onSelectDate(col.dateStr);
+                      }
+                    }}
+                    title="Open in Day View"
+                    className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 uppercase tracking-wider block font-mono hover:underline cursor-pointer text-left transition-colors"
+                  >
                     {col.dayName}
-                  </span>
+                  </button>
                   {(() => {
                     let weekDayNumColor = '';
                     if (stayInfo) {

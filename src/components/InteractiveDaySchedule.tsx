@@ -308,7 +308,11 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
         </div>
       )}
 
-      {/* Unified Backlog Tasks: Compact Collapsible Pill */}
+      {/* 2-Column Responsive Grid: Stacked on Mobile/Tablet, Side-by-Side with Sticky Notes on PC */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column: Backlog & Day Events */}
+        <div className="lg:col-span-8 space-y-4">
+          {/* Unified Backlog Tasks: Compact Collapsible Pill */}
       {allBacklogTasks.length > 0 && (
         <div className="rounded-lg border border-amber-300 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 overflow-hidden text-xs transition-colors">
           <button
@@ -732,9 +736,12 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
           })}
         </div>
       )}
+        </div>
 
-      {/* Notes for Working this Day */}
-      <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] p-4 shadow-2xs space-y-2 transition-colors">
+        {/* Right Column: Sticky Notes scratchpad on PC */}
+        <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+          {/* Notes for Working this Day */}
+          <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] p-4 shadow-2xs space-y-2 transition-colors">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider">
             <FileText className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
@@ -765,6 +772,8 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
           placeholder="Notes, customer feedback, parts used, pet care & reminders..."
           className="w-full text-xs p-3 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 whitespace-pre-wrap font-sans leading-relaxed"
         />
+          </div>
+        </div>
       </div>
 
       {/* EDIT EVENT DETAILS MODAL */}
