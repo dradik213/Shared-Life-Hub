@@ -285,7 +285,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 : currentStay === 'his_home'
                 ? user2Theme.badgeBg
                 : currentStay === 'our_home'
-                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
+                ? 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600'
                 : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
 
             const [sy, sm, sd] = selectedDate.split('-').map(Number);
@@ -350,73 +350,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
       </div>
 
       <div className="p-3 overflow-y-auto space-y-3 flex-1 pb-24">
-        
-        {/* Overnight Stay Selector with 3-position initials slider and center Home (compact, no redundant spacing) */}
-        <div className="flex items-center justify-between bg-[#f5f1e8] dark:bg-[#202329] px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs">
-          <div className="flex items-center gap-1.5 text-stone-600 dark:text-stone-300 font-medium">
-            <Home className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
-            <span className="text-[11px]">Stay:</span>
-          </div>
-          
-          <div className="flex items-center gap-1.5 bg-[#ede8df]/70 dark:bg-[#1a1d22] px-2 py-0.5 rounded-md border border-[#e4ded5] dark:border-[#2d3139]">
-            {/* Left Partner Initial */}
-            <button
-              type="button"
-              onClick={() => onUpdateStay(selectedDate, currentStay === 'her_home' ? 'our_home' : 'her_home')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                currentStay === 'her_home'
-                  ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
-              }`}
-              title={`Stay at ${partner1DisplayName}'s (click again for Home)`}
-              aria-label={`Stay at ${partner1DisplayName}'s`}
-            >
-              {partner1Initial}
-            </button>
-
-            {/* 3-Position Slider Switch: Left=Partner 1 Initial, Center=Home, Right=Partner 2 Initial */}
-            <button
-              type="button"
-              role="switch"
-              aria-label={`Overnight stay: ${currentStay === 'our_home' ? 'Home (Center)' : currentStay === 'her_home' ? partner1DisplayName : partner2DisplayName}`}
-              onClick={handleCycleStay}
-              className={`relative inline-flex h-5 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
-                currentStay === 'her_home'
-                  ? user1Theme.sliderTrack
-                  : currentStay === 'his_home'
-                  ? user2Theme.sliderTrack
-                  : 'bg-stone-700 dark:bg-stone-600 ring-1 ring-stone-500/50'
-              }`}
-              title={`Current Stay: ${currentStay === 'our_home' ? 'Home (Center)' : currentStay === 'her_home' ? partner1DisplayName : partner2DisplayName} (Click to cycle)`}
-            >
-              <span
-                aria-hidden="true"
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
-                  currentStay === 'her_home'
-                    ? 'translate-x-0.5'
-                    : currentStay === 'his_home'
-                    ? 'translate-x-[30px]'
-                    : 'translate-x-[16px] ring-1 ring-stone-400/50'
-                }`}
-              />
-            </button>
-
-            {/* Right Partner Initial */}
-            <button
-              type="button"
-              onClick={() => onUpdateStay(selectedDate, currentStay === 'his_home' ? 'our_home' : 'his_home')}
-              className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
-                currentStay === 'his_home'
-                  ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
-                  : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
-              }`}
-              title={`Stay at ${partner2DisplayName}'s (click again for Home)`}
-              aria-label={`Stay at ${partner2DisplayName}'s`}
-            >
-              {partner2Initial}
-            </button>
-          </div>
-        </div>
 
         {/* Unified Backlog Tasks Accordion: Google Tasks + Unfinished Checklist Items */}
         {allBacklogTasks.length > 0 && (
@@ -534,16 +467,17 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 return (
                   <div
                     key={evt.id}
-                    className={`rounded-xl border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} bg-white dark:bg-[#1a1d24] transition-all shadow-2xs overflow-hidden`}
+                    className="rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] transition-all shadow-2xs overflow-hidden"
                   >
-                    {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
+                    {/* Event Header: Row 1 = Full Untruncated Title with subtle category dot, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                     <div
                       onClick={() => toggleEventExpanded(evt.id)}
                       className="flex flex-col gap-1 py-2 px-3 cursor-pointer select-none hover:bg-stone-50/50 dark:hover:bg-stone-800/30 transition-colors"
                     >
-                      {/* Row 1: Full-width untruncated title */}
-                      <div className="w-full">
-                        <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
+                      {/* Row 1: Full-width untruncated title with subtle category dot */}
+                      <div className="w-full flex items-start gap-2">
+                        <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${cfg.dotColor || 'bg-stone-400'}`} />
+                        <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100 flex-1">
                           {evt.title}
                         </h3>
                       </div>
@@ -577,16 +511,24 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                                 e.stopPropagation();
                                 toggleTaskSection(evt.id);
                               }}
-                              className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors border border-stone-200 dark:border-stone-700"
+                              className="font-mono text-xs font-semibold px-2.5 py-1 min-h-[28px] rounded-md bg-stone-100 hover:bg-stone-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 border border-stone-200/90 dark:border-stone-700 text-stone-700 dark:text-stone-200 inline-flex items-center gap-1 cursor-pointer transition-colors"
                               title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                             >
                               <span>{completedCount}/{tasks.length}</span>
-                              {isTasksExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                              {isTasksExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
                           )}
-                          <div className="text-stone-400 p-0.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleEventExpanded(evt.id);
+                            }}
+                            className="p-1.5 min-w-[28px] min-h-[28px] rounded-md bg-stone-100/70 hover:bg-stone-200/80 dark:bg-stone-800/60 dark:hover:bg-stone-700 border border-stone-200/70 dark:border-stone-700/70 text-stone-600 dark:text-stone-300 inline-flex items-center justify-center cursor-pointer transition-colors"
+                            title={isExpanded ? 'Collapse event details' : 'Expand event details'}
+                          >
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                          </div>
+                          </button>
                         </div>
                       </div>
                     </div>

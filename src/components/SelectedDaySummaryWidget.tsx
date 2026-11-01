@@ -366,7 +366,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
                 : stayInfo?.stayAt === 'his_home'
                 ? user2Theme.badgeBg
                 : stayInfo?.stayAt === 'our_home'
-                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
+                ? 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600'
                 : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
 
             const handleCycleStay = () => {
@@ -405,13 +405,19 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
             className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200 whitespace-nowrap shrink-0 cursor-pointer hover:bg-stone-100 dark:hover:bg-[#2a2d36] transition-colors"
             title="Weather & Day Info"
           >
-            <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span className="sm:hidden">
-              {dayForecast ? `${formatTemp(dayForecast.highTemp)}` : 'Weather'}
-            </span>
-            <span className="hidden sm:inline">
-              {dayForecast ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}` : 'Weather & Info'}
-            </span>
+            {dayForecast && isWithinHorizon ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="sm:hidden">
+                  {formatTemp(dayForecast.highTemp)}
+                </span>
+                <span className="hidden sm:inline">
+                  {formatTemp(dayForecast.highTemp)} / {formatTemp(dayForecast.lowTemp)}
+                </span>
+              </>
+            ) : (
+              <span className="text-[11px] font-normal text-stone-400 dark:text-stone-500">N/A</span>
+            )}
             {isDropdownOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
 

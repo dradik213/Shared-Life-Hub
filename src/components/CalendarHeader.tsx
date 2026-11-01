@@ -510,16 +510,17 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
 
       {/* Collapsible Category Filter & Sort Toolbar Row */}
       {isFilterSortOpen && viewMode !== 'reflection' && viewMode !== 'admin' && (
-        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 bg-stone-50/95 dark:bg-[#1a1d22]/95 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 text-xs animate-in fade-in duration-150">
+        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 bg-stone-50/95 dark:bg-[#1a1d22]/95 border-t border-[#e5e0d8] dark:border-[#2d3139] flex flex-col gap-1.5 text-xs animate-in fade-in duration-150 overflow-x-hidden max-w-full">
           
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* 1. Partner View 3-position slider */}
-            <div className="flex items-center gap-1 sm:gap-1.5 bg-[#f5f1e8] dark:bg-[#202329] px-2 py-1 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] text-xs shadow-2xs shrink-0">
-              <span className="text-[11px] font-semibold text-stone-600 dark:text-stone-400 whitespace-nowrap">Partner View:</span>
+          {/* Row 1: Compact Partner View on Left & Sort Controls on Right */}
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-stone-200/60 dark:border-stone-800">
+            {/* Left: Compact Partner View */}
+            <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-md border border-stone-200 dark:border-stone-700 text-xs shadow-2xs shrink-0">
+              <span className="text-[11px] font-medium text-stone-500 dark:text-stone-400 whitespace-nowrap">View:</span>
               <button
                 type="button"
                 onClick={() => onPartnerFilterChange(partnerFilter === 'her' ? 'all' : 'her')}
-                className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                className={`w-4.5 h-4.5 flex items-center justify-center text-[11px] font-bold rounded transition-all cursor-pointer ${
                   partnerFilter === 'her'
                     ? `${user1Theme.activeText} ${user1Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
                     : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
@@ -530,7 +531,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                 {partner1Initial}
               </button>
 
-              {/* 3-Position Slider switch */}
+              {/* Compact 3-Position Slider switch */}
               <button
                 type="button"
                 role="switch"
@@ -540,7 +541,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                   else if (partnerFilter === 'all') onPartnerFilterChange('him');
                   else onPartnerFilterChange('her');
                 }}
-                className={`relative inline-flex h-5 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                className={`relative inline-flex h-4 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
                   partnerFilter === 'her'
                     ? user1Theme.sliderTrack
                     : partnerFilter === 'him'
@@ -551,12 +552,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
               >
                 <span
                   aria-hidden="true"
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
+                  className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out mt-0.5 ${
                     partnerFilter === 'her'
                       ? 'translate-x-0.5'
                       : partnerFilter === 'him'
-                      ? 'translate-x-[30px]'
-                      : 'translate-x-[16px] ring-1 ring-stone-400/50'
+                      ? 'translate-x-[22px]'
+                      : 'translate-x-[11px] ring-1 ring-stone-400/50'
                   }`}
                 />
               </button>
@@ -564,7 +565,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
               <button
                 type="button"
                 onClick={() => onPartnerFilterChange(partnerFilter === 'him' ? 'all' : 'him')}
-                className={`w-5 h-5 flex items-center justify-center text-[11px] font-bold rounded-md transition-all cursor-pointer ${
+                className={`w-4.5 h-4.5 flex items-center justify-center text-[11px] font-bold rounded transition-all cursor-pointer ${
                   partnerFilter === 'him'
                     ? `${user2Theme.activeText} ${user2Theme.activeBg} ring-1 ring-stone-400/40 dark:ring-stone-500/40 shadow-xs`
                     : `text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-700/60`
@@ -576,50 +577,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
               </button>
             </div>
 
-            {/* 2. Category Filter Buttons with Text Labels */}
-            <div className="flex flex-wrap items-center gap-1 shrink-0" role="toolbar" aria-label="Category filters">
-              <button
-                type="button"
-                onClick={() => onCategoryFilterChange('all')}
-                title="All Categories"
-                aria-label="All Categories"
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 ${
-                  categoryFilter === 'all'
-                    ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold shadow-2xs'
-                    : 'bg-stone-100 dark:bg-[#252830] text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] border border-stone-200/80 dark:border-[#353943]'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>All</span>
-              </button>
-
-              {categoryKeys.map((key) => {
-                const meta = CATEGORY_CONFIG[key];
-                const isSelected = categoryFilter === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => onCategoryFilterChange(key)}
-                    title={meta.label}
-                    aria-label={meta.label}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer shrink-0 ${getCategoryButtonClasses(
-                      key,
-                      isSelected
-                    )}`}
-                  >
-                    {getCategoryIcon(key)}
-                    <span>{meta.shortLabel || meta.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right side: Sort + Reset button */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Sort Dropdown + Direction Toggle Arrow Button */}
-            <div className="flex items-center gap-1.5 border-l border-[#e2ddd5] dark:border-[#353943] pl-2 shrink-0">
+            {/* Right side: Sort + Reset button */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <label htmlFor="sort-select" className="text-[11px] font-mono text-stone-500 dark:text-stone-400 uppercase tracking-wider hidden sm:inline cursor-pointer">
                 Sort:
               </label>
@@ -662,20 +621,59 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                   <ArrowDown className="w-3.5 h-3.5" />
                 )}
               </button>
-            </div>
 
-            {/* Quick Reset Filters button if any filter is active */}
-            {isAnyFilterActive && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors cursor-pointer"
-                title="Reset all filters and sorting to default"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset Filters</span>
-              </button>
-            )}
+              {/* Quick Reset Filters button if any filter is active */}
+              {isAnyFilterActive && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 transition-colors cursor-pointer"
+                  title="Reset all filters and sorting to default"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Reset</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Category Filter Pills wrapping cleanly within mobile viewport */}
+          <div className="w-full max-w-full flex flex-wrap items-center gap-1.5 pt-1" role="toolbar" aria-label="Category filter toolbar">
+            <button
+              type="button"
+              onClick={() => onCategoryFilterChange('all')}
+              title="All Categories"
+              aria-label="All Categories"
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${
+                categoryFilter === 'all'
+                  ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-semibold shadow-2xs'
+                  : 'bg-stone-100 dark:bg-[#252830] text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] border border-stone-200/80 dark:border-[#353943]'
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>All</span>
+            </button>
+
+            {categoryKeys.map((key) => {
+              const meta = CATEGORY_CONFIG[key];
+              const isSelected = categoryFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => onCategoryFilterChange(key)}
+                  title={meta.label}
+                  aria-label={meta.label}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer ${getCategoryButtonClasses(
+                    key,
+                    isSelected
+                  )}`}
+                >
+                  {getCategoryIcon(key)}
+                  <span>{meta.shortLabel || meta.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

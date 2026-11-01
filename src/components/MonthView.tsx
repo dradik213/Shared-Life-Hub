@@ -105,7 +105,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
             } else if (stayInfo.stayAt === 'his_home') {
               dayNumColorClass = user2Theme.badgeBg;
             } else if (stayInfo.stayAt === 'our_home') {
-              dayNumColorClass = 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700';
+              dayNumColorClass = 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
             } else {
               dayNumColorClass = 'bg-stone-200/80 text-stone-800 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
             }

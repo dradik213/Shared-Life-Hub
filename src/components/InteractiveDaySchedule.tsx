@@ -353,17 +353,20 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
             return (
               <div
                 key={evt.id}
-                className={`w-full relative rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} transition-all shadow-xs overflow-hidden`}
+                className="w-full relative rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 transition-all shadow-xs overflow-hidden"
               >
                 {/* Event Card Header - 2-row vertical stack */}
                 <div
                   onClick={() => toggleEventExpanded(evt.id)}
                   className="flex flex-col gap-1 py-2 px-3 cursor-pointer select-none hover:bg-stone-50/50 dark:hover:bg-stone-800/30 transition-colors"
                 >
-                  {/* Row 1: Full Width Untruncated Title */}
-                  <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
-                    {evt.title}
-                  </h3>
+                  {/* Row 1: Full Width Untruncated Title with subtle category dot */}
+                  <div className="flex items-start gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${cfg.dotColor || 'bg-stone-400'}`} />
+                    <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100 flex-1">
+                      {evt.title}
+                    </h3>
+                  </div>
 
                   {/* Row 2: Metadata & Controls Row */}
                   <div className="flex items-center justify-between gap-2">
@@ -392,21 +395,29 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                             e.stopPropagation();
                             toggleTaskSection(evt.id);
                           }}
-                          className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors"
+                          className="font-mono text-xs font-semibold px-2.5 py-1 min-h-[28px] rounded-md bg-stone-100 hover:bg-stone-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 border border-stone-200/90 dark:border-stone-700 text-stone-700 dark:text-stone-200 inline-flex items-center gap-1 cursor-pointer transition-colors"
                           title={isTasksExpanded ? "Collapse checklist tasks" : "Expand checklist tasks"}
                         >
                           <span>{completedCount}/{tasks.length}</span>
                           {isTasksExpanded ? (
-                            <ChevronUp className="w-3 h-3 text-stone-500" />
+                            <ChevronUp className="w-3.5 h-3.5 text-stone-500" />
                           ) : (
-                            <ChevronDown className="w-3 h-3 text-stone-500" />
+                            <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
                           )}
                         </button>
                       )}
 
-                      <div className="flex items-center text-stone-400 p-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleEventExpanded(evt.id);
+                        }}
+                        className="p-1.5 min-w-[28px] min-h-[28px] rounded-md bg-stone-100/70 hover:bg-stone-200/80 dark:bg-stone-800/60 dark:hover:bg-stone-700 border border-stone-200/70 dark:border-stone-700/70 text-stone-600 dark:text-stone-300 inline-flex items-center justify-center cursor-pointer transition-colors"
+                        title={isExpanded ? "Collapse event details" : "Expand event details"}
+                      >
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </div>
+                      </button>
                     </div>
                   </div>
                 </div>

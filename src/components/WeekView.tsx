@@ -187,7 +187,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       } else if (stayInfo.stayAt === 'his_home') {
                         weekDayNumColor = user2Theme.badgeBg;
                       } else if (stayInfo.stayAt === 'our_home') {
-                        weekDayNumColor = 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700';
+                        weekDayNumColor = 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
                       } else {
                         weekDayNumColor = 'bg-stone-200/80 text-stone-800 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
                       }
@@ -238,16 +238,17 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     return (
                       <div
                         key={evt.id}
-                        className={`p-2 rounded-lg border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} bg-white dark:bg-[#1a1d24] text-xs shadow-2xs space-y-1.5`}
+                        className="p-2 rounded-lg border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] text-xs shadow-2xs space-y-1.5"
                       >
-                        {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
+                        {/* Event Header: Row 1 = Full Untruncated Title with subtle category dot, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                         <div
                           onClick={() => toggleEvent(evt.id)}
                           className="cursor-pointer select-none space-y-1.5"
                         >
-                          {/* Row 1: Full-width untruncated title */}
-                          <div className="w-full">
-                            <h4 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
+                          {/* Row 1: Full-width untruncated title with subtle category dot */}
+                          <div className="w-full flex items-start gap-2">
+                            <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${cfg.dotColor || 'bg-stone-400'}`} />
+                            <h4 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100 flex-1">
                               {evt.title}
                             </h4>
                           </div>
@@ -279,11 +280,11 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                     e.stopPropagation();
                                     toggleTasks(evt.id);
                                   }}
-                                  className="font-sans text-[9px] px-1.5 py-0.2 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-0.5 cursor-pointer transition-colors"
+                                  className="font-mono text-xs font-semibold px-2.5 py-1 min-h-[28px] rounded-md bg-stone-100 hover:bg-stone-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 border border-stone-200/90 dark:border-stone-700 text-stone-700 dark:text-stone-200 inline-flex items-center gap-1 cursor-pointer transition-colors"
                                   title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                                 >
                                   <span>{completedCount}/{tasks.length}</span>
-                                  {isTasksExpanded ? <ChevronUp className="w-2 h-2" /> : <ChevronDown className="w-2 h-2" />}
+                                  {isTasksExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                                 </button>
                               )}
                               <button
@@ -292,10 +293,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                   e.stopPropagation();
                                   toggleEvent(evt.id);
                                 }}
-                                className="p-0.5 rounded text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer transition-colors"
+                                className="p-1.5 min-w-[28px] min-h-[28px] rounded-md bg-stone-100/70 hover:bg-stone-200/80 dark:bg-stone-800/60 dark:hover:bg-stone-700 border border-stone-200/70 dark:border-stone-700/70 text-stone-600 dark:text-stone-300 inline-flex items-center justify-center cursor-pointer transition-colors"
                                 title={isEventExpanded ? 'Collapse event details' : 'Expand event details'}
                               >
-                                {isEventExpanded ? <ChevronUp className="w-2.5 h-2.5" /> : <ChevronDown className="w-2.5 h-2.5" />}
+                                {isEventExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                               </button>
                             </div>
                           </div>
