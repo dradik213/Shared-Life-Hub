@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Home, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatDateToYMD, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
@@ -118,6 +118,17 @@ export const WeekView: React.FC<WeekViewProps> = ({
     return matchesPartnerFilter(evt.assignedTo, partnerFilter);
   });
 
+  const todayColRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (todayColRef.current) {
+      const timer = setTimeout(() => {
+        todayColRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentDate]);
+
   return (
     <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] shadow-2xs overflow-hidden transition-colors">
       {/* 7-Day Week Flow Header */}
@@ -156,8 +167,11 @@ export const WeekView: React.FC<WeekViewProps> = ({
           return (
             <div
               key={col.dateStr}
+              ref={(el) => {
+                if (col.isToday) todayColRef.current = el;
+              }}
               onClick={() => onSelectDate(col.dateStr)}
-              className={`min-h-[280px] xl:min-h-[350px] p-2.5 sm:p-3 transition-colors flex flex-col justify-between cursor-pointer bg-[#fcfaf7] dark:bg-[#1a1d22] hover:bg-[#f6f2ea] dark:hover:bg-[#22252b] ${
+              className={`scroll-mt-28 min-h-[280px] xl:min-h-[350px] p-2.5 sm:p-3 transition-colors flex flex-col justify-between cursor-pointer bg-[#fcfaf7] dark:bg-[#1a1d22] hover:bg-[#f6f2ea] dark:hover:bg-[#22252b] ${
                 isSelected ? 'ring-2 ring-stone-900 dark:ring-stone-100 ring-inset z-10 bg-[#f5f0e6] dark:bg-[#262a32]' : ''
               }`}
             >
