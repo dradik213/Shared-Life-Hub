@@ -7,7 +7,13 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-const port = Number(process.env.PORT) || 3e3;
+let port = 3e3;
+const portArgIndex = process.argv.indexOf("--port");
+if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+  port = Number(process.argv[portArgIndex + 1]) || 3e3;
+} else if (process.env.PORT) {
+  port = Number(process.env.PORT) || 3e3;
+}
 app.use(express.json());
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -52,6 +58,9 @@ Category matching guide:
 - "other": Flight, doctor appointment, party, general shared schedule.
 
 Strictly output ONLY the JSON object, no Markdown code fences, no extra text.`;
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: "GEMINI_API_KEY is not configured on the server." });
+    }
     const response = await ai.models.generateContent({
       model: "gemini-3.8-flash",
       contents: [
@@ -112,6 +121,9 @@ Return a JSON array of actionable insights:
 ]
 
 Strictly return ONLY the JSON array.`;
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: "GEMINI_API_KEY is not configured on the server." });
+    }
     const response = await ai.models.generateContent({
       model: "gemini-3.8-flash",
       contents: [
@@ -140,11 +152,32 @@ ${JSON.stringify(emailSnippets, null, 2)}` }]
     return res.status(500).json({ error: err.message || "Failed to analyze emails with Gemini" });
   }
 });
+app.post("/api/generate-insights", async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: "GEMINI_API_KEY is not configured on the server." });
+    }
+    const { timeframe, selectedDate, events, stays } = req.body;
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `Generate a concise couple reflection and schedule summary for timeframe: ${timeframe || "week"} (date: ${selectedDate}). Events: ${JSON.stringify(events || [])}. Stays: ${JSON.stringify(stays || [])}. Keep it supportive and actionable in 2-3 sentences.` }]
+        }
+      ]
+    });
+    return res.json({ insight: response.text || "Great coordination and balanced schedule!" });
+  } catch (err) {
+    console.error("Error in /api/generate-insights:", err);
+    return res.status(500).json({ error: err.message || "Failed to generate insights" });
+  }
+});
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: false },
       appType: "spa"
     });
     app.use(vite.middlewares);
