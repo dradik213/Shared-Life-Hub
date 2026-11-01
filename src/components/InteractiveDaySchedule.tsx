@@ -116,6 +116,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   const [showRolloverDrawer, setShowRolloverDrawer] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
 
   // Sync day notes when selectedDate changes so notes don't stick across days
   const currentStayNotes = stays[selectedDate]?.notes || '';
@@ -310,69 +311,8 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
 
       {/* 2-Column Responsive Grid: Stacked on Mobile/Tablet, Side-by-Side with Sticky Notes on PC */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Column: Backlog & Day Events */}
-        <div className="lg:col-span-8 space-y-4">
-          {/* Unified Backlog Tasks: Compact Collapsible Pill */}
-      {allBacklogTasks.length > 0 && (
-        <div className="rounded-lg border border-amber-300 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 overflow-hidden text-xs transition-colors">
-          <button
-            type="button"
-            onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-            className="w-full py-1.5 px-3 flex items-center justify-between text-left hover:bg-amber-100/50 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-semibold text-xs">
-              <RotateCcw className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span>{allBacklogTasks.length} Tasks in Backlog</span>
-            </div>
-            <div className="flex items-center gap-1 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-              <span>{showRolloverDrawer ? 'Hide' : 'Review & Add'}</span>
-              {showRolloverDrawer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </div>
-          </button>
-
-          {showRolloverDrawer && (
-            <div className="p-3 border-t border-amber-200 dark:border-amber-900/50 bg-[#fffdfa] dark:bg-[#1e2127] space-y-2">
-              <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                Unfinished checklist items and Google Tasks in your backlog. Click "Add to Today" to pull them into this schedule:
-              </p>
-              <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
-                {allBacklogTasks.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-2.5 rounded bg-[#fcfaf7] dark:bg-[#252830] border border-[#e4ded5] dark:border-[#353943] flex items-center justify-between gap-2 text-xs"
-                  >
-                    <div className="truncate flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                          item.sourceType === 'google_task'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                        }`}>
-                          {item.sourceType === 'google_task' ? 'Google Task' : 'Unfinished Tag'}
-                        </span>
-                        <span className="font-semibold text-stone-800 dark:text-stone-200 truncate">
-                          {item.title}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate mt-0.5">
-                        {item.sourceDetail}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyTask(item.title, item.assignedTo)}
-                      className="bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-white text-white dark:text-stone-900 text-[10px] font-semibold px-2.5 py-1 rounded shadow-2xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Copy className="w-2.5 h-2.5" />
-                      <span>Add to Today</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Left Column: Day Events */}
+        <div className="lg:col-span-8 space-y-3">
 
       {/* Main Interactive Colorful Event Cards List ("Working the Day") */}
       {dayEvents.length === 0 ? (
@@ -413,27 +353,26 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
             return (
               <div
                 key={evt.id}
-                className={`w-full relative rounded-xl border transition-all shadow-xs overflow-hidden ${cfg.badgeBg} ${cfg.borderColor}`}
+                className={`w-full relative rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} transition-all shadow-xs overflow-hidden`}
               >
                 {/* Event Card Header - 2-row vertical stack */}
                 <div
                   onClick={() => toggleEventExpanded(evt.id)}
-                  className="flex flex-col gap-1.5 p-3 sm:p-3.5 cursor-pointer select-none hover:opacity-95 transition-opacity"
+                  className="flex flex-col gap-1 py-2 px-3 cursor-pointer select-none hover:bg-stone-50/50 dark:hover:bg-stone-800/30 transition-colors"
                 >
                   {/* Row 1: Full Width Untruncated Title */}
-                  <h3 className={`text-xs sm:text-sm md:text-base font-semibold leading-snug break-words ${cfg.textColor}`}>
+                  <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
                     {evt.title}
                   </h3>
 
                   {/* Row 2: Metadata & Controls Row */}
                   <div className="flex items-center justify-between gap-2">
                     {/* Left side: Time range + Partner Initial badge */}
-                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                      <span className="font-mono text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 whitespace-nowrap flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{evt.startTime ? formatTimeRange(evt.startTime, evt.endTime) : 'All Day'}</span>
+                    <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                      <span className="font-mono text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 whitespace-nowrap">
+                        {evt.startTime ? formatTimeRange(evt.startTime, evt.endTime) : 'All Day'}
                       </span>
-                      <span className={`text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded border ${
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                         evt.assignedTo === 'her'
                           ? user1Theme.badgeBg
                           : evt.assignedTo === 'him'
@@ -453,10 +392,9 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                             e.stopPropagation();
                             toggleTaskSection(evt.id);
                           }}
-                          className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 px-2 py-0.5 rounded border border-black/5 dark:border-white/10 cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors"
                           title={isTasksExpanded ? "Collapse checklist tasks" : "Expand checklist tasks"}
                         >
-                          <CheckCircle2 className={`w-3.5 h-3.5 ${allTasksDone ? 'text-emerald-600' : 'text-stone-500'}`} />
                           <span>{completedCount}/{tasks.length}</span>
                           {isTasksExpanded ? (
                             <ChevronUp className="w-3 h-3 text-stone-500" />
@@ -466,7 +404,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                         </button>
                       )}
 
-                      <div className="flex items-center text-stone-500 p-0.5">
+                      <div className="flex items-center text-stone-400 p-0.5">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </div>
                     </div>
@@ -740,38 +678,50 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
 
         {/* Right Column: Sticky Notes scratchpad on PC */}
         <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-          {/* Notes for Working this Day */}
-          <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] p-4 shadow-2xs space-y-2 transition-colors">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider">
-            <FileText className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
-            <span>Notes</span>
-          </span>
-          <div className="flex items-center gap-1 text-[11px]">
-            <button
-              type="button"
-              onClick={handleInsertBullet}
-              className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+          <div className="rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] overflow-hidden text-xs shadow-2xs">
+            <div
+              onClick={() => setIsNotesExpanded(!isNotesExpanded)}
+              className="py-2 px-3 flex items-center justify-between cursor-pointer select-none hover:bg-stone-50 dark:hover:bg-[#202329] transition-colors"
             >
-              + Bullet (•)
-            </button>
-            <button
-              type="button"
-              onClick={handleInsertBreak}
-              className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-            >
-              + Break
-            </button>
-          </div>
-        </div>
+              <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider text-[11px]">
+                <FileText className="w-3.5 h-3.5 text-stone-500" />
+                Notes
+              </span>
+              <div className="flex-1 mx-2 truncate text-stone-400 text-[11px]">
+                {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Notes, feedback, reminders...'}
+              </div>
+              <div className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200">
+                {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </div>
+            </div>
 
-        <textarea
-          rows={3}
-          value={dayNotes}
-          onChange={(e) => handleNotesChange(e.target.value)}
-          placeholder="Notes, customer feedback, parts used, pet care & reminders..."
-          className="w-full text-xs p-3 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 whitespace-pre-wrap font-sans leading-relaxed"
-        />
+            {isNotesExpanded && (
+              <div className="p-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
+                <div className="flex items-center justify-end gap-1 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={handleInsertBullet}
+                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                  >
+                    + Bullet (•)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInsertBreak}
+                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                  >
+                    + Break
+                  </button>
+                </div>
+                <textarea
+                  rows={4}
+                  value={dayNotes}
+                  onChange={(e) => handleNotesChange(e.target.value)}
+                  placeholder="Notes, customer feedback, parts used, pet care & reminders..."
+                  className="w-full text-xs p-3 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 whitespace-pre-wrap font-sans leading-relaxed"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

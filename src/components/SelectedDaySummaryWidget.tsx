@@ -13,6 +13,9 @@ import {
   Home, 
   ChevronDown, 
   ChevronUp, 
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
   Quote, 
   MapPin, 
   Heart,
@@ -27,7 +30,7 @@ import {
   X,
   Camera
 } from 'lucide-react';
-import { CalendarEvent, DayStayInfo, EventCategory, StayLocation } from '../types/calendar';
+import { CalendarEvent, CalendarViewMode, DayStayInfo, EventCategory, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, formatDateToYMD, formatUsTime } from '../utils/calendarUtils';
 import { getMoonPhase, getDailyInspiration, MoonPhaseInfo } from '../utils/astronomyUtils';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +54,16 @@ interface SelectedDaySummaryWidgetProps {
   onUpdateStay?: (date: string, location: StayLocation) => void;
   onOpenFridgePhotos?: () => void;
   photoCount?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
+  onToday?: () => void;
+  navLabel?: string;
+  viewMode?: CalendarViewMode;
+  isFilterSortOpen?: boolean;
+  onToggleFilterSort?: () => void;
+  isAnyFilterActive?: boolean;
+  activeFilterCount?: number;
+  partnerFilter?: 'all' | 'her' | 'him';
 }
 
 const COLLAPSED_STORAGE_KEY = 'duosync_day_widget_collapsed';
@@ -64,6 +77,16 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
   onUpdateStay,
   onOpenFridgePhotos,
   photoCount = 0,
+  onPrev,
+  onNext,
+  onToday,
+  navLabel,
+  viewMode,
+  isFilterSortOpen = false,
+  onToggleFilterSort,
+  isAnyFilterActive = false,
+  activeFilterCount = 0,
+  partnerFilter = 'all',
 }) => {
   const { 
     currentUser, 
@@ -299,15 +322,43 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
 
 
   return (
-    <section 
-      aria-label="Selected Day Summary Widget"
-      className="my-1.5 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white/95 dark:bg-[#1a1d22]/95 shadow-2xs transition-all duration-200 overflow-hidden"
-    >
-      {/* Top Header / Bar - Single Un-squished Horizontal Row */}
-      <div className={`bg-gradient-to-r from-stone-50 via-white to-stone-50 dark:from-[#202329] dark:via-[#1c1f25] dark:to-[#202329] ${isDropdownOpen ? 'border-b border-[#e6e1d8] dark:border-[#2d3139]' : ''} flex items-center justify-between gap-2 px-3 py-2 flex-nowrap transition-all`}>
-        
-        {/* Left side: Colored Day name pill & Fridge Photos button */}
-        <div className="flex items-center gap-2 min-w-0">
+    <div className="w-full">
+      {/* Unified Sub-Header Row: Navigation, Stay/Date Pill, Weather Dropdown, Camera, Filter & Sort */}
+      <div className="flex items-center justify-between gap-1.5 px-2.5 sm:px-6 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139]">
+        {/* Left side: < > Today + Date / Stay pill */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          {onPrev && onNext && (
+            <div className="flex items-center border border-[#e2ddd5] dark:border-[#353943] rounded-lg overflow-hidden bg-white dark:bg-[#202329] shadow-2xs shrink-0">
+              <button
+                type="button"
+                onClick={onPrev}
+                aria-label="Previous period"
+                className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors cursor-pointer shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                aria-label="Next period"
+                className="p-1 hover:bg-stone-100 dark:hover:bg-[#2a2e36] text-stone-600 dark:text-stone-300 transition-colors border-l border-[#e2ddd5] dark:border-[#353943] cursor-pointer shrink-0"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {onToday && (
+            <button
+              type="button"
+              onClick={onToday}
+              className="text-[11px] font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
+            >
+              Today
+            </button>
+          )}
+
+          {/* Unified Date / Stay Pill */}
           {(() => {
             const dayPillStayColor = 
               stayInfo?.stayAt === 'her_home'
@@ -329,15 +380,17 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
               onUpdateStay(selectedDate, nextStay);
             };
 
+            const shortDateLabel = targetDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
             return (
               <button
                 type="button"
                 onClick={onUpdateStay ? handleCycleStay : undefined}
                 title={stayInfo ? `Stay: ${stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : stayInfo.stayAt === 'her_home' ? partner1Label : partner2Label}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
-                className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 truncate ${dayPillStayColor}`}
               >
                 <Home className="w-3 h-3 shrink-0 opacity-80" />
-                <span className="font-serif capitalize">{dayOfWeekName}</span>
+                <span className="truncate">{shortDateLabel}</span>
                 {isToday && (
                   <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs">
                     Today
@@ -346,13 +399,33 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
               </button>
             );
           })()}
+        </div>
+
+        {/* Right side: Weather Dropdown Pill, Camera Button, Filter & Sort */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Weather Dropdown Pill */}
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen((prev) => !prev)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200 whitespace-nowrap shrink-0 cursor-pointer hover:bg-stone-100 dark:hover:bg-[#2a2d36] transition-colors"
+            title="Weather & Day Info"
+          >
+            <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="sm:hidden">
+              {dayForecast ? `${formatTemp(dayForecast.highTemp)}` : 'Weather'}
+            </span>
+            <span className="hidden sm:inline">
+              {dayForecast ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}` : 'Weather & Info'}
+            </span>
+            {isDropdownOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
 
           {/* Compact Fridge Photos button */}
           {onOpenFridgePhotos && (
             <button
               type="button"
               onClick={onOpenFridgePhotos}
-              className="relative p-1 rounded-md bg-stone-100 dark:bg-[#252830] hover:bg-stone-200 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-200 border border-[#e4ded5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
+              className="relative p-1.5 rounded-lg bg-stone-100 dark:bg-[#252830] hover:bg-stone-200 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-200 border border-[#e4ded5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
               title={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
               aria-label="Fridge Photos"
             >
@@ -364,27 +437,43 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
               )}
             </button>
           )}
-        </div>
 
-        {/* Right side: Single clean dropdown button combining temperature and chevron */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsDropdownOpen((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-200 whitespace-nowrap shrink-0 cursor-pointer hover:bg-stone-100 dark:hover:bg-[#2a2d36] transition-colors"
-          >
-            <Sun className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-            <span>
-              {dayForecast ? `${formatTemp(dayForecast.highTemp)} / ${formatTemp(dayForecast.lowTemp)}` : 'Weather & Info'}
-            </span>
-            {isDropdownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
+          {/* Filter & Sort Button (Icon only on mobile, text on sm+) */}
+          {onToggleFilterSort && (
+            <button
+              type="button"
+              onClick={onToggleFilterSort}
+              className={`inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs whitespace-nowrap shrink-0 ${
+                isFilterSortOpen || isAnyFilterActive
+                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
+                  : 'bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 border-[#e2ddd5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#2a2e36]'
+              }`}
+              title="Toggle Category Filter & Sort Options"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Filter & Sort</span>
+              {partnerFilter !== 'all' ? (
+                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                  partnerFilter === 'her' ? user1Theme.badgeBg : user2Theme.badgeBg
+                }`}>
+                  {partnerFilter === 'her' ? partner1Initial : partner2Initial}
+                </span>
+              ) : (activeFilterCount || 0) > 0 ? (
+                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+              <span className="hidden sm:inline">
+                {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Widget Body (Expanded) - Responsive 3-column grid */}
+      {/* Main Widget Body (Expanded) - Responsive 3-column grid cleanly below the bar */}
       {isDropdownOpen && (
-        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 mt-2 border-t border-stone-200/70 dark:border-stone-800 animate-in fade-in duration-200">
+        <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-3 gap-3 border-t border-stone-200/70 dark:border-stone-800 bg-white/95 dark:bg-[#1a1d22]/95 animate-in fade-in duration-200">
 
           {/* Card 2: Phrase of the Day / Motivational Quote */}
           <div className="rounded-xl p-3 bg-stone-50/80 dark:bg-[#21242c] border border-stone-200/80 dark:border-[#2d3139] flex flex-col justify-between">
@@ -699,6 +788,6 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };

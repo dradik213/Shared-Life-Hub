@@ -94,6 +94,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   const [packoutEvent, setPackoutEvent] = useState<CalendarEvent | null>(null);
   const [posEvent, setPosEvent] = useState<CalendarEvent | null>(null);
   const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
 
   const toggleEventExpanded = (eventId: string) => {
     if (onToggleExpandEvent) {
@@ -274,9 +275,9 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   return (
     <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] shadow-md overflow-hidden flex flex-col h-full transition-colors">
       
-      {/* Header Bar */}
-      <div className="px-3.5 py-2.5 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between">
-        <div className="min-w-0 flex items-center gap-2">
+      {/* Header Bar - Single Clean Row: Stay Button + Event Count on Left, Actions on Right */}
+      <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between gap-1.5">
+        <div className="min-w-0 flex items-center gap-1.5">
           {(() => {
             const dayPillStayColor = 
               currentStay === 'her_home'
@@ -287,46 +288,44 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 border border-purple-300 dark:border-purple-700'
                 : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
 
+            const [sy, sm, sd] = selectedDate.split('-').map(Number);
+            const targetDateObj = new Date(sy, sm - 1, sd, 12, 0, 0);
+            const shortDateLabel = targetDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
             return (
               <button
                 type="button"
                 onClick={handleCycleStay}
                 title={`Stay: ${currentStay === 'her_home' ? partner1Label : currentStay === 'his_home' ? partner2Label : `${partner1Label} & ${partner2Label}`} (Click to change stay)`}
-                className={`px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold cursor-pointer shadow-2xs transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5 whitespace-nowrap shrink-0 ${dayPillStayColor}`}
               >
                 <Home className="w-3 h-3 shrink-0 opacity-80" />
-                <span>{dayName}</span>
-                <span className="font-mono text-xs">{d}</span>
+                <span>{shortDateLabel}</span>
               </button>
             );
           })()}
-          <div className="min-w-0">
-            <h2 className="text-xs sm:text-sm font-serif font-bold text-stone-900 dark:text-stone-100 truncate">
-              {monthYearHeading}
-            </h2>
-            <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate">
-              {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'} planned
-            </span>
-          </div>
+          <span className="text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate">
+            ({dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'})
+          </span>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 shrink-0">
           {onOpenDayView && (
             <button
               type="button"
               onClick={() => onOpenDayView(selectedDate)}
-              className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#282c34] text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#313640] transition-colors cursor-pointer"
+              className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#282c34] text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#313640] transition-colors cursor-pointer shrink-0"
               title="Open full Daily Schedule"
             >
               Day View →
             </button>
           )}
 
-          {/* Photo Button: compact icon-only without redundant text */}
+          {/* Photo Button */}
           <button
             type="button"
             onClick={onOpenFridgePhotos}
-            className="relative p-1.5 rounded-lg bg-white dark:bg-[#282c34] hover:bg-stone-100 dark:hover:bg-[#313640] text-stone-700 dark:text-stone-200 border border-[#e2ddd5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer"
+            className="relative p-1.5 rounded-lg bg-white dark:bg-[#282c34] hover:bg-stone-100 dark:hover:bg-[#313640] text-stone-700 dark:text-stone-200 border border-[#e2ddd5] dark:border-[#353943] shadow-2xs transition-colors cursor-pointer shrink-0"
             title={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
             aria-label={`Fridge Photos${photoCount > 0 ? ` (${photoCount})` : ''}`}
           >
@@ -342,7 +341,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 p-1.5 rounded-lg hover:bg-stone-200/60 dark:hover:bg-[#2c3039] transition-colors cursor-pointer"
+            className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 p-1.5 rounded-lg hover:bg-stone-200/60 dark:hover:bg-[#2c3039] transition-colors cursor-pointer shrink-0"
             title="Collapse Details & Expand Calendar"
           >
             <Minimize2 className="w-3.5 h-3.5" />
@@ -535,16 +534,16 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 return (
                   <div
                     key={evt.id}
-                    className={`rounded-xl border border-l-4 transition-all shadow-2xs overflow-hidden ${cfg.badgeBg} ${cfg.borderColor}`}
+                    className={`rounded-xl border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} bg-white dark:bg-[#1a1d24] transition-all shadow-2xs overflow-hidden`}
                   >
                     {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                     <div
                       onClick={() => toggleEventExpanded(evt.id)}
-                      className="p-3 cursor-pointer select-none hover:opacity-95 transition-opacity space-y-2"
+                      className="flex flex-col gap-1 py-2 px-3 cursor-pointer select-none hover:bg-stone-50/50 dark:hover:bg-stone-800/30 transition-colors"
                     >
                       {/* Row 1: Full-width untruncated title */}
                       <div className="w-full">
-                        <h3 className={`text-xs sm:text-sm md:text-base font-semibold leading-snug break-words ${cfg.textColor}`}>
+                        <h3 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
                           {evt.title}
                         </h3>
                       </div>
@@ -552,14 +551,13 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                       {/* Row 2: Controls & secondary metadata */}
                       <div className="flex items-center justify-between gap-2 pt-0.5">
                         {/* Left: Time + Partner Badge */}
-                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                           {evt.startTime && (
-                            <span className="font-mono text-[11px] sm:text-xs text-stone-600 dark:text-stone-300 flex items-center gap-1 shrink-0 font-medium">
-                              <Clock className="w-3 h-3 text-stone-400" />
-                              <span>{formatTimeRange(evt.startTime, evt.endTime)}</span>
+                            <span className="font-mono text-[11px] sm:text-xs text-stone-500 dark:text-stone-400 whitespace-nowrap">
+                              {formatTimeRange(evt.startTime, evt.endTime)}
                             </span>
                           )}
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                          <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
                             evt.assignedTo === 'her'
                               ? user1Theme.badgeBg
                               : evt.assignedTo === 'him'
@@ -579,7 +577,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                                 e.stopPropagation();
                                 toggleTaskSection(evt.id);
                               }}
-                              className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors border border-black/5 dark:border-white/5"
+                              className="font-sans text-[10px] px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 font-mono inline-flex items-center gap-1 cursor-pointer transition-colors border border-stone-200 dark:border-stone-700"
                               title={isTasksExpanded ? 'Collapse checklist tasks' : 'Expand checklist tasks'}
                             >
                               <span>{completedCount}/{tasks.length}</span>
@@ -811,42 +809,56 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
           )}
         </div>
 
-        {/* Notes (Per-day, syncs when selectedDate changes) */}
-        <div className="border border-[#e4ded5] dark:border-[#2d3139] rounded-xl p-3.5 bg-[#f7f4ec]/80 dark:bg-[#1f2228] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider">
-              <FileText className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
+        {/* Notes (Per-day, collapsible by default) */}
+        <div className="border border-stone-200/80 dark:border-stone-800 rounded-xl bg-white dark:bg-[#1a1d24] overflow-hidden text-xs shadow-2xs">
+          <div
+            onClick={() => setIsNotesExpanded(!isNotesExpanded)}
+            className="py-2 px-3 flex items-center justify-between cursor-pointer select-none hover:bg-stone-50 dark:hover:bg-[#202329] transition-colors"
+          >
+            <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider text-[11px]">
+              <FileText className="w-3.5 h-3.5 text-stone-500" />
               Notes
             </span>
-            <div className="flex items-center gap-1 text-[11px]">
-              <button
-                type="button"
-                onClick={handleInsertBullet}
-                className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                title="Insert Bullet Point"
-              >
-                + Bullet (•)
-              </button>
-              <button
-                type="button"
-                onClick={handleInsertBreak}
-                className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                title="Insert Line Break"
-              >
-                + Break
-              </button>
+            <div className="flex-1 mx-2 truncate text-stone-400 text-[11px]">
+              {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Add notes, reminders & thoughts...'}
+            </div>
+            <div className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200">
+              {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </div>
           </div>
-          
-          <textarea
-            rows={3}
-            value={dayNotes}
-            onChange={(e) => handleNotesChange(e.target.value)}
-            placeholder={`Notes for ${dateHeading}...
+
+          {isNotesExpanded && (
+            <div className="p-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
+              <div className="flex items-center justify-end gap-1 text-[11px]">
+                <button
+                  type="button"
+                  onClick={handleInsertBullet}
+                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                  title="Insert Bullet Point"
+                >
+                  + Bullet (•)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInsertBreak}
+                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                  title="Insert Line Break"
+                >
+                  + Break
+                </button>
+              </div>
+              
+              <textarea
+                rows={3}
+                value={dayNotes}
+                onChange={(e) => handleNotesChange(e.target.value)}
+                placeholder={`Notes for ${dateHeading}...
 • Record bullet notes or thoughts
 • Auto-saved specifically for this day`}
-            className="w-full text-xs p-2.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
-          />
+                className="w-full text-xs p-2.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
+              />
+            </div>
+          )}
         </div>
 
       </div>

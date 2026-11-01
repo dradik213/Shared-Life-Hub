@@ -446,27 +446,33 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </div>
       </div>
 
-      {/* Middle Row: Selected Day Pulse & Summary Widget - Hidden on Reflection and Admin views */}
-      {viewMode !== 'admin' && viewMode !== 'reflection' && selectedDate && events && stays && (
-        <div className="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 border-t border-[#e5e0d8] dark:border-[#2d3139] pt-1.5 pb-0.5">
-          <SelectedDaySummaryWidget
-            selectedDate={selectedDate}
-            events={events}
-            stays={stays}
-            onFilterCategory={onCategoryFilterChange}
-            categoryFilter={categoryFilter}
-            onUpdateStay={onUpdateStay}
-            onOpenFridgePhotos={onOpenFridgePhotos}
-            photoCount={photoCount}
-          />
-        </div>
+      {/* Unified Sub-Header Row: Navigation, Stay/Date Pill, Weather Dropdown, Camera, Filter & Sort */}
+      {viewMode !== 'admin' && viewMode !== 'reflection' && (
+        <SelectedDaySummaryWidget
+          selectedDate={selectedDate || ''}
+          events={events || []}
+          stays={stays || {}}
+          onFilterCategory={onCategoryFilterChange}
+          categoryFilter={categoryFilter}
+          onUpdateStay={onUpdateStay}
+          onOpenFridgePhotos={onOpenFridgePhotos}
+          photoCount={photoCount}
+          onPrev={onPrev}
+          onNext={onNext}
+          onToday={onToday}
+          navLabel={navLabel}
+          viewMode={viewMode}
+          isFilterSortOpen={isFilterSortOpen}
+          onToggleFilterSort={() => setIsFilterSortOpen(!isFilterSortOpen)}
+          isAnyFilterActive={isAnyFilterActive}
+          activeFilterCount={activeFilterCount}
+          partnerFilter={partnerFilter}
+        />
       )}
 
-      {/* Secondary Bar: Dynamic Navigation (Day/Week/Month/All Time) & Filter & Sort toggle */}
-      {viewMode !== 'admin' && (
+      {/* Reflection view period navigation bar */}
+      {viewMode === 'reflection' && (
         <div className="w-full max-w-[1800px] mx-auto px-2.5 sm:px-6 lg:px-8 py-2 border-t border-[#e5e0d8] dark:border-[#2d3139] flex items-center justify-between gap-2 flex-nowrap text-sm">
-          
-          {/* Top-left Navigation: < > Today + Date/Month title */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
             <div className="flex items-center border border-[#e2ddd5] dark:border-[#353943] rounded-lg overflow-hidden bg-white dark:bg-[#202329] shadow-2xs shrink-0">
               <button
@@ -490,7 +496,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             <button
               type="button"
               onClick={onToday}
-              className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
+              className="text-xs font-medium text-stone-700 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white border border-[#e2ddd5] dark:border-[#353943] hover:bg-white dark:hover:bg-[#22252b] px-2.5 py-1 rounded-lg transition-colors cursor-pointer shrink-0"
             >
               Today
             </button>
@@ -499,36 +505,6 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
               {navLabel}
             </span>
           </div>
-
-          {/* Right side: Filter & Sort Button (always shows "Filter & Sort" + active filter pill) */}
-          {viewMode !== 'reflection' && (
-            <button
-              type="button"
-              onClick={() => setIsFilterSortOpen(!isFilterSortOpen)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs whitespace-nowrap shrink-0 ${
-                isFilterSortOpen || isAnyFilterActive
-                  ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 border-stone-800'
-                  : 'bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 border-[#e2ddd5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#2a2e36]'
-              }`}
-              title="Toggle Category Filter & Sort Options"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filter & Sort</span>
-              {partnerFilter !== 'all' ? (
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                  partnerFilter === 'her' ? user1Theme.badgeBg : user2Theme.badgeBg
-                }`}>
-                  {partnerFilter === 'her' ? partner1Initial : partner2Initial}
-                </span>
-              ) : activeFilterCount > 0 ? (
-                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              ) : null}
-              {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-          )}
-
         </div>
       )}
 

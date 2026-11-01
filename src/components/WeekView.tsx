@@ -238,7 +238,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     return (
                       <div
                         key={evt.id}
-                        className={`p-2 rounded-lg border text-xs ${cfg.badgeBg} ${cfg.borderColor} shadow-2xs space-y-1.5`}
+                        className={`p-2 rounded-lg border border-stone-200/80 dark:border-stone-800 border-l-4 ${cfg.borderColor} bg-white dark:bg-[#1a1d24] text-xs shadow-2xs space-y-1.5`}
                       >
                         {/* Event Header: Row 1 = Full Untruncated Title, Row 2 = Time + Partner on Left, Tasks + Chevron on Right */}
                         <div
@@ -247,7 +247,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         >
                           {/* Row 1: Full-width untruncated title */}
                           <div className="w-full">
-                            <h4 className={`text-xs sm:text-sm font-semibold leading-snug break-words ${cfg.textColor}`}>
+                            <h4 className="text-xs sm:text-sm font-semibold leading-snug break-words text-stone-900 dark:text-stone-100">
                               {evt.title}
                             </h4>
                           </div>
