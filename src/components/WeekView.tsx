@@ -126,17 +126,17 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const todayColRef = useRef<HTMLDivElement | null>(null);
   const mondayColRef = useRef<HTMLDivElement | null>(null);
 
+  const hasToday = weekDays.some((d) => d.isToday);
+  if (!hasToday) {
+    todayColRef.current = null;
+  }
+
   useEffect(() => {
-    const hasToday = weekDays.some((d) => d.isToday);
     const timer = setTimeout(() => {
-      if (!hasToday) {
+      if (todayColRef.current) {
+        todayColRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (todayColRef.current) {
-        const headerEl = document.querySelector('header');
-        const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 80;
-        const rect = todayColRef.current.getBoundingClientRect();
-        const targetY = rect.top + window.scrollY - headerHeight - 12;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
       }
     }, 100);
     return () => clearTimeout(timer);

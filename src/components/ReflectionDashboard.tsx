@@ -797,39 +797,37 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
               </span>
               <span className="text-xs text-stone-500 dark:text-stone-400">nights tracked</span>
             </div>
-            <div className="text-[11px] text-stone-500 dark:text-stone-400 mt-2 flex items-center justify-between">
-              <span className="font-semibold text-blue-700 dark:text-blue-400">
-                {partner1DisplayName || 'Dustin'}: {hisNights}d ({hisPercent}%)
-              </span>
+            <div className="text-[11px] text-stone-600 dark:text-stone-400 mt-2 flex items-center justify-between flex-wrap gap-1">
               <span className="font-semibold text-purple-700 dark:text-purple-400">
-                {partner2DisplayName || 'Katherine'}: {herNights}d ({herPercent}%)
+                {partner1Label}: {herNights}d ({herPercent}%)
+              </span>
+              <span className="font-semibold text-stone-600 dark:text-stone-400">
+                Own Home: {homeNights}d ({homePercent}%)
+              </span>
+              <span className="font-semibold text-indigo-700 dark:text-indigo-400">
+                {partner2Label}: {hisNights}d ({hisPercent}%)
               </span>
             </div>
-            {/* Visual Two/Three-Color Balance Bar */}
+            {/* Visual Three-Color Balance Bar */}
             <div className="w-full bg-stone-200 dark:bg-stone-800 rounded-full h-2 mt-2 overflow-hidden flex">
-              <div
-                className="bg-blue-600 dark:bg-blue-500 h-full transition-all"
-                style={{ width: `${hisPercent}%` }}
-                title={`${partner1DisplayName || 'Dustin'}: ${hisNights} nights`}
-              />
-              {homePercent > 0 && (
-                <div
-                  className="bg-stone-500 h-full transition-all"
-                  style={{ width: `${homePercent}%` }}
-                  title={`Home / Joint: ${homeNights} nights`}
-                />
-              )}
               <div
                 className="bg-purple-600 dark:bg-purple-500 h-full transition-all"
                 style={{ width: `${herPercent}%` }}
-                title={`${partner2DisplayName || 'Katherine'}: ${herNights} nights`}
+                title={`${partner1Label}: ${herNights} nights`}
+              />
+              {homePercent > 0 && (
+                <div
+                  className="bg-stone-400 dark:bg-stone-500 h-full transition-all"
+                  style={{ width: `${homePercent}%` }}
+                  title={`Own Home: ${homeNights} nights`}
+                />
+              )}
+              <div
+                className="bg-indigo-600 dark:bg-indigo-500 h-full transition-all"
+                style={{ width: `${hisPercent}%` }}
+                title={`${partner2Label}: ${hisNights} nights`}
               />
             </div>
-            {homeNights > 0 && (
-              <p className="text-[10px] text-stone-400 dark:text-stone-500 mt-1">
-                Joint / Home: {homeNights}d
-              </p>
-            )}
           </div>
 
           {/* Collapsible Overnight Stays Roster */}
@@ -843,14 +841,14 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
                 <div className="max-h-[420px] overflow-y-auto pr-1 space-y-1.5">
                   {sortedStayEntries.map((stay) => {
                     const badgeBg = stay.stayAt === 'his_home' 
-                      ? user1Theme.badgeBg 
-                      : stay.stayAt === 'her_home' 
                       ? user2Theme.badgeBg 
+                      : stay.stayAt === 'her_home' 
+                      ? user1Theme.badgeBg 
                       : 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
                     const label = stay.stayAt === 'his_home' 
-                      ? `${partner1DisplayName || 'Dustin'}'s Place` 
+                      ? `${partner2Label}'s Place` 
                       : stay.stayAt === 'her_home' 
-                      ? `${partner2DisplayName || 'Katherine'}'s Place` 
+                      ? `${partner1Label}'s Place` 
                       : 'Our Own Home';
 
                     return (
