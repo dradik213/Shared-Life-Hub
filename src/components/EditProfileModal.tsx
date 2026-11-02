@@ -58,9 +58,6 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <h2 className="font-bold text-base text-stone-900 dark:text-stone-100">
                 Edit Profile & Gender
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                Customize your pronouns and hub settings
-              </p>
             </div>
           </div>
           <button

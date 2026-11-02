@@ -245,11 +245,6 @@ export const MarketPackoutModal: React.FC<MarketPackoutModalProps> = ({
                 Market Packout: Log Inventory
               </h2>
             </div>
-            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-              {event.title} · {event.startDate}
-              {boothFee > 0 && <span className="ml-2 font-mono">· Booth Fee: ${boothFee}</span>}
-              {targetRevenue > 0 && <span className="ml-2 font-mono">· Target: ${targetRevenue}</span>}
-            </p>
           </div>
 
           <button

@@ -453,13 +453,7 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
               <span className="text-2xl font-bold font-serif text-stone-900 dark:text-stone-100">
                 {uncompletedTasksCount}
               </span>
-              <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-                Ready to roll forward
-              </span>
             </div>
-            <p className="text-[11px] text-stone-400 dark:text-stone-500 mt-2">
-              Can be copied directly when planning upcoming days.
-            </p>
           </div>
 
           {/* Collapsible Unfinished Tasks Dropdown Body */}

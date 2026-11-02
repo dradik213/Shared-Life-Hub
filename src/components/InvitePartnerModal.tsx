@@ -90,9 +90,6 @@ export const InvitePartnerModal: React.FC<InvitePartnerModalProps> = ({ isOpen, 
               <h2 className="font-bold text-base text-stone-900 dark:text-stone-100">
                 Invite Partner to Shared Hub
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                {currentHub?.name || 'Shared Hub'} • Active Couple View: <span className="font-semibold text-purple-600 dark:text-purple-400">{coupleViewLabel}</span>
-              </p>
             </div>
           </div>
           <button

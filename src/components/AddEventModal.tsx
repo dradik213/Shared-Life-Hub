@@ -310,18 +310,13 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs">
-      <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-2xl max-w-lg w-full border border-[#e4ded5] dark:border-[#2d3139] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 transition-colors flex flex-col max-h-[90vh]">
+      <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-2xl max-w-lg w-full border border-[#e4ded5] dark:border-[#2d3139] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 transition-colors flex flex-col max-h-[85dvh]">
         
         {/* Modal Top Header */}
         <div className="p-3.5 sm:p-4 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between shrink-0">
-          <div>
-            <h2 className="text-sm sm:text-base font-semibold text-stone-900 dark:text-stone-100 font-serif">
-              Add Activity for {formatReadableDate(startDate)}
-            </h2>
-            <p className="text-[11px] text-stone-500 dark:text-stone-400">
-              Step {step} of 3 · {step === 1 ? 'Basics & Category' : step === 2 ? 'Date, Time & Lead' : 'Details & Tasks'}
-            </p>
-          </div>
+          <h2 className="text-sm sm:text-base font-semibold text-stone-900 dark:text-stone-100 font-serif">
+            Add Activity for {formatReadableDate(startDate)}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -362,7 +357,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             }`}
           >
             <span className="w-4 h-4 rounded-full border border-current text-[10px] flex items-center justify-center shrink-0">2</span>
-            <span className="truncate">When & Who</span>
+            <span className="truncate">Time & Who</span>
           </button>
 
           <button
@@ -382,7 +377,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             }`}
           >
             <span className="w-4 h-4 rounded-full border border-current text-[10px] flex items-center justify-center shrink-0">3</span>
-            <span className="truncate">Details & Tasks</span>
+            <span className="truncate">Details</span>
           </button>
         </div>
 
@@ -409,7 +404,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                     onChange={(e) => handleTemplateDropdownChange(e.target.value)}
                     className="flex-1 text-xs bg-white dark:bg-[#1a1d22] border border-[#e4ded5] dark:border-[#353943] text-stone-800 dark:text-stone-200 rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100 cursor-pointer shadow-2xs font-medium"
                   >
-                    <option value="">No template (Blank activity)</option>
+                    <option value="">None</option>
                     {templates.map((tmpl) => {
                       const meta = CATEGORY_CONFIG[tmpl.category] || CATEGORY_CONFIG.other;
                       return (
@@ -448,7 +443,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                         handleAiAutoFill();
                       }
                     }}
-                    placeholder="Ask AI: e.g. 'Dinner date Friday 7pm at Osteria Mozza with flowers task'"
+                    placeholder="Ask AI (e.g. Dinner Fri 7pm)"
                     className="flex-1 text-xs bg-white dark:bg-[#1a1d22] border border-purple-300/80 dark:border-purple-800/80 rounded-md px-2.5 py-1 text-stone-800 dark:text-stone-200 placeholder-stone-400 outline-none focus:ring-1 focus:ring-purple-500"
                   />
                   <button
@@ -516,7 +511,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               {/* Activity Type: Compact 3x2 Grid */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5 uppercase font-mono">
-                  Activity Type
+                  Type
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {categoryKeys.map((cat) => {
@@ -533,25 +528,23 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                             : `${config.badgeBg} ${config.borderColor} ${config.textColor} hover:opacity-90`
                         }`}
                       >
-                        <span className="text-sm shrink-0">{config.emoji}</span>
-                        <div className="truncate">
-                          <div className="truncate">{config.shortLabel}</div>
-                        </div>
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${config.dotColor}`} />
+                        <span className="truncate">{config.shortLabel}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Title / Activity Name */}
+              {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Title / Activity Name <span className="text-rose-500">*</span>
+                  Title <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Autumn Artisan Pop-Up or Dinner at Nopa"
+                  placeholder="Activity name"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={(e) => {
@@ -587,7 +580,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Start Time {startTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(startTime)})</span>}
+                    Start {startTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(startTime)})</span>}
                   </label>
                   <input
                     type="time"
@@ -601,7 +594,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    End Time {endTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(endTime)})</span>}
+                    End {endTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(endTime)})</span>}
                   </label>
                   <input
                     type="time"
@@ -624,13 +617,13 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
               {/* Lead / Assigned To: 3-Button Segmented Selector */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5 uppercase font-mono">
-                  Assigned To / Lead
+                  Who
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'both', label: 'K&D (Shared)' },
-                    { id: 'her', label: partner1Label },
-                    { id: 'him', label: partner2Label },
+                    { id: 'her', label: 'K' },
+                    { id: 'both', label: 'K&D' },
+                    { id: 'him', label: 'D' },
                   ].map((opt) => (
                     <button
                       key={opt.id}
@@ -664,7 +657,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-medium text-amber-800 dark:text-amber-300 mb-1">
-                        Booth Fee ($)
+                        Fee ($)
                       </label>
                       <input
                         type="number"
@@ -676,7 +669,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                     </div>
                     <div>
                       <label className="block text-[11px] font-medium text-amber-800 dark:text-amber-300 mb-1">
-                        Target Revenue ($)
+                        Goal ($)
                       </label>
                       <input
                         type="number"
@@ -687,52 +680,35 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                       />
                     </div>
                   </div>
-                  <div className="pt-1 border-t border-amber-200 dark:border-amber-900/40 text-[11px] text-amber-900 dark:text-amber-200 font-medium">
-                    <span>📦 Barcode Packout & POS Register buttons will be ready on this market card.</span>
-                  </div>
                 </div>
               )}
 
-              {/* Location & Address */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Location Name / Venue
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Fort Mason Center"
-                    value={locationName}
-                    onChange={(e) => setLocationName(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Address or Venue Notes
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 2 Marina Blvd"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900"
-                  />
-                </div>
+              {/* Single Location Field */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  placeholder="Venue or address"
+                  value={locationName}
+                  onChange={(e) => setLocationName(e.target.value)}
+                  className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900"
+                />
               </div>
 
               {/* Individual Checklist Tasks */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Individual Checklist Tasks ({taskInputs.filter(t => t.trim()).length})
+                    Tasks ({taskInputs.filter(t => t.trim()).length})
                   </label>
                   <button
                     type="button"
                     onClick={handleAddTaskField}
                     className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-medium cursor-pointer"
                   >
-                    + Add another task
+                    + Add
                   </button>
                 </div>
                 {taskInputs.map((taskText, idx) => (
@@ -754,7 +730,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Any details or reminders for this plan..."
+                  placeholder="Notes..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 whitespace-pre-wrap font-sans"
@@ -920,7 +896,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 disabled={!title.trim()}
                 className="px-4 py-1.5 text-xs font-semibold bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:opacity-90 disabled:opacity-40 rounded-lg shadow-2xs transition-colors cursor-pointer"
               >
-                Save Activity
+                Save
               </button>
             )}
           </div>

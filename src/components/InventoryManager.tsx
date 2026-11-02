@@ -383,9 +383,6 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
               Inventory & Price Tiers
             </h2>
           </div>
-          <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-            Organized by Category and Price Tier with auto-generated SKUs and Code-128 barcodes.
-          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">

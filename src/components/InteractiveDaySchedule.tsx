@@ -493,9 +493,6 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                     {/* Multiline Notes Display */}
                     {evt.notes && (
                       <div className="p-3 rounded-lg bg-stone-50/90 dark:bg-[#252830] border border-stone-200/80 dark:border-stone-700/60 text-xs text-stone-800 dark:text-stone-200 whitespace-pre-wrap leading-relaxed font-sans">
-                        <span className="text-[10px] uppercase font-mono tracking-wider text-stone-400 block mb-1">
-                          Event Notes & Instructions:
-                        </span>
                         {evt.notes}
                       </div>
                     )}

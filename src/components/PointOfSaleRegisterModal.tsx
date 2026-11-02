@@ -362,11 +362,6 @@ export const PointOfSaleRegisterModal: React.FC<PointOfSaleRegisterModalProps> =
                   Live Register
                 </span>
               </div>
-              <p className="text-[11px] text-stone-500 font-mono">
-                {event.title} · Sales Today: ${currentRevenue.toFixed(2)}
-                {targetRevenue > 0 && ` / Target: $${targetRevenue}`}
-                {boothFee > 0 && ` (Booth Fee: $${boothFee})`}
-              </p>
             </div>
           </div>
 
