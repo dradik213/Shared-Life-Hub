@@ -308,6 +308,17 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
           <span className="text-xs text-stone-500 dark:text-stone-400 truncate">
             {dayEvents.length} {dayEvents.length === 1 ? 'item' : 'items'}
           </span>
+
+          {allBacklogTasks.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-stone-200/80 hover:bg-stone-300/80 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors cursor-pointer shrink-0"
+              title="Toggle Backlog tasks to copy into this day"
+            >
+              + Backlog ({allBacklogTasks.length})
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1 shrink-0 ml-auto">
@@ -326,65 +337,47 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
 
       <div className="p-3 overflow-y-auto space-y-3 flex-1 pb-24">
 
-        {/* Unified Backlog Tasks Accordion: Google Tasks + Unfinished Checklist Items */}
-        {allBacklogTasks.length > 0 && (
-          <div className="rounded-lg border border-amber-300 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/20 overflow-hidden text-xs">
-            <button
-              type="button"
-              onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-              className="w-full p-2.5 px-3 flex items-center justify-between text-left hover:bg-amber-100/40 dark:hover:bg-amber-950/30 transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-semibold">
-                <RotateCcw className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-                <span>{allBacklogTasks.length} Tasks in Backlog (Google Tasks & Unfinished Checklist)</span>
-              </div>
-              <div className="flex items-center gap-1 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
-                <span>{showRolloverDrawer ? 'Hide' : 'Review & Add'}</span>
-                {showRolloverDrawer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </div>
-            </button>
-
-            {showRolloverDrawer && (
-              <div className="p-3 border-t border-amber-200 dark:border-amber-900/50 bg-[#fffdfa] dark:bg-[#1e2127] space-y-2">
-                <p className="text-[11px] text-stone-500 dark:text-stone-400">
-                  Tasks from Google Tasks and past uncompleted checklist tags in your backlog:
-                </p>
-                <div className="max-h-40 overflow-y-auto space-y-1.5">
-                  {allBacklogTasks.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-2 rounded bg-[#fcfaf7] dark:bg-[#252830] border border-[#e4ded5] dark:border-[#353943] flex items-center justify-between gap-2 text-xs"
-                    >
-                      <div className="truncate flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                            item.sourceType === 'google_task'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                          }`}>
-                            {item.sourceType === 'google_task' ? 'Google Task' : 'Unfinished Tag'}
-                          </span>
-                          <span className="font-medium text-stone-800 dark:text-stone-200 block truncate">
-                            {item.title}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate mt-0.5">
-                          {item.sourceDetail}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onCopyTaskToDate(item.title, selectedDate, item.assignedTo)}
-                        className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-semibold px-2 py-1 rounded shadow-2xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Copy className="w-2.5 h-2.5" />
-                        <span>Add</span>
-                      </button>
-                    </div>
-                  ))}
+        {/* Compact Backlog Inline List */}
+        {showRolloverDrawer && allBacklogTasks.length > 0 && (
+          <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#202329] p-2.5 shadow-2xs space-y-1.5 text-xs">
+            <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                Backlog Tasks ({allBacklogTasks.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowRolloverDrawer(false)}
+                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="max-h-48 overflow-y-auto space-y-1">
+              {allBacklogTasks.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-2 text-xs"
+                >
+                  <div className="truncate flex-1 min-w-0">
+                    <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                      {item.title}
+                    </span>
+                    <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
+                      {item.sourceDetail}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCopyTaskToDate(item.title, selectedDate, item.assignedTo);
+                    }}
+                    className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer hover:bg-stone-800 dark:hover:bg-white"
+                  >
+                    <span>+ Add</span>
+                  </button>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
 

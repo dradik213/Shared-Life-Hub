@@ -402,19 +402,57 @@ function CalendarApp() {
     }).length;
   }, [currentUser, chatMessages, lastChatReadTime]);
 
-  // Count overdue incomplete tasks (amber badge marker)
-  const overdueTasksCount = useMemo(() => {
+  // Track seen overdue task IDs in localStorage ('duosync_seen_overdue_ids')
+  const [seenOverdueIds, setSeenOverdueIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('duosync_seen_overdue_ids');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
+
+  const markOverdueTasksSeen = () => {
+    const todayStr = formatDateToYMD(new Date());
+    const overdueIds: string[] = [];
+    events.forEach((evt) => {
+      if (evt.startDate < todayStr && evt.tasks) {
+        evt.tasks.forEach((t) => {
+          if (!t.completed) overdueIds.push(t.id);
+        });
+      }
+    });
+    setSeenOverdueIds((prev) => {
+      const updated = Array.from(new Set([...prev, ...overdueIds]));
+      try {
+        localStorage.setItem('duosync_seen_overdue_ids', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const handleDismissOverdueTask = (taskId: string) => {
+    setSeenOverdueIds((prev) => {
+      const updated = Array.from(new Set([...prev, taskId]));
+      try {
+        localStorage.setItem('duosync_seen_overdue_ids', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  // Count unseen overdue incomplete tasks (one-time dismissible marker)
+  const unseenOverdueCount = useMemo(() => {
     const todayStr = formatDateToYMD(new Date());
     let count = 0;
     events.forEach((evt) => {
       if (evt.startDate < todayStr && evt.tasks) {
         evt.tasks.forEach((t) => {
-          if (!t.completed) count++;
+          if (!t.completed && !seenOverdueIds.includes(t.id)) count++;
         });
       }
     });
     return count;
-  }, [events]);
+  }, [events, seenOverdueIds]);
 
   // Tab-specific notification counts across Unified Workspace (strictly authentic, non-persistent signals)
   const workspaceNotifications = useMemo(() => {
@@ -433,8 +471,8 @@ function CalendarApp() {
     // 3. Gemini: 0 by default; only alert if there are pending unreviewed AI suggestions
     const gemini = 0;
 
-    // 4. Tasks: strictly overdue tasks (no fake badges for standard pending tasks)
-    const tasks = overdueTasksCount;
+    // 4. Tasks: strictly unseen overdue tasks (one-time dismissible badge)
+    const tasks = unseenOverdueCount;
 
     // 5. Calendar: 0 (unless calendar sync conflict)
     const calendar = 0;
@@ -454,7 +492,7 @@ function CalendarApp() {
       gmail,
       chat,
     };
-  }, [templates, currentUser, lastViewedTemplatesTime, currentHub, hasSeenPartnerInviteNotice, overdueTasksCount, unreadChatCount]);
+  }, [templates, currentUser, lastViewedTemplatesTime, currentHub, hasSeenPartnerInviteNotice, unseenOverdueCount, unreadChatCount]);
 
   // Total notification sum displayed on the Pastel Heart button (only rendered if > 0)
   const totalHeartNotifications = useMemo(() => {
@@ -474,7 +512,39 @@ function CalendarApp() {
     if (viewMode === 'admin' || isUnifiedWorkspaceOpen || isInviteModalOpen) {
       markPartnerInviteSeen();
     }
+    if (isUnifiedWorkspaceOpen) {
+      markOverdueTasksSeen();
+    }
   }, [viewMode, isUnifiedWorkspaceOpen, isInviteModalOpen]);
+
+  // Aggregate backlog tasks across unfinished past checklist items & Google Tasks
+  const availableBacklogTasks = useMemo(() => {
+    const todayStr = formatDateToYMD(new Date());
+    const tasksList: Array<{ id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }> = [];
+    events.forEach((evt) => {
+      if (evt.startDate < todayStr && evt.tasks) {
+        evt.tasks.forEach((t) => {
+          if (!t.completed) {
+            tasksList.push({
+              id: t.id,
+              title: t.title,
+              assignedTo: t.assignedTo,
+            });
+          }
+        });
+      }
+    });
+    googleTasks.forEach((gt) => {
+      if (gt.status !== 'completed') {
+        tasksList.push({
+          id: `gt-${gt.id}`,
+          title: gt.title,
+          assignedTo: 'both',
+        });
+      }
+    });
+    return tasksList;
+  }, [events, googleTasks]);
 
   // Sync dark class on documentElement and body
   useEffect(() => {
@@ -1091,9 +1161,10 @@ function CalendarApp() {
           setIsUnifiedWorkspaceOpen(true);
           handleTemplatesViewed();
           markPartnerInviteSeen();
+          markOverdueTasksSeen();
         }}
         unreadChatCount={unreadChatCount}
-        overdueTasksCount={overdueTasksCount}
+        overdueTasksCount={unseenOverdueCount}
         totalHeartNotifications={totalHeartNotifications}
         tabNotificationCounts={workspaceNotifications}
         onOpenChat={() => {
@@ -1243,6 +1314,9 @@ function CalendarApp() {
                   expandedTaskSections={expandedTaskSections}
                   onToggleExpandEvent={handleToggleExpandEvent}
                   onToggleExpandTasks={handleToggleExpandTasks}
+                  onUpdateStay={handleUpdateStay}
+                  availableBacklogTasks={availableBacklogTasks}
+                  onAddBacklogTaskToDate={(task, targetDate) => handleCopyTaskToDate(task.title, targetDate, task.assignedTo)}
                   onOpenDayView={(d) => {
                     handleSelectDate(d);
                     setViewMode('agenda');
@@ -1338,6 +1412,13 @@ function CalendarApp() {
         initialTab={unifiedWorkspaceTab}
         selectedDate={selectedDate}
         templates={templates}
+        events={events}
+        onToggleTask={handleToggleTask}
+        onMoveTaskToToday={(title, assignedTo) => {
+          const todayStr = formatDateToYMD(new Date());
+          handleCopyTaskToDate(title, todayStr, assignedTo);
+        }}
+        onDismissOverdueTask={handleDismissOverdueTask}
         onUpdateTemplate={handleUpdateTemplate}
         onCreateTemplate={handleCreateTemplate}
         onDeleteTemplate={handleDeleteTemplate}

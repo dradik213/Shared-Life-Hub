@@ -38,6 +38,7 @@ import {
   Package
 } from 'lucide-react';
 import { InventoryManager } from './InventoryManager';
+import { TaskToggleSlider } from './TaskToggleSlider';
 import { CalendarEvent, EventCategory, PlanTemplate } from '../types/calendar';
 import { 
   auth,
@@ -135,6 +136,10 @@ interface UnifiedWorkspaceModalProps {
     gmail?: number;
     chat?: number;
   };
+  events?: CalendarEvent[];
+  onToggleTask?: (eventId: string, taskId: string, completed: boolean) => void;
+  onMoveTaskToToday?: (title: string, assignedTo?: 'both' | 'him' | 'her') => void;
+  onDismissOverdueTask?: (taskId: string) => void;
 }
 
 export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
@@ -161,6 +166,10 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
   onPartnerInviteViewed,
   unreadChatCount = 0,
   tabNotifications,
+  events = [],
+  onToggleTask,
+  onMoveTaskToToday,
+  onDismissOverdueTask,
 }) => {
   const { 
     currentUser, 
@@ -743,6 +752,36 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
     showAdminFeedback('Hub name updated successfully.');
   };
 
+  // Missed past checklist tasks (< todayYmd)
+  const todayYmd = formatDateToYMD(new Date());
+  const missedTasks: Array<{
+    eventId: string;
+    eventTitle: string;
+    eventDate: string;
+    taskId: string;
+    title: string;
+    completed: boolean;
+    assignedTo?: 'both' | 'him' | 'her';
+  }> = [];
+
+  events.forEach((evt) => {
+    if (evt.startDate < todayYmd && evt.tasks) {
+      evt.tasks.forEach((t) => {
+        if (!t.completed) {
+          missedTasks.push({
+            eventId: evt.id,
+            eventTitle: evt.title,
+            eventDate: evt.startDate,
+            taskId: t.id,
+            title: t.title,
+            completed: t.completed,
+            assignedTo: t.assignedTo,
+          });
+        }
+      });
+    }
+  });
+
   // Tab-specific notification counts (strictly authentic notifications, default 0)
   const notificationCounts = {
     templates: tabNotifications?.templates ?? 0,
@@ -774,26 +813,21 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar */}
-        <div className="px-4 sm:px-6 py-3 border-b border-[#e5e0d8] dark:border-[#2d3139] bg-stone-50/90 dark:bg-[#202329]/90 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-400 flex items-center justify-center text-white shadow-xs">
+        <div className="px-4 py-3 border-b border-[#e5e0d8] dark:border-[#2d3139] bg-stone-50/90 dark:bg-[#202329]/90 flex items-center justify-between gap-2 flex-nowrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-400 flex items-center justify-center text-white shadow-xs shrink-0">
               <Heart className="w-4 h-4 fill-white text-white drop-shadow-xs" />
             </div>
-            <div>
-              <h2 className="text-base font-serif font-bold tracking-tight text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                <span>{currentHub?.name || 'Shared Life Hub'}</span>
-                <span className="text-[11px] font-sans font-normal px-2 py-0.5 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
-                  Workspace
-                </span>
-              </h2>
-            </div>
+            <h2 className="text-base font-serif font-bold tracking-tight text-stone-900 dark:text-stone-100 truncate">
+              {currentHub?.name || 'Shared Life Hub'}
+            </h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {googleUser ? (
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="font-semibold">{googleUser.email || googleUser.displayName}</span>
+                <span className="font-semibold truncate max-w-[140px]">{googleUser.email || googleUser.displayName}</span>
               </div>
             ) : (
               <button
@@ -810,7 +844,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-200/60 dark:hover:bg-[#2a2e36] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-200/60 dark:hover:bg-[#2a2e36] transition-colors cursor-pointer shrink-0"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -1093,7 +1127,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                 )}
                 {/* Active Hub Switcher: Calls AuthContext switchHub so App updates currentHub immediately */}
                 {hubs && hubs.length > 0 && (
-                  <div className="pt-2.5 border-t border-stone-200/70 dark:border-stone-800/70 flex items-center justify-between gap-3">
+                  <div className="pt-2.5 border-t border-stone-200/70 dark:border-stone-800/70 flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-stone-700 dark:text-stone-300">
                       Switch Active Hub:
                     </span>
@@ -1105,7 +1139,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                           showAdminFeedback('Switched active hub.');
                         }
                       }}
-                      className="text-xs px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] text-stone-900 dark:text-stone-100 font-semibold cursor-pointer outline-none focus:ring-1 focus:ring-purple-500"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] text-stone-900 dark:text-stone-100 font-semibold cursor-pointer outline-none focus:ring-1 focus:ring-purple-500"
                     >
                       {hubs.map((h) => (
                         <option key={h.id} value={h.id}>
@@ -1222,74 +1256,6 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* Data Reset & Hygiene */}
-              {onClearAllEventsAndStays && (
-                <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 space-y-2">
-                  <h4 className="font-bold text-xs text-rose-900 dark:text-rose-200">
-                    Data Hygiene & Reset
-                  </h4>
-                  <p className="text-[11px] text-rose-700 dark:text-rose-400">
-                    Clear scheduled calendar events and overnight stays for a fresh start. This cannot be undone.
-                  </p>
-                  {!confirmClearData ? (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmClearData(true)}
-                      className="text-xs font-semibold px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
-                    >
-                      Clear Calendar Events & Stays
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onClearAllEventsAndStays();
-                          setConfirmClearData(false);
-                          showAdminFeedback('Calendar events and stays cleared.');
-                        }}
-                        className="text-xs font-bold px-2.5 py-1 rounded bg-rose-700 text-white cursor-pointer"
-                      >
-                        Confirm Wipe
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmClearData(false)}
-                        className="text-xs text-stone-600 hover:underline cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* November Test Dataset Loader */}
-              {onLoadNovemberTestData && (
-                <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-900/60 bg-purple-50/50 dark:bg-purple-950/20 space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="font-bold text-xs text-purple-950 dark:text-purple-200">
-                        November Test Schedule (Dustin & Katherine)
-                      </h4>
-                      <p className="text-[11px] text-purple-700 dark:text-purple-400">
-                        Loads the complete 30-day November calendar: alternating stays, 9:30 PM dog care, daily dinners, 6 weekend markets, and Thanksgiving week.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onLoadNovemberTestData();
-                        showAdminFeedback('November test schedule reloaded!');
-                      }}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white cursor-pointer shadow-xs shrink-0 transition-colors"
-                    >
-                      Reload November Schedule
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -1448,11 +1414,78 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                 </button>
               </form>
 
+              {/* Missed Past Checklist Tasks */}
+              {missedTasks.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between pb-1 border-b border-stone-200/60 dark:border-stone-800">
+                    <h4 className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider">
+                      Overdue Checklist Tasks ({missedTasks.length})
+                    </h4>
+                    <span className="text-[11px] text-stone-500">Uncompleted from past events</span>
+                  </div>
+                  <div className="space-y-2">
+                    {missedTasks.map((item) => (
+                      <div
+                        key={`${item.eventId}-${item.taskId}`}
+                        className="p-3 rounded-xl border border-amber-200/90 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <TaskToggleSlider
+                            checked={item.completed}
+                            onChange={(checked: boolean) => {
+                              onToggleTask?.(item.eventId, item.taskId, checked);
+                            }}
+                          />
+                          <div className="min-w-0 truncate">
+                            <span className="font-semibold text-stone-900 dark:text-stone-100 block truncate">
+                              {item.title}
+                            </span>
+                            <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate">
+                              {formatReadableDate(item.eventDate)} · {item.eventTitle}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onMoveTaskToToday?.(item.title, item.assignedTo);
+                              onDismissOverdueTask?.(item.taskId);
+                              showAdminFeedback(`Moved "${item.title}" to today!`);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors cursor-pointer"
+                          >
+                            <span>+ Move to Today</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onDismissOverdueTask?.(item.taskId);
+                              showAdminFeedback(`Dismissed overdue task notice.`);
+                            }}
+                            className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 text-xs px-2 py-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+                            title="Dismiss notification"
+                          >
+                            Dismiss ×
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tasks List */}
               <div className="space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-stone-200/60 dark:border-stone-800">
+                  <h4 className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider">
+                    Backlog & Google Tasks ({googleTasksList.length})
+                  </h4>
+                </div>
                 {isLoadingTasks ? (
                   <p className="text-xs text-stone-400 py-4 text-center">Loading tasks from Google Tasks...</p>
-                ) : googleTasksList.length === 0 ? (
+                ) : googleTasksList.length === 0 && missedTasks.length === 0 ? (
                   <div className="p-8 text-center text-xs text-stone-400 border border-dashed border-[#e4ded5] dark:border-[#2d3139] rounded-xl">
                     No active tasks found. Add a task above or connect Google Tasks.
                   </div>
@@ -1490,6 +1523,16 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                             Due: {formatReadableDate(task.due.split('T')[0])}
                           </span>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onMoveTaskToToday?.(task.title, 'both');
+                            showAdminFeedback(`Moved "${task.title}" to today!`);
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors cursor-pointer"
+                        >
+                          + Move to Today
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteTask(task.id)}
@@ -1808,39 +1851,6 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
             </div>
           )}
 
-        </div>
-
-        {/* Modal Footer Bar */}
-        <div className="px-6 py-3 border-t border-[#e5e0d8] dark:border-[#2d3139] bg-stone-50 dark:bg-[#1f2229] flex items-center justify-between text-xs text-stone-500">
-          <div className="flex items-center gap-2">
-            <span>Active Hub:</span>
-            {hubs && hubs.length > 1 ? (
-              <select
-                value={currentHub?.id || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    switchHub(e.target.value);
-                  }
-                }}
-                className="bg-transparent font-bold text-stone-900 dark:text-stone-100 border border-stone-300 dark:border-stone-700 rounded px-1.5 py-0.5 text-xs cursor-pointer"
-              >
-                {hubs.map((h) => (
-                  <option key={h.id} value={h.id} className="bg-white dark:bg-[#1a1d22]">
-                    {h.name} {h.id === currentHub?.id ? '(Active)' : ''}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <strong className="text-stone-800 dark:text-stone-200">{currentHub?.name || 'Shared Life Hub'}</strong>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#252830] text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#2e323c] font-semibold cursor-pointer shadow-2xs"
-          >
-            Close
-          </button>
         </div>
       </div>
 

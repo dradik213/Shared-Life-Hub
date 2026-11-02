@@ -25,6 +25,8 @@ interface WeekViewProps {
   onToggleExpandTasks?: (eventId: string) => void;
   onUpdateStay?: (dateStr: string, stayAt: StayLocation) => void;
   onOpenDayView?: (dateStr: string) => void;
+  availableBacklogTasks?: Array<{ id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }>;
+  onAddBacklogTaskToDate?: (task: { id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }, targetDateStr: string) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
@@ -47,11 +49,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onToggleExpandTasks,
   onUpdateStay,
   onOpenDayView,
+  availableBacklogTasks = [],
+  onAddBacklogTaskToDate,
 }) => {
   const { partner1Label, partner2Label, partner1Initial, partner2Initial, user1Theme, user2Theme } = useAuth();
   const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
   const [localExpandedTaskIds, setLocalExpandedTaskIds] = useState<Record<string, boolean>>({});
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
+  const [openBacklogPopoverDate, setOpenBacklogPopoverDate] = useState<string | null>(null);
 
   const currentExpandedEventIds = propsExpandedEventIds ?? localExpandedEventIds;
   const currentExpandedTaskIds = propsExpandedTaskSections ?? localExpandedTaskIds;
@@ -124,10 +129,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
   useEffect(() => {
     const hasToday = weekDays.some((d) => d.isToday);
     const timer = setTimeout(() => {
-      if (hasToday && todayColRef.current) {
-        todayColRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (mondayColRef.current) {
-        mondayColRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!hasToday) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (todayColRef.current) {
+        const headerEl = document.querySelector('header');
+        const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 80;
+        const rect = todayColRef.current.getBoundingClientRect();
+        const targetY = rect.top + window.scrollY - headerHeight - 12;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
       }
     }, 100);
     return () => clearTimeout(timer);
@@ -183,21 +192,71 @@ export const WeekView: React.FC<WeekViewProps> = ({
               <div>
                 {/* Column Day Header */}
                 <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onOpenDayView) {
-                        onOpenDayView(col.dateStr);
-                      } else {
-                        onSelectDate(col.dateStr);
-                      }
-                    }}
-                    title="Open in Day View"
-                    className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 uppercase tracking-wider block font-mono hover:underline cursor-pointer text-left transition-colors"
-                  >
-                    {col.dayName}
-                  </button>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onOpenDayView) {
+                          onOpenDayView(col.dateStr);
+                        } else {
+                          onSelectDate(col.dateStr);
+                        }
+                      }}
+                      title="Open in Day View"
+                      className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 uppercase tracking-wider block font-mono hover:underline cursor-pointer text-left transition-colors"
+                    >
+                      {col.dayName}
+                    </button>
+                    {availableBacklogTasks && availableBacklogTasks.length > 0 && onAddBacklogTaskToDate && (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenBacklogPopoverDate(openBacklogPopoverDate === col.dateStr ? null : col.dateStr);
+                          }}
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer"
+                          title={`Add task from Backlog (${availableBacklogTasks.length} available)`}
+                        >
+                          + Backlog
+                        </button>
+                        {openBacklogPopoverDate === col.dateStr && (
+                          <div
+                            className="absolute left-0 top-full mt-1 w-56 max-h-48 overflow-y-auto bg-white dark:bg-[#1f2228] border border-stone-200 dark:border-stone-700 rounded-lg shadow-lg z-30 p-1.5 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between px-1.5 py-1 text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider border-b border-stone-100 dark:border-stone-800">
+                              <span>Backlog ({availableBacklogTasks.length})</span>
+                              <button
+                                type="button"
+                                onClick={() => setOpenBacklogPopoverDate(null)}
+                                className="hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div className="space-y-1 mt-1">
+                              {availableBacklogTasks.map((t) => (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  onClick={() => {
+                                    onAddBacklogTaskToDate(t, col.dateStr);
+                                    setOpenBacklogPopoverDate(null);
+                                  }}
+                                  className="w-full text-left px-2 py-1.5 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-[11px] text-stone-800 dark:text-stone-200 flex items-center justify-between group cursor-pointer"
+                                >
+                                  <span className="truncate pr-1">{t.title}</span>
+                                  <span className="text-[10px] text-stone-400 group-hover:text-stone-900 dark:group-hover:text-white shrink-0 font-bold">+</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {(() => {
                     let weekDayNumColor = '';
                     if (stayInfo) {

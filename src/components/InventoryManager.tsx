@@ -313,15 +313,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
     saveMasterInventory(updated);
   };
 
-  // Reset to Sample Tiered Inventory
-  const handleResetToSample = () => {
-    setProducts(DEFAULT_SAMPLE_PRODUCTS);
-    saveMasterInventory(DEFAULT_SAMPLE_PRODUCTS);
-    const sampleCats = Array.from(new Set([...INITIAL_CATEGORIES, ...DEFAULT_SAMPLE_PRODUCTS.map((p) => p.category)]));
-    setCategories(sampleCats);
-    showStatus('Reset inventory to Category & Price Tier catalog.');
-    playScannerBeep(true);
-  };
+
 
   const handleOpenPrintDialog = (p: InventoryProduct) => {
     setPrintProduct(p);
@@ -386,16 +378,6 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={handleResetToSample}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-700 dark:text-stone-300 text-xs font-semibold hover:bg-stone-100 dark:hover:bg-[#282c35] transition-colors cursor-pointer shadow-2xs"
-            title="Reload default sample tiered items (Shirts @ $20, Shirts @ $8, Hoodies @ $35, etc.)"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-stone-500" />
-            <span>Reset to Sample Tiers</span>
-          </button>
-
           <button
             type="button"
             onClick={() => handleOpenAdd()}

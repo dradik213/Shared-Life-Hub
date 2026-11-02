@@ -295,27 +295,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                 title={`Account: ${currentUser.name} (${currentUser.gender})`}
                 aria-label={`Account menu for ${currentUser.name}`}
               >
-                <div className="relative">
-                  <div className={`w-6 h-6 rounded-full ${currentUser.avatarColor || 'bg-purple-600'} text-white flex items-center justify-center font-bold text-[11px]`}>
-                    {currentUser.name[0]}
-                  </div>
-
-                  {/* Notification badge on avatar */}
-                  {unreadChatCount > 0 ? (
-                    <span 
-                      className="absolute -top-1 -right-1 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-bold text-white ring-1 ring-white dark:ring-[#202329] shadow-xs"
-                      title={`${unreadChatCount} unread chat messages`}
-                    >
-                      {unreadChatCount > 9 ? '9+' : unreadChatCount}
-                    </span>
-                  ) : overdueTasksCount > 0 ? (
-                    <span 
-                      className="absolute -top-1 -right-1 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-white ring-1 ring-white dark:ring-[#202329] shadow-xs"
-                      title={`${overdueTasksCount} overdue tasks`}
-                    >
-                      {overdueTasksCount > 9 ? '9+' : overdueTasksCount}
-                    </span>
-                  ) : null}
+                <div className={`w-6 h-6 rounded-full ${currentUser.avatarColor || 'bg-purple-600'} text-white flex items-center justify-center font-bold text-[11px]`}>
+                  {currentUser.name[0]}
                 </div>
               </button>
 
@@ -332,47 +313,6 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
                     </div>
                     <p className="text-[11px] text-stone-500 dark:text-stone-400 capitalize mt-0.5">{currentUser.email}</p>
                   </div>
-
-                  {/* Notification Markers Section inside Profile */}
-                  {(unreadChatCount > 0 || overdueTasksCount > 0) && (
-                    <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-stone-50/70 dark:bg-[#1f2229]">
-                      <div className="text-[10px] uppercase font-mono tracking-wider text-stone-500 dark:text-stone-400 font-bold mb-1.5">
-                        Notifications & Activity
-                      </div>
-                      <div className="space-y-1.5">
-                        {unreadChatCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onOpenChat) onOpenChat();
-                              else if (onOpenWorkspaceModal) onOpenWorkspaceModal();
-                            }}
-                            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer transition-colors"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                              <span className="font-semibold text-[11px]">Unread Chat Messages</span>
-                            </div>
-                            <span className="px-1.5 py-0.2 rounded-full bg-emerald-600 text-white font-bold text-[10px]">
-                              {unreadChatCount} new
-                            </span>
-                          </button>
-                        )}
-
-                        {overdueTasksCount > 0 && (
-                          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-[11px]">
-                            <div className="flex items-center gap-1.5">
-                              <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                              <span className="font-medium">Overdue Tasks</span>
-                            </div>
-                            <span className="px-1.5 py-0.2 rounded-full bg-amber-600 text-white font-bold text-[10px]">
-                              {overdueTasksCount}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Day / Night View Switcher (Living in Profile Settings) */}
                   <button

@@ -99,7 +99,7 @@ export function generateAutoSku(category: string, price: number | string, sequen
   return `${prefix}-${priceClean}-${seq}`;
 }
 
-export const INVENTORY_STORAGE_KEY = 'duosync_master_inventory_v1';
+export const INVENTORY_STORAGE_KEY = 'duosync_master_inventory_v2';
 
 export function loadMasterInventory(): InventoryProduct[] {
   try {
