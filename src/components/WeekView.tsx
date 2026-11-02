@@ -119,14 +119,18 @@ export const WeekView: React.FC<WeekViewProps> = ({
   });
 
   const todayColRef = useRef<HTMLDivElement | null>(null);
+  const mondayColRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (todayColRef.current) {
-      const timer = setTimeout(() => {
-        todayColRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    const hasToday = weekDays.some((d) => d.isToday);
+    const timer = setTimeout(() => {
+      if (hasToday && todayColRef.current) {
+        todayColRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (mondayColRef.current) {
+        mondayColRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [currentDate]);
 
   return (
@@ -146,7 +150,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
       {/* 7 Columns Grid starting Monday: 1-col mobile, 2-col tablet, 7-col wide PC */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3 xl:gap-0 xl:divide-x divide-[#e4ded5] dark:divide-stone-800">
-        {weekDays.map((col) => {
+        {weekDays.map((col, idx) => {
           const isSelected = selectedDate === col.dateStr;
           const matching = filteredEvents.filter((e) => eventOccursOnDate(e, col.dateStr));
           const dayEvents = sortDirection === 'none'
@@ -168,6 +172,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
             <div
               key={col.dateStr}
               ref={(el) => {
+                if (idx === 0) mondayColRef.current = el;
                 if (col.isToday) todayColRef.current = el;
               }}
               onClick={() => onSelectDate(col.dateStr)}

@@ -275,9 +275,9 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   return (
     <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] shadow-md overflow-hidden flex flex-col h-full transition-colors">
       
-      {/* Header Bar - Single Clean Row: Stay Pill + Category Breakdown Pills on Left, Day View on Right */}
-      <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between gap-1.5 flex-wrap">
-        <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+      {/* Header Bar - Single Clean Row: Stay Pill + Item Count on Left, Day View on Right */}
+      <div className="px-3 py-2 border-b border-[#e4ded5] dark:border-[#2d3139] bg-[#f5f1e8] dark:bg-[#202329] flex items-center justify-between gap-2 flex-nowrap">
+        <div className="min-w-0 flex items-center gap-2">
           {(() => {
             const dayPillStayColor = 
               currentStay === 'her_home'
@@ -305,28 +305,9 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
             );
           })()}
 
-          {/* Compact Category Breakdown Pills */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {Object.entries(
-              dayEvents.reduce<Record<string, number>>((acc, e) => {
-                acc[e.category] = (acc[e.category] || 0) + 1;
-                return acc;
-              }, {})
-            ).map(([cat, count]) => {
-              const meta = CATEGORY_CONFIG[cat as EventCategory];
-              if (!meta) return null;
-              return (
-                <span
-                  key={cat}
-                  title={`${count} ${meta.label}`}
-                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border flex items-center gap-1 ${meta.badgeBg} ${meta.borderColor} ${meta.textColor}`}
-                >
-                  <span>{meta.shortLabel}</span>
-                  <span>{count}</span>
-                </span>
-              );
-            })}
-          </div>
+          <span className="text-xs text-stone-500 dark:text-stone-400 truncate">
+            {dayEvents.length} {dayEvents.length === 1 ? 'item' : 'items'}
+          </span>
         </div>
 
         <div className="flex items-center gap-1 shrink-0 ml-auto">
@@ -334,7 +315,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
             <button
               type="button"
               onClick={() => onOpenDayView(selectedDate)}
-              className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#282c34] text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#313640] transition-colors cursor-pointer shrink-0"
+              className="text-[11px] font-semibold px-2 py-1 rounded-lg border border-[#e2ddd5] dark:border-[#353943] bg-white dark:bg-[#282c34] text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#313640] transition-colors cursor-pointer shrink-0 whitespace-nowrap"
               title="Open full Daily Schedule"
             >
               Day View →

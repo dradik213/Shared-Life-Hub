@@ -529,7 +529,21 @@ function CalendarApp() {
       const d = new Date(currentDate);
       d.setDate(d.getDate() - 7);
       setCurrentDate(d);
-      setSelectedDate(formatDateToYMD(d));
+
+      const dow = (d.getDay() + 6) % 7;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() - dow);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      const mondayStr = formatDateToYMD(mon);
+      const sundayStr = formatDateToYMD(sun);
+      const todayStr = formatDateToYMD(new Date());
+
+      if (todayStr >= mondayStr && todayStr <= sundayStr) {
+        setSelectedDate(todayStr);
+      } else {
+        setSelectedDate(mondayStr);
+      }
     } else {
       // Month step
       const d = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
@@ -551,12 +565,47 @@ function CalendarApp() {
       const d = new Date(currentDate);
       d.setDate(d.getDate() + 7);
       setCurrentDate(d);
-      setSelectedDate(formatDateToYMD(d));
+
+      const dow = (d.getDay() + 6) % 7;
+      const mon = new Date(d);
+      mon.setDate(d.getDate() - dow);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      const mondayStr = formatDateToYMD(mon);
+      const sundayStr = formatDateToYMD(sun);
+      const todayStr = formatDateToYMD(new Date());
+
+      if (todayStr >= mondayStr && todayStr <= sundayStr) {
+        setSelectedDate(todayStr);
+      } else {
+        setSelectedDate(mondayStr);
+      }
     } else {
       // Month step
       const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
       setCurrentDate(d);
       setSelectedDate(formatDateToYMD(d));
+    }
+  };
+
+  const handleViewModeChange = (mode: CalendarViewMode) => {
+    setViewMode(mode);
+    if (mode === 'week') {
+      const todayStr = formatDateToYMD(new Date());
+      const c = new Date(currentDate);
+      const dow = (c.getDay() + 6) % 7;
+      const mon = new Date(c);
+      mon.setDate(c.getDate() - dow);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
+      const mondayStr = formatDateToYMD(mon);
+      const sundayStr = formatDateToYMD(sun);
+
+      if (todayStr >= mondayStr && todayStr <= sundayStr) {
+        setSelectedDate(todayStr);
+      } else {
+        setSelectedDate(mondayStr);
+      }
     }
   };
 
@@ -947,7 +996,7 @@ function CalendarApp() {
       <CalendarHeader
         currentDate={currentDate}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
