@@ -145,7 +145,7 @@ export const FridgePhotosModal: React.FC<FridgePhotosModalProps> = ({
 
             <input
               type="text"
-              placeholder="Caption (e.g. Saturday booth setup with new jewelry racks)"
+              placeholder="Photo caption..."
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               className="w-full px-3 py-1.5 rounded-lg border border-stone-300 dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 text-xs"

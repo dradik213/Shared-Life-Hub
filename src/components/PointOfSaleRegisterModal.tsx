@@ -417,7 +417,7 @@ export const PointOfSaleRegisterModal: React.FC<PointOfSaleRegisterModalProps> =
                 <input
                   ref={barcodeInputRef}
                   type="text"
-                  placeholder="Scan barcode with scanner or type barcode & Enter..."
+                  placeholder="Scan barcode..."
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   className="flex-1 text-xs font-mono px-3 py-1.5 rounded-lg border border-amber-300 dark:border-amber-800/80 bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -444,7 +444,7 @@ export const PointOfSaleRegisterModal: React.FC<PointOfSaleRegisterModalProps> =
                 <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search catalog by name or SKU..."
+                  placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100"

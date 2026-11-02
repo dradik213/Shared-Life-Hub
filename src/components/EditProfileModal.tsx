@@ -157,7 +157,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <div className="mt-2">
                 <input
                   type="text"
-                  placeholder="Enter short pronoun (e.g. Ze)"
+                  placeholder=""
                   value={customPronoun}
                   onChange={(e) => setCustomPronoun(e.target.value)}
                   className="w-full px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-[#faf8f5] dark:bg-[#202329] text-xs text-stone-900 dark:text-stone-100"

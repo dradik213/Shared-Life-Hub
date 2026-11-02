@@ -639,7 +639,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                         <div className="pt-1">
                           <input
                             type="text"
-                            placeholder="Type task & press Enter to add..."
+                            placeholder="Add task..."
                             value={newTaskInputs[evt.id] || ''}
                             onChange={(e) =>
                               setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
@@ -673,7 +673,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
               Notes
             </span>
             <div className="flex-1 mx-2 truncate text-stone-400 text-[11px]">
-              {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Add notes, reminders & thoughts...'}
+              {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Notes...'}
             </div>
             <div className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200">
               {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -705,9 +705,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 rows={3}
                 value={dayNotes}
                 onChange={(e) => handleNotesChange(e.target.value)}
-                placeholder={`Notes for ${dateHeading}...
-• Record bullet notes or thoughts
-• Auto-saved specifically for this day`}
+                placeholder="Add note..."
                 className="w-full text-xs p-2.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
               />
             </div>

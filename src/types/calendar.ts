@@ -16,6 +16,8 @@ export interface EventTask {
   assignedTo?: 'both' | 'him' | 'her';
 }
 
+export type RecurrenceFrequency = 'none' | 'daily' | 'weekdays' | 'weekly' | 'biweekly' | 'monthly';
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -32,6 +34,9 @@ export interface CalendarEvent {
   overnightLocation?: StayLocation;
   tasks: EventTask[]; // Specific event checklist tasks
   notes?: string;
+  recurrence?: RecurrenceFrequency;
+  repeatUntil?: string; // YYYY-MM-DD
+  recurrenceGroupId?: string;
   marketDetails?: {
     venueName?: string;
     boothFee?: number;

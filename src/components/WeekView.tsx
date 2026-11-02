@@ -398,7 +398,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                               <div className="pt-0.5 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                 <input
                                   type="text"
-                                  placeholder="Type task & press Enter to add..."
+                                  placeholder="Add task..."
                                   value={newTaskInputs[evt.id] || ''}
                                   onChange={(e) =>
                                     setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))

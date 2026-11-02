@@ -897,6 +897,75 @@ function CalendarApp() {
   };
 
   const handleSaveEvent = (newEventData: Omit<CalendarEvent, 'id'>) => {
+    const isRecurring = Boolean(
+      newEventData.recurrence &&
+      newEventData.recurrence !== 'none' &&
+      newEventData.repeatUntil &&
+      newEventData.repeatUntil >= newEventData.startDate
+    );
+
+    if (isRecurring) {
+      const recurrenceGroupId = `rec-${Date.now()}`;
+      const eventsToAdd: CalendarEvent[] = [];
+      const [sy, sm, sd] = newEventData.startDate.split('-').map(Number);
+      const curr = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const [ey, em, ed] = newEventData.repeatUntil!.split('-').map(Number);
+      const untilDate = new Date(ey, em - 1, ed, 23, 59, 59);
+
+      let occIdx = 0;
+      const MAX_OCCURRENCES = 90;
+
+      while (curr <= untilDate && occIdx < MAX_OCCURRENCES) {
+        const dateStr = formatDateToYMD(curr);
+        const clonedTasks: EventTask[] = (newEventData.tasks || []).map((t, idx) => ({
+          ...t,
+          id: `t-${Date.now()}-${occIdx}-${idx}`,
+          completed: false,
+        }));
+
+        eventsToAdd.push({
+          ...newEventData,
+          id: `evt-${Date.now()}-${occIdx}`,
+          startDate: dateStr,
+          recurrenceGroupId,
+          tasks: clonedTasks,
+        });
+
+        occIdx++;
+
+        if (newEventData.recurrence === 'daily') {
+          curr.setDate(curr.getDate() + 1);
+        } else if (newEventData.recurrence === 'weekdays') {
+          do {
+            curr.setDate(curr.getDate() + 1);
+          } while (curr.getDay() === 0 || curr.getDay() === 6);
+        } else if (newEventData.recurrence === 'weekly') {
+          curr.setDate(curr.getDate() + 7);
+        } else if (newEventData.recurrence === 'biweekly') {
+          curr.setDate(curr.getDate() + 14);
+        } else if (newEventData.recurrence === 'monthly') {
+          curr.setMonth(curr.getMonth() + 1);
+        } else {
+          break;
+        }
+      }
+
+      setEvents((prev) => [...eventsToAdd, ...prev]);
+      if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
+        eventsToAdd.forEach((evt) => {
+          saveEventToFirestore(currentHub.id, evt).catch(console.warn);
+        });
+      }
+
+      if (newEventData.overnightLocation) {
+        handleUpdateStay(newEventData.startDate, newEventData.overnightLocation);
+      }
+
+      setSelectedDate(newEventData.startDate);
+      setIsDayInspectorOpen(true);
+      return;
+    }
+
     const newId = `evt-${Date.now()}`;
     const createdEvent: CalendarEvent = {
       ...newEventData,

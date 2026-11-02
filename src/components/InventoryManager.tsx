@@ -449,7 +449,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
           <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search category, price, SKU, or barcode..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-900"
@@ -736,7 +736,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                   <div className="mt-2 flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
                     <input
                       type="text"
-                      placeholder="New Category Name (e.g. Leather Goods, Jewelry)..."
+                      placeholder=""
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                       onKeyDown={(e) => {
@@ -779,7 +779,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                       type="number"
                       step="0.01"
                       required
-                      placeholder="20.00"
+                      placeholder=""
                       value={formPrice}
                       onChange={(e) => handlePriceChange(e.target.value)}
                       className="w-full text-xs pl-7 pr-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100 font-mono font-bold"
@@ -795,7 +795,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                     type="number"
                     min="0"
                     required
-                    placeholder="10"
+                    placeholder=""
                     value={formStock}
                     onChange={(e) => setFormStock(e.target.value)}
                     className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100 font-mono font-bold"
@@ -830,7 +830,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                     setFormSku(e.target.value);
                     setIsSkuManuallyEdited(true);
                   }}
-                  placeholder="e.g. SHIRTS-20-01"
+                  placeholder=""
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100 font-mono font-semibold tracking-wider"
                 />
               </div>
@@ -842,7 +842,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Graphic & vintage wash tees, assorted sizes..."
+                  placeholder=""
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100"

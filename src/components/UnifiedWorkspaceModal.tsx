@@ -1082,7 +1082,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                       type="text"
                       value={hubNameDraft}
                       onChange={(e) => setHubNameDraft(e.target.value)}
-                      placeholder="e.g. Dustin & Sarah's Life Hub"
+                      placeholder=""
                       className="flex-1 px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] text-xs font-semibold text-stone-900 dark:text-stone-100 outline-none focus:ring-1 focus:ring-purple-500"
                     />
                   </div>
@@ -1312,7 +1312,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                 <textarea
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="e.g. Dinner date at Osteria Morini this Friday at 7pm with Sarah, need to book table and pick up flowers on the way."
+                  placeholder="Ask AI..."
                   rows={3}
                   className="w-full p-3 rounded-xl border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#1f2229] text-xs sm:text-sm text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-purple-500"
                 />
@@ -1340,25 +1340,6 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   </button>
                 </div>
               </form>
-
-              {/* Example Prompts */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs text-stone-500">
-                <span className="font-semibold text-stone-600 dark:text-stone-400">Try:</span>
-                {[
-                  'Farmers Market Saturday at 9am to buy fresh sourdough and peaches',
-                  'Vet appointment for Oliver on Tuesday at 3:30pm',
-                  'Weekend getaway packing and house maintenance checklist',
-                ].map((sample, sIdx) => (
-                  <button
-                    key={sIdx}
-                    type="button"
-                    onClick={() => setAiPrompt(sample)}
-                    className="px-2 py-1 rounded-md bg-stone-100 dark:bg-[#252830] text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-[#2e323c] text-[11px] cursor-pointer"
-                  >
-                    "{sample}"
-                  </button>
-                ))}
-              </div>
 
               {/* AI Result Card */}
               {aiResult && (
@@ -1455,7 +1436,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   type="text"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="Add a new task (e.g. Schedule chimney sweep)..."
+                  placeholder="Add task..."
                   className="flex-1 px-3 py-2 rounded-xl border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#1f2229] text-xs text-stone-900 dark:text-stone-100 outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 <button
@@ -1904,7 +1885,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                     type="text"
                     value={editingTemplate.name}
                     onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
-                    placeholder="e.g. Farmers Market Trip"
+                    placeholder=""
                     required
                     className="w-full p-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] outline-none font-medium"
                   />
@@ -1917,7 +1898,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   type="text"
                   value={editingTemplate.defaultTitle}
                   onChange={(e) => setEditingTemplate({ ...editingTemplate, defaultTitle: e.target.value })}
-                  placeholder="e.g. Weekend Farmers Market"
+                  placeholder=""
                   required
                   className="w-full p-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] outline-none"
                 />
@@ -1981,7 +1962,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                     type="text"
                     value={newTaskInput}
                     onChange={(e) => setNewTaskInput(e.target.value)}
-                    placeholder="Add a checklist task..."
+                    placeholder="Add task..."
                     className="flex-1 p-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#252830] outline-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {

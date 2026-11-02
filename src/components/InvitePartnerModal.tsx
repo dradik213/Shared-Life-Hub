@@ -231,7 +231,7 @@ export const InvitePartnerModal: React.FC<InvitePartnerModalProps> = ({ isOpen, 
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Emma"
+                  placeholder=""
                   value={partnerName}
                   onChange={(e) => setPartnerName(e.target.value)}
                   className="w-full px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-xs text-stone-900 dark:text-stone-100"
@@ -260,7 +260,7 @@ export const InvitePartnerModal: React.FC<InvitePartnerModalProps> = ({ isOpen, 
               </label>
               <input
                 type="email"
-                placeholder="partner@example.com"
+                placeholder=""
                 value={partnerEmail}
                 onChange={(e) => setPartnerEmail(e.target.value)}
                 className="w-full px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-xs text-stone-900 dark:text-stone-100"
@@ -289,7 +289,7 @@ export const InvitePartnerModal: React.FC<InvitePartnerModalProps> = ({ isOpen, 
           <form onSubmit={handleJoinWithCode} className="flex items-center gap-2">
             <input
               type="text"
-              placeholder="e.g. DUO-1234"
+              placeholder=""
               value={joinCodeInput}
               onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
               className="flex-1 uppercase font-mono px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-xs font-bold text-stone-900 dark:text-stone-100"

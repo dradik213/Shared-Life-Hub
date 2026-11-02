@@ -617,7 +617,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                     <div className="pt-1 flex items-center gap-1.5">
                       <input
                         type="text"
-                        placeholder="Add new checklist task & press Enter..."
+                        placeholder="Add task..."
                         value={newTaskInputs[evt.id] || ''}
                         onChange={(e) =>
                           setNewTaskInputs((prev) => ({ ...prev, [evt.id]: e.target.value }))
@@ -689,7 +689,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                   rows={4}
                   value={dayNotes}
                   onChange={(e) => handleNotesChange(e.target.value)}
-                  placeholder="Notes, customer feedback, parts used, pet care & reminders..."
+                  placeholder="Add note..."
                   className="w-full text-xs p-3 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 whitespace-pre-wrap font-sans leading-relaxed"
                 />
               </div>
@@ -821,7 +821,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g., Waterfront Crafts Fair or His House"
+                  placeholder=""
                   value={editingEvent.locationName || ''}
                   onChange={(e) => setEditingEvent({ ...editingEvent, locationName: e.target.value })}
                   className="w-full px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100"
@@ -909,7 +909,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
                   rows={3}
                   value={editingEvent.notes || ''}
                   onChange={(e) => setEditingEvent({ ...editingEvent, notes: e.target.value })}
-                  placeholder="Checkpoints, reservation codes, feeding instructions, tools needed..."
+                  placeholder=""
                   className="w-full p-2.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329] text-stone-900 dark:text-stone-100"
                 />
               </div>

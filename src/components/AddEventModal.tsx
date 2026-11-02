@@ -9,7 +9,7 @@ import {
   Plus,
   Sparkles
 } from 'lucide-react';
-import { CalendarEvent, EventCategory, EventTask, PlanTemplate } from '../types/calendar';
+import { CalendarEvent, EventCategory, EventTask, PlanTemplate, RecurrenceFrequency } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, formatUsTime, formatDateToYMD } from '../utils/calendarUtils';
 import { INITIAL_TEMPLATES } from '../data/mockTemplates';
 import { useAuth } from '../context/AuthContext';
@@ -66,6 +66,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   const [startDate, setStartDate] = useState(initialDate || formatDateToYMD(new Date()));
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [recurrence, setRecurrence] = useState<RecurrenceFrequency>('none');
+  const [repeatUntil, setRepeatUntil] = useState<string>('');
   const [locationName, setLocationName] = useState('');
   const [address, setAddress] = useState('');
   const [assignedTo, setAssignedTo] = useState<'both' | 'him' | 'her'>('both');
@@ -97,6 +99,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       setStartDate(initialDate || formatDateToYMD(new Date()));
       setStartTime('');
       setEndTime('');
+      setRecurrence('none');
+      setRepeatUntil('');
       setTimeError(null);
       setLocationName('');
       setAddress('');
@@ -177,6 +181,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     setSelectedEmoji('🎪');
     setStartTime('');
     setEndTime('');
+    setRecurrence('none');
+    setRepeatUntil('');
     setLocationName('');
     setAddress('');
     setAssignedTo('both');
@@ -261,6 +267,15 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     setPinnedPhotos(pinnedPhotos.filter((p) => p.id !== id));
   };
 
+  const handleRecurrenceChange = (freq: RecurrenceFrequency) => {
+    setRecurrence(freq);
+    if (freq !== 'none' && (!repeatUntil || repeatUntil < startDate)) {
+      const [y, m, d] = startDate.split('-').map(Number);
+      const nextMonth = new Date(y, m - 1 + 1, d, 12, 0, 0);
+      setRepeatUntil(formatDateToYMD(nextMonth));
+    }
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim()) return;
@@ -288,6 +303,8 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       startDate,
       startTime: startTime || undefined,
       endTime: endTime || undefined,
+      recurrence: recurrence !== 'none' ? recurrence : undefined,
+      repeatUntil: recurrence !== 'none' && repeatUntil ? repeatUntil : undefined,
       locationName: locationName.trim() || undefined,
       address: address.trim() || undefined,
       assignedTo,
@@ -443,7 +460,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                         handleAiAutoFill();
                       }
                     }}
-                    placeholder="Ask AI (e.g. Dinner Fri 7pm)"
+                    placeholder="Ask AI..."
                     className="flex-1 text-xs bg-white dark:bg-[#1a1d22] border border-purple-300/80 dark:border-purple-800/80 rounded-md px-2.5 py-1 text-stone-800 dark:text-stone-200 placeholder-stone-400 outline-none focus:ring-1 focus:ring-purple-500"
                   />
                   <button
@@ -544,7 +561,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Activity name"
+                  placeholder=""
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={(e) => {
@@ -614,6 +631,42 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </div>
               )}
 
+              {/* Repeat & Recurrence */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-[#e4ded5] dark:border-[#2d3139]">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                    Repeat
+                  </label>
+                  <select
+                    value={recurrence}
+                    onChange={(e) => handleRecurrenceChange(e.target.value as RecurrenceFrequency)}
+                    className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-medium cursor-pointer"
+                  >
+                    <option value="none">Does not repeat</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekdays">Weekdays (Mon–Fri)</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Every 2 weeks</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+
+                {recurrence !== 'none' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      Until
+                    </label>
+                    <input
+                      type="date"
+                      min={startDate}
+                      value={repeatUntil}
+                      onChange={(e) => setRepeatUntil(e.target.value)}
+                      className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Lead / Assigned To: 3-Button Segmented Selector */}
               <div>
                 <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1.5 uppercase font-mono">
@@ -663,7 +716,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                         type="number"
                         value={boothFee}
                         onChange={(e) => setBoothFee(e.target.value)}
-                        placeholder="e.g. 150"
+                        placeholder=""
                         className="w-full text-xs px-2.5 py-1.5 rounded-md border border-amber-300 dark:border-amber-800/60 bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200"
                       />
                     </div>
@@ -675,7 +728,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                         type="number"
                         value={targetRevenue}
                         onChange={(e) => setTargetRevenue(e.target.value)}
-                        placeholder="e.g. 800"
+                        placeholder=""
                         className="w-full text-xs px-2.5 py-1.5 rounded-md border border-amber-300 dark:border-amber-800/60 bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200"
                       />
                     </div>
@@ -690,7 +743,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Venue or address"
+                  placeholder=""
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900"
@@ -715,7 +768,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                   <input
                     key={idx}
                     type="text"
-                    placeholder={`Task ${idx + 1} (e.g. Pack canopy, charge reader, buy milk)`}
+                    placeholder="Add task..."
                     value={taskText}
                     onChange={(e) => handleTaskInputChange(idx, e.target.value)}
                     className="w-full text-xs px-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900"
@@ -730,7 +783,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Notes..."
+                  placeholder=""
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full text-xs px-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 whitespace-pre-wrap font-sans"
@@ -781,7 +834,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
 
                     <input
                       type="text"
-                      placeholder="Photo caption (e.g. Booth setup, receipt)..."
+                      placeholder="Photo caption..."
                       value={photoCaption}
                       onChange={(e) => setPhotoCaption(e.target.value)}
                       className="w-full text-xs px-2.5 py-1.5 rounded border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#202329]"

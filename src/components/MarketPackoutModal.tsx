@@ -327,7 +327,7 @@ export const MarketPackoutModal: React.FC<MarketPackoutModalProps> = ({
                 <input
                   ref={barcodeInputRef}
                   type="text"
-                  placeholder="Scan barcode with scanner or type barcode & press Enter..."
+                  placeholder="Scan barcode..."
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   className="w-full text-xs font-mono px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-800/80 bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -476,7 +476,7 @@ export const MarketPackoutModal: React.FC<MarketPackoutModalProps> = ({
                   <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search category or SKU..."
+                    placeholder="Search..."
                     value={searchCatalogQuery}
                     onChange={(e) => setSearchCatalogQuery(e.target.value)}
                     className="w-full text-xs pl-8 pr-2.5 py-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100"
