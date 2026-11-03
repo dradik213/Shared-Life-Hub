@@ -102,7 +102,7 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
     user2Theme 
   } = useAuth();
   
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   const [tempUnit, setTempUnit] = useState<'F' | 'C'>('F');
   const [currentLocation, setCurrentLocation] = useState<WeatherLocation>(getSavedLocation);
   const [weatherReport, setWeatherReport] = useState<LiveWeatherReport | null>(null);
@@ -129,6 +129,19 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
           setWeatherReport(report);
         }
       } catch (err: any) {
+        if (currentLocation.name !== DEFAULT_LOCATION.name) {
+          try {
+            const fallbackReport = await fetchLiveForecast(DEFAULT_LOCATION);
+            if (isMounted) {
+              setCurrentLocation(DEFAULT_LOCATION);
+              saveLocation(DEFAULT_LOCATION);
+              setWeatherReport(fallbackReport);
+              return;
+            }
+          } catch {
+            // ignore fallback error
+          }
+        }
         if (isMounted) {
           setWeatherError('Unable to sync live radar. Check internet connection.');
         }
@@ -152,6 +165,17 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
       const report = await fetchLiveForecast(currentLocation, true);
       setWeatherReport(report);
     } catch (err: any) {
+      if (currentLocation.name !== DEFAULT_LOCATION.name) {
+        try {
+          const fallbackReport = await fetchLiveForecast(DEFAULT_LOCATION, true);
+          setCurrentLocation(DEFAULT_LOCATION);
+          saveLocation(DEFAULT_LOCATION);
+          setWeatherReport(fallbackReport);
+          return;
+        } catch {
+          // ignore fallback error
+        }
+      }
       setWeatherError('Failed to refresh radar.');
     } finally {
       setIsLoadingWeather(false);

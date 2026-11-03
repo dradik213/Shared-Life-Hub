@@ -157,8 +157,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
         </div>
       </div>
 
-      {/* 7 Columns Grid starting Monday: 1-col mobile, 2-col tablet, 7-col wide PC */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-3 xl:gap-0 xl:divide-x divide-[#e4ded5] dark:divide-stone-800">
+      {/* 7 Days Stacked Vertically Across All Screens */}
+      <div className="flex flex-col divide-y divide-[#e4ded5] dark:divide-[#2d3139] w-full">
         {weekDays.map((col, idx) => {
           const isSelected = selectedDate === col.dateStr;
           const matching = filteredEvents.filter((e) => eventOccursOnDate(e, col.dateStr));
@@ -185,7 +185,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 if (col.isToday) todayColRef.current = el;
               }}
               onClick={() => onSelectDate(col.dateStr)}
-              className={`scroll-mt-28 min-h-[280px] xl:min-h-[350px] p-2.5 sm:p-3 transition-colors flex flex-col justify-between cursor-pointer bg-[#fcfaf7] dark:bg-[#1a1d22] hover:bg-[#f6f2ea] dark:hover:bg-[#22252b] ${
+              className={`scroll-mt-28 py-3 px-3 sm:px-4 w-full transition-colors flex flex-col justify-between cursor-pointer bg-[#fcfaf7] dark:bg-[#1a1d22] hover:bg-[#f6f2ea] dark:hover:bg-[#22252b] ${
                 isSelected ? 'ring-2 ring-stone-900 dark:ring-stone-100 ring-inset z-10 bg-[#f5f0e6] dark:bg-[#262a32]' : ''
               }`}
             >

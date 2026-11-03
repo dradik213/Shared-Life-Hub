@@ -397,63 +397,35 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
         </div>
       )}
 
-      {/* KPI Stats Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 bg-stone-50 dark:bg-[#202329] rounded-xl border border-[#e4ded5] dark:border-[#353943]">
-          <span className="text-[10px] text-stone-500 font-mono uppercase tracking-wider block">Total SKUs</span>
-          <span className="text-lg font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-            {products.length}
-          </span>
-        </div>
-        <div className="p-3 bg-stone-50 dark:bg-[#202329] rounded-xl border border-[#e4ded5] dark:border-[#353943]">
-          <span className="text-[10px] text-stone-500 font-mono uppercase tracking-wider block">Quantity on Hand</span>
-          <span className="text-lg font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-            {totalStockCount}
-          </span>
-        </div>
-        <div className="p-3 bg-stone-50 dark:bg-[#202329] rounded-xl border border-[#e4ded5] dark:border-[#353943]">
-          <span className="text-[10px] text-stone-500 font-mono uppercase tracking-wider block">Retail Valuation</span>
-          <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-            ${totalRetailValuation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-        </div>
-        <div className="p-3 bg-stone-50 dark:bg-[#202329] rounded-xl border border-[#e4ded5] dark:border-[#353943]">
-          <span className="text-[10px] text-stone-500 font-mono uppercase tracking-wider block">Categories Active</span>
-          <span className="text-lg font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-            {groupedProducts.size}
-          </span>
-        </div>
-      </div>
-
-      {/* Search & Category Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-900"
-          />
+      {/* Compact Summary & Search Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-stone-200 dark:border-stone-800">
+        <div className="text-xs text-stone-600 dark:text-stone-400 font-medium">
+          <span className="font-semibold text-stone-900 dark:text-stone-100">{products.length} SKUs</span>
+          <span className="mx-1.5 text-stone-400">·</span>
+          <span>{totalStockCount} in stock</span>
+          <span className="mx-1.5 text-stone-400">·</span>
+          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">${totalRetailValuation.toFixed(2)}</span>
         </div>
 
-        {/* Categories as clean interactive pills */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {allAvailableCategories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategoryFilter(cat)}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                selectedCategoryFilter === cat
-                  ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
-                  : 'bg-stone-100 dark:bg-[#252830] text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
+          <div className="relative min-w-[180px] max-w-xs flex-1 sm:flex-initial">
+            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-xs pl-7 pr-3 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-900"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => handleOpenAdd()}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white shadow-xs transition-colors cursor-pointer shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ Add Item</span>
+          </button>
         </div>
       </div>
 
@@ -562,37 +534,25 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                     return (
                       <div
                         key={product.id}
-                        className="p-3.5 hover:bg-stone-50/60 dark:hover:bg-[#22252c] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                        className="p-3 hover:bg-stone-50/60 dark:hover:bg-[#22252c] transition-colors flex items-center justify-between gap-3 text-xs"
                       >
-                        {/* Left: Price Tier, Stock, SKU & Description */}
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-                              {product.defaultStock} in stock @ ${product.price.toFixed(2)}
+                        {/* Left: Bold $Price + optional description + subtle muted SKU */}
+                        <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-stone-900 dark:text-stone-100 tabular-nums">
+                            ${product.price.toFixed(2)}
+                          </span>
+                          {product.description && (
+                            <span className="text-xs text-stone-600 dark:text-stone-300 truncate max-w-xs">
+                              {product.description}
                             </span>
-                            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300">
-                              Total: ${tierTotal.toFixed(2)}
-                            </span>
-                            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-stone-100 dark:bg-[#282c35] text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700">
-                              SKU: {product.sku}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-[11px] text-stone-500 dark:text-stone-400 font-mono">
-                            <span>Barcode: {product.barcode}</span>
-                            {product.description && (
-                              <>
-                                <span>·</span>
-                                <span className="font-sans italic text-stone-600 dark:text-stone-300 truncate max-w-md">
-                                  {product.description}
-                                </span>
-                              </>
-                            )}
-                          </div>
+                          )}
+                          <span className="text-[11px] font-mono text-stone-400 dark:text-stone-500">
+                            {product.sku}
+                          </span>
                         </div>
 
-                        {/* Right: Quantity Stepper, Print Label, Edit, and Inline Delete */}
-                        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                        {/* Right: Quantity Stepper, Edit, and Inline Delete */}
+                        <div className="flex items-center gap-2 shrink-0">
                           {/* Quantity Stepper */}
                           <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden bg-white dark:bg-[#1a1d22]">
                             <button
@@ -603,7 +563,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="w-10 text-center text-xs font-mono font-bold text-stone-900 dark:text-stone-100">
+                            <span className="w-9 text-center text-xs font-mono font-bold text-stone-900 dark:text-stone-100">
                               {product.defaultStock}
                             </span>
                             <button
@@ -616,17 +576,6 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                             </button>
                           </div>
 
-                          {/* Print Label */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPrintDialog(product)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-stone-50 dark:bg-[#282c35] text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-[#323640] font-medium text-[11px] transition-colors cursor-pointer"
-                            title="Print thermal barcode labels"
-                          >
-                            <Printer className="w-3 h-3 text-stone-500" />
-                            <span className="hidden sm:inline">Print Label</span>
-                          </button>
-
                           {/* Edit Item */}
                           <button
                             type="button"
@@ -637,20 +586,20 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* Inline Two-Click Delete (no window.confirm) */}
+                          {/* Inline Two-Click Delete */}
                           {isDeleting ? (
                             <div className="flex items-center gap-1 animate-in fade-in duration-150">
                               <button
                                 type="button"
                                 onClick={() => handleDeleteProduct(product.id)}
-                                className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] cursor-pointer shadow-2xs"
+                                className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] cursor-pointer shadow-2xs"
                               >
-                                Confirm Delete?
+                                Delete
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmDeleteId(null)}
-                                className="px-2 py-1 text-[11px] text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer"
+                                className="px-1.5 py-1 text-[11px] text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer"
                               >
                                 Cancel
                               </button>

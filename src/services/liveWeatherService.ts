@@ -69,7 +69,14 @@ export function getSavedLocation(): WeatherLocation {
     const raw = localStorage.getItem(STORAGE_LOCATION_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && (parsed.name === 'Austin' || !parsed.name)) {
+      if (
+        !parsed ||
+        !parsed.name ||
+        parsed.name === 'Austin' ||
+        parsed.name === 'My GPS Location' ||
+        !parsed.latitude ||
+        !parsed.longitude
+      ) {
         saveLocation(DEFAULT_LOCATION);
         return DEFAULT_LOCATION;
       }
