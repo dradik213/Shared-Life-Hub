@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, ChevronDown, ChevronUp, X, Trash2, Plus } from 'lucide-react';
+import { Home, ChevronDown, ChevronUp, X, Trash2, Plus, FileText } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatDateToYMD, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
@@ -24,9 +24,10 @@ interface WeekViewProps {
   onToggleExpandEvent?: (eventId: string) => void;
   onToggleExpandTasks?: (eventId: string) => void;
   onUpdateStay?: (dateStr: string, stayAt: StayLocation) => void;
+  onUpdateStayNotes?: (dateStr: string, notes: string) => void;
   onOpenDayView?: (dateStr: string) => void;
   availableBacklogTasks?: Array<{ id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }>;
-  onAddBacklogTaskToDate?: (task: { id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }, targetDateStr: string) => void;
+  onAddBacklogTaskToDate?: (task: { id: string; title: string; assignedTo?: 'both' | 'him' | 'her' } | string, targetDateStr: string) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
@@ -48,6 +49,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onToggleExpandEvent,
   onToggleExpandTasks,
   onUpdateStay,
+  onUpdateStayNotes,
   onOpenDayView,
   availableBacklogTasks = [],
   onAddBacklogTaskToDate,
@@ -56,7 +58,9 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const [localExpandedEventIds, setLocalExpandedEventIds] = useState<Record<string, boolean>>({});
   const [localExpandedTaskIds, setLocalExpandedTaskIds] = useState<Record<string, boolean>>({});
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
-  const [openBacklogPopoverDate, setOpenBacklogPopoverDate] = useState<string | null>(null);
+  const [expandedNotesDate, setExpandedNotesDate] = useState<string | null>(null);
+  const [expandedBacklogDate, setExpandedBacklogDate] = useState<string | null>(null);
+  const [inlineTaskInputs, setInlineTaskInputs] = useState<Record<string, string>>({});
 
   const currentExpandedEventIds = propsExpandedEventIds ?? localExpandedEventIds;
   const currentExpandedTaskIds = propsExpandedTaskSections ?? localExpandedTaskIds;
@@ -210,69 +214,9 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       <span>{shortDateLabel}</span>
                     </button>
 
-                    {/* Consistent + Backlog ({count}) Pill */}
-                    {availableBacklogTasks && availableBacklogTasks.length > 0 && onAddBacklogTaskToDate && (
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenBacklogPopoverDate(openBacklogPopoverDate === col.dateStr ? null : col.dateStr);
-                          }}
-                          className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
-                          title={`Add task from Backlog (${availableBacklogTasks.length} available)`}
-                        >
-                          + Backlog ({availableBacklogTasks.length})
-                        </button>
-                        {openBacklogPopoverDate === col.dateStr && (
-                          <div
-                            className="absolute left-0 top-full mt-1.5 w-72 max-h-56 overflow-y-auto bg-white dark:bg-[#202329] border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl z-30 p-2 space-y-1.5 text-xs"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
-                                Backlog ({availableBacklogTasks.length})
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setOpenBacklogPopoverDate(null)}
-                                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                            <div className="space-y-1">
-                              {availableBacklogTasks.map((t) => (
-                                <div
-                                  key={t.id}
-                                  className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-1.5 text-xs"
-                                >
-                                  <div className="truncate flex-1 min-w-0">
-                                    <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
-                                      {t.title}
-                                    </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onAddBacklogTaskToDate(t, col.dateStr);
-                                      setOpenBacklogPopoverDate(null);
-                                    }}
-                                    className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
-                                    title="Add to day"
-                                  >
-                                    <Plus className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {/* Right side: Item count & Day View link */}
                   </div>
 
-                  {/* Right side: Item count & Day View link */}
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-[11px] text-stone-500 dark:text-stone-400">
                       {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'}
@@ -297,6 +241,52 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 <div className="space-y-1.5">
                   {dayEvents.map((evt) => {
                     const cfg = CATEGORY_CONFIG[evt.category];
+
+                    // Standalone untimed task card rendering
+                    if (evt.isStandaloneTask) {
+                      return (
+                        <div
+                          key={evt.id}
+                          className="py-2 px-3 rounded-lg bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 flex items-center justify-between gap-2.5 shadow-2xs transition-all"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <TaskToggleSlider
+                              checked={Boolean(evt.completed)}
+                              onChange={(val) => onToggleTask && onToggleTask(evt.id, evt.id, val)}
+                            />
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-400'}`} />
+                            <span className={`text-xs font-medium leading-snug break-words text-stone-900 dark:text-stone-100 flex-1 ${evt.completed ? 'line-through text-stone-400 dark:text-stone-500' : ''}`}>
+                              {evt.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className={`text-[9px] font-bold px-1 py-0.2 rounded border ${
+                              evt.assignedTo === 'her'
+                                ? user1Theme.badgeBg
+                                : evt.assignedTo === 'him'
+                                ? user2Theme.badgeBg
+                                : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                            }`}>
+                              {evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`}
+                            </span>
+                            {onDeleteEvent && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteEvent(evt.id);
+                                }}
+                                className="p-1 text-stone-400 hover:text-rose-500 rounded cursor-pointer transition-colors"
+                                title="Delete task"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
                     const tasks = evt.tasks || [];
                     const completedCount = tasks.filter((t) => t.completed).length;
                     const isEventExpanded = currentExpandedEventIds[evt.id] === true;
@@ -471,6 +461,182 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   {dayEvents.length === 0 && (
                     <div className="py-3 text-center text-[10px] text-stone-400">
                       Free day
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom 50/50 Notes & Tasks Bar */}
+                <div className="space-y-2 pt-2 mt-2 border-t border-[#e4ded5]/60 dark:border-[#2d3139]/60">
+                  <div className="grid grid-cols-2 gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const isExpanded = expandedNotesDate === col.dateStr;
+                        setExpandedNotesDate(isExpanded ? null : col.dateStr);
+                        if (!isExpanded) setExpandedBacklogDate(null);
+                      }}
+                      className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
+                        expandedNotesDate === col.dateStr
+                          ? 'border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                          : 'border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#202329]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 shrink-0" />
+                        <span>Notes</span>
+                        {stayInfo?.notes?.trim() && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${expandedNotesDate === col.dateStr ? 'bg-amber-400' : 'bg-amber-500'}`} />
+                        )}
+                      </span>
+                      {expandedNotesDate === col.dateStr ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const isExpanded = expandedBacklogDate === col.dateStr;
+                        setExpandedBacklogDate(isExpanded ? null : col.dateStr);
+                        if (!isExpanded) setExpandedNotesDate(null);
+                      }}
+                      className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
+                        expandedBacklogDate === col.dateStr
+                          ? 'border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                          : 'border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#202329]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5 shrink-0" />
+                        <span>Tasks {availableBacklogTasks.length > 0 ? `(${availableBacklogTasks.length})` : ''}</span>
+                      </span>
+                      {expandedBacklogDate === col.dateStr ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+                    </button>
+                  </div>
+
+                  {/* Notes Drawer */}
+                  {expandedNotesDate === col.dateStr && (
+                    <div
+                      className="border border-stone-200/80 dark:border-stone-800 rounded-lg bg-white dark:bg-[#1a1d24] p-2.5 space-y-2 shadow-2xs text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                          Day Notes
+                        </span>
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currNotes = stayInfo?.notes || '';
+                              const bulletText = currNotes ? `${currNotes}\n• ` : '• ';
+                              if (onUpdateStayNotes) onUpdateStayNotes(col.dateStr, bulletText);
+                            }}
+                            className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                            title="Insert Bullet Point"
+                          >
+                            + Bullet (•)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currNotes = stayInfo?.notes || '';
+                              const breakText = `${currNotes}\n\n`;
+                              if (onUpdateStayNotes) onUpdateStayNotes(col.dateStr, breakText);
+                            }}
+                            className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                            title="Insert Line Break"
+                          >
+                            + Break
+                          </button>
+                        </div>
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={stayInfo?.notes || ''}
+                        onChange={(e) => {
+                          if (onUpdateStayNotes) onUpdateStayNotes(col.dateStr, e.target.value);
+                        }}
+                        placeholder="Add note..."
+                        className="w-full text-xs p-2 rounded-md border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
+                      />
+                    </div>
+                  )}
+
+                  {/* Tasks Drawer */}
+                  {expandedBacklogDate === col.dateStr && (
+                    <div
+                      className="border border-stone-200/80 dark:border-stone-800 rounded-lg bg-white dark:bg-[#1a1d24] p-2.5 space-y-2 shadow-2xs text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Quick inline task input */}
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={inlineTaskInputs[col.dateStr] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setInlineTaskInputs((prev) => ({ ...prev, [col.dateStr]: val }));
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = (inlineTaskInputs[col.dateStr] || '').trim();
+                              if (!val || !onAddBacklogTaskToDate) return;
+                              onAddBacklogTaskToDate(val, col.dateStr);
+                              setInlineTaskInputs((prev) => ({ ...prev, [col.dateStr]: '' }));
+                            }
+                          }}
+                          placeholder="Add task..."
+                          className="flex-1 text-xs px-2.5 py-1.5 rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-[#202329] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const val = (inlineTaskInputs[col.dateStr] || '').trim();
+                            if (!val || !onAddBacklogTaskToDate) return;
+                            onAddBacklogTaskToDate(val, col.dateStr);
+                            setInlineTaskInputs((prev) => ({ ...prev, [col.dateStr]: '' }));
+                          }}
+                          className="px-2.5 py-1.5 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1 shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add</span>
+                        </button>
+                      </div>
+
+                      {/* Backlog List */}
+                      {availableBacklogTasks.length > 0 && (
+                        <div className="space-y-1 pt-1">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                            Backlog Tasks ({availableBacklogTasks.length})
+                          </div>
+                          <div className="max-h-40 overflow-y-auto space-y-1 pr-0.5">
+                            {availableBacklogTasks.map((item) => (
+                              <div
+                                key={item.id}
+                                className="p-1.5 rounded-md bg-stone-50 dark:bg-[#202329] border border-stone-200/60 dark:border-stone-800 flex items-center justify-between gap-2"
+                              >
+                                <div className="truncate flex-1 min-w-0">
+                                  <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                                    {item.title}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onAddBacklogTaskToDate) {
+                                      onAddBacklogTaskToDate(item, col.dateStr);
+                                    }
+                                  }}
+                                  className="w-5 h-5 rounded bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-90 text-xs font-bold"
+                                  title="Move to this day"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

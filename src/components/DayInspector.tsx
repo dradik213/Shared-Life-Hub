@@ -37,6 +37,15 @@ interface DayInspectorProps {
   onAddTaskToEvent: (eventId: string, taskTitle: string, assignedTo?: 'both' | 'him' | 'her') => void;
   onDeleteTaskFromEvent: (eventId: string, taskId: string) => void;
   onCopyTaskToDate: (sourceTaskTitle: string, targetDate: string, assignedTo?: 'both' | 'him' | 'her') => void;
+  onAddBacklogTaskToDate?: (backlogItem: any, targetDate: string) => void;
+  availableBacklogTasks?: Array<{
+    id: string;
+    taskId?: string;
+    eventId?: string;
+    title: string;
+    sourceDetail?: string;
+    assignedTo?: 'both' | 'him' | 'her';
+  }>;
   onUpdateEvent?: (updatedEvent: CalendarEvent) => void;
   onDeleteEvent?: (eventId: string) => void;
   onOpenFridgePhotos: () => void;
@@ -55,6 +64,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   allEvents,
   stayInfo,
   googleTasks = [],
+  availableBacklogTasks,
   onClose,
   onUpdateStay,
   onUpdateStayNotes,
@@ -62,6 +72,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   onAddTaskToEvent,
   onDeleteTaskFromEvent,
   onCopyTaskToDate,
+  onAddBacklogTaskToDate,
   onUpdateEvent,
   onDeleteEvent,
   onOpenFridgePhotos,
@@ -96,6 +107,8 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   const [posEvent, setPosEvent] = useState<CalendarEvent | null>(null);
   const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
   const [isNotesExpanded, setIsNotesExpanded] = useState(false);
+  const [isBacklogOpen, setIsBacklogOpen] = useState(false);
+  const [inlineTaskInput, setInlineTaskInput] = useState('');
 
   const toggleEventExpanded = (eventId: string) => {
     if (onToggleExpandEvent) {
@@ -236,6 +249,27 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
     }
   });
 
+  const effectiveBacklog = availableBacklogTasks && availableBacklogTasks.length > 0 ? availableBacklogTasks : allBacklogTasks;
+
+  const handleMoveBacklog = (item: any) => {
+    if (onAddBacklogTaskToDate) {
+      onAddBacklogTaskToDate(item, selectedDate);
+    } else {
+      onCopyTaskToDate(typeof item === 'string' ? item : item.title, selectedDate, item?.assignedTo);
+    }
+  };
+
+  const handleAddInlineTask = () => {
+    const val = inlineTaskInput.trim();
+    if (!val) return;
+    if (onAddBacklogTaskToDate) {
+      onAddBacklogTaskToDate(val, selectedDate);
+    } else {
+      onCopyTaskToDate(val, selectedDate, 'both');
+    }
+    setInlineTaskInput('');
+  };
+
   const handleNotesChange = (val: string) => {
     setDayNotes(val);
     if (onUpdateStayNotes) {
@@ -309,17 +343,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
           <span className="text-xs text-stone-500 dark:text-stone-400 truncate">
             {dayEvents.length} {dayEvents.length === 1 ? 'item' : 'items'}
           </span>
-
-          {allBacklogTasks.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
-              title="Toggle Backlog tasks to copy into this day"
-            >
-              + Backlog ({allBacklogTasks.length})
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-1 shrink-0 ml-auto">
@@ -338,51 +361,6 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
 
       <div className="p-3 overflow-y-auto space-y-3 flex-1 pb-24">
 
-        {/* Compact Backlog Inline List */}
-        {showRolloverDrawer && allBacklogTasks.length > 0 && (
-          <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#202329] p-2.5 shadow-2xs space-y-1.5 text-xs">
-            <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                Backlog Tasks ({allBacklogTasks.length})
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowRolloverDrawer(false)}
-                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="max-h-48 overflow-y-auto space-y-1">
-              {allBacklogTasks.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-2 text-xs"
-                >
-                  <div className="truncate flex-1 min-w-0">
-                    <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
-                      {item.title}
-                    </span>
-                    <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
-                      {item.sourceDetail}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onCopyTaskToDate(item.title, selectedDate, item.assignedTo);
-                    }}
-                    className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
-                    title="Add to day"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Day Events & Individual Tasks List */}
         <div>
           {dayEvents.length === 0 ? (
@@ -394,6 +372,48 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
             <div className="space-y-3">
               {dayEvents.map((evt) => {
                 const cfg = CATEGORY_CONFIG[evt.category];
+                // Standalone untimed task card rendering
+                if (evt.isStandaloneTask) {
+                  return (
+                    <div
+                      key={evt.id}
+                      className="py-2 px-3 rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 flex items-center justify-between gap-2.5 shadow-2xs transition-all"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <TaskToggleSlider
+                          checked={Boolean(evt.completed)}
+                          onChange={(val) => onToggleTask(evt.id, evt.id, val)}
+                        />
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-400'}`} />
+                        <span className={`text-xs sm:text-sm font-medium leading-snug break-words text-stone-900 dark:text-stone-100 flex-1 ${evt.completed ? 'line-through text-stone-400 dark:text-stone-500' : ''}`}>
+                          {evt.title}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                          evt.assignedTo === 'her'
+                            ? user1Theme.badgeBg
+                            : evt.assignedTo === 'him'
+                            ? user2Theme.badgeBg
+                            : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                        }`}>
+                          {evt.assignedTo === 'her' ? (partner1Label ? partner1Label[0].toUpperCase() : 'K') : evt.assignedTo === 'him' ? (partner2Label ? partner2Label[0].toUpperCase() : 'D') : `${partner1Label ? partner1Label[0].toUpperCase() : 'K'}&${partner2Label ? partner2Label[0].toUpperCase() : 'D'}`}
+                        </span>
+                        {onDeleteEvent && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteEvent(evt.id)}
+                            className="p-1 text-stone-400 hover:text-rose-500 rounded cursor-pointer transition-colors"
+                            title="Delete task"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
                 const tasks = evt.tasks || [];
                 const completedCount = tasks.filter((t) => t.completed).length;
 
@@ -657,45 +677,77 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
           )}
         </div>
 
-        {/* Notes (Per-day, collapsible by default) */}
-        <div className="border border-stone-200/80 dark:border-stone-800 rounded-xl bg-white dark:bg-[#1a1d24] overflow-hidden text-xs shadow-2xs">
-          <div
-            onClick={() => setIsNotesExpanded(!isNotesExpanded)}
-            className="py-2 px-3 flex items-center justify-between cursor-pointer select-none hover:bg-stone-50 dark:hover:bg-[#202329] transition-colors"
-          >
-            <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider text-[11px]">
-              <FileText className="w-3.5 h-3.5 text-stone-500" />
-              Notes
-            </span>
-            <div className="flex-1 mx-2 truncate text-stone-400 text-[11px]">
-              {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Notes...'}
-            </div>
-            <div className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200">
-              {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </div>
+        {/* Bottom 50/50 Notes & Tasks Bar */}
+        <div className="space-y-2 pt-1">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsNotesExpanded(!isNotesExpanded);
+                if (!isNotesExpanded) setIsBacklogOpen(false);
+              }}
+              className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
+                isNotesExpanded
+                  ? 'border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                  : 'border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#202329]'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 shrink-0" />
+                <span>Notes</span>
+                {dayNotes.trim() && (
+                  <span className={`w-1.5 h-1.5 rounded-full ${isNotesExpanded ? 'bg-amber-400' : 'bg-amber-500'}`} />
+                )}
+              </span>
+              {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsBacklogOpen(!isBacklogOpen);
+                if (!isBacklogOpen) setIsNotesExpanded(false);
+              }}
+              className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer shadow-2xs ${
+                isBacklogOpen
+                  ? 'border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900'
+                  : 'border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-[#202329]'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5 shrink-0" />
+                <span>Tasks {effectiveBacklog.length > 0 ? `(${effectiveBacklog.length})` : ''}</span>
+              </span>
+              {isBacklogOpen ? <ChevronUp className="w-3.5 h-3.5 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 shrink-0" />}
+            </button>
           </div>
 
+          {/* Notes Drawer */}
           {isNotesExpanded && (
-            <div className="p-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
-              <div className="flex items-center justify-end gap-1 text-[11px]">
-                <button
-                  type="button"
-                  onClick={handleInsertBullet}
-                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                  title="Insert Bullet Point"
-                >
-                  + Bullet (•)
-                </button>
-                <button
-                  type="button"
-                  onClick={handleInsertBreak}
-                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                  title="Insert Line Break"
-                >
-                  + Break
-                </button>
+            <div className="border border-stone-200/80 dark:border-stone-800 rounded-xl bg-white dark:bg-[#1a1d24] p-3 space-y-2 shadow-2xs text-xs">
+              <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                  Day Notes
+                </span>
+                <div className="flex items-center gap-1 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={handleInsertBullet}
+                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                    title="Insert Bullet Point"
+                  >
+                    + Bullet (•)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleInsertBreak}
+                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-white dark:bg-[#282c34] px-1.5 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
+                    title="Insert Line Break"
+                  >
+                    + Break
+                  </button>
+                </div>
               </div>
-              
               <textarea
                 rows={3}
                 value={dayNotes}
@@ -703,6 +755,72 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                 placeholder="Add note..."
                 className="w-full text-xs p-2.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
               />
+            </div>
+          )}
+
+          {/* Tasks Drawer */}
+          {isBacklogOpen && (
+            <div className="border border-stone-200/80 dark:border-stone-800 rounded-xl bg-white dark:bg-[#1a1d24] p-3 space-y-2.5 shadow-2xs text-xs">
+              {/* Quick inline task input */}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={inlineTaskInput}
+                  onChange={(e) => setInlineTaskInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddInlineTask();
+                    }
+                  }}
+                  placeholder="Add task..."
+                  className="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-[#202329] text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddInlineTask}
+                  className="px-2.5 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </button>
+              </div>
+
+              {/* Backlog List */}
+              {effectiveBacklog.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                    Backlog Tasks ({effectiveBacklog.length})
+                  </div>
+                  <div className="max-h-44 overflow-y-auto space-y-1 pr-0.5">
+                    {effectiveBacklog.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#202329] border border-stone-200/60 dark:border-stone-800 flex items-center justify-between gap-2"
+                      >
+                        <div className="truncate flex-1 min-w-0">
+                          <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                            {item.title}
+                          </span>
+                          {item.sourceDetail && (
+                            <span className="text-[9px] text-stone-400 dark:text-stone-500 block truncate">
+                              {item.sourceDetail}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveBacklog(item)}
+                          className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-90 text-xs font-bold"
+                          title="Move to this day"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

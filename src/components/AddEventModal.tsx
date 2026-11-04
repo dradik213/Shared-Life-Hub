@@ -82,6 +82,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   const [photoCaption, setPhotoCaption] = useState('');
   const [photoCategory, setPhotoCategory] = useState<EventCategory>('market');
 
+  const [isStandaloneTask, setIsStandaloneTask] = useState(false);
   const [showRolloverSection, setShowRolloverSection] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -92,6 +93,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setIsStandaloneTask(false);
       setSelectedTemplateId('');
       setTitle('');
       setCategory('market');
@@ -280,7 +282,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
     if (e) e.preventDefault();
     if (!title.trim()) return;
 
-    if (startTime && endTime && endTime <= startTime) {
+    if (!isStandaloneTask && startTime && endTime && endTime <= startTime) {
       setTimeError('End time must be after start time');
       setStep(2);
       return;
@@ -300,9 +302,11 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
       title: title.trim(),
       category,
       emoji: selectedEmoji,
+      isStandaloneTask: isStandaloneTask || undefined,
+      completed: isStandaloneTask ? false : undefined,
       startDate,
-      startTime: startTime || undefined,
-      endTime: endTime || undefined,
+      startTime: !isStandaloneTask ? (startTime || undefined) : undefined,
+      endTime: !isStandaloneTask ? (endTime || undefined) : undefined,
       recurrence: recurrence !== 'none' ? recurrence : undefined,
       repeatUntil: recurrence !== 'none' && repeatUntil ? repeatUntil : undefined,
       locationName: locationName.trim() || undefined,
@@ -380,7 +384,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           <button
             type="button"
             onClick={() => {
-              if (startTime && endTime && endTime <= startTime) {
+              if (!isStandaloneTask && startTime && endTime && endTime <= startTime) {
                 setTimeError('End time must be after start time');
                 setStep(2);
                 return;
@@ -405,6 +409,32 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
           {step === 1 && (
             <div className="p-4 space-y-4">
               
+              {/* Type Switcher: Event vs Task (No Time) */}
+              <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-stone-100 dark:bg-stone-800 border border-[#e4ded5] dark:border-[#2d3139]">
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneTask(false)}
+                  className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    !isStandaloneTask
+                      ? 'bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 shadow-2xs'
+                      : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                  }`}
+                >
+                  Event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneTask(true)}
+                  className={`py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    isStandaloneTask
+                      ? 'bg-white dark:bg-[#1a1d22] text-stone-900 dark:text-stone-100 shadow-2xs'
+                      : 'text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+                  }`}
+                >
+                  Task (No Time)
+                </button>
+              </div>
+
               {/* Quick Start: Templates Dropdown */}
               <div className="p-2.5 px-3 bg-stone-100/90 dark:bg-[#22252c] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] flex items-center justify-between gap-2.5 flex-wrap">
                 <div className="flex items-center gap-2 flex-1 min-w-[200px]">
@@ -582,7 +612,7 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
             <div className="p-4 space-y-4">
               
               {/* Date & Time Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {isStandaloneTask ? (
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Date
@@ -595,35 +625,50 @@ export const AddEventModal: React.FC<AddEventModalProps> = ({
                     className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Start {startTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(startTime)})</span>}
-                  </label>
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => {
-                      setStartTime(e.target.value);
-                      if (timeError) setTimeError(null);
-                    }}
-                    className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
-                  />
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      Start {startTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(startTime)})</span>}
+                    </label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => {
+                        setStartTime(e.target.value);
+                        if (timeError) setTimeError(null);
+                      }}
+                      className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
+                      End {endTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(endTime)})</span>}
+                    </label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => {
+                        setEndTime(e.target.value);
+                        if (timeError) setTimeError(null);
+                      }}
+                      className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    End {endTime && <span className="font-mono font-normal text-stone-500 text-[11px]">({formatUsTime(endTime)})</span>}
-                  </label>
-                  <input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => {
-                      setEndTime(e.target.value);
-                      if (timeError) setTimeError(null);
-                    }}
-                    className="w-full text-xs px-2.5 py-2 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-100 font-mono"
-                  />
-                </div>
-              </div>
+              )}
 
               {timeError && (
                 <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-semibold text-rose-600 dark:text-rose-400">

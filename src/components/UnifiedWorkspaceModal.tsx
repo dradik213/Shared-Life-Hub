@@ -138,7 +138,7 @@ interface UnifiedWorkspaceModalProps {
   };
   events?: CalendarEvent[];
   onToggleTask?: (eventId: string, taskId: string, completed: boolean) => void;
-  onMoveTaskToToday?: (title: string, assignedTo?: 'both' | 'him' | 'her') => void;
+  onMoveTaskToToday?: (title: string, assignedTo?: 'both' | 'him' | 'her', item?: any) => void;
   onDismissOverdueTask?: (taskId: string) => void;
 }
 
@@ -1441,7 +1441,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              onMoveTaskToToday?.(item.title, item.assignedTo);
+                              onMoveTaskToToday?.(item.title, item.assignedTo, item);
                               onDismissOverdueTask?.(item.taskId);
                               showAdminFeedback(`Moved "${item.title}" to today!`);
                             }}
@@ -1520,7 +1520,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            onMoveTaskToToday?.(task.title, 'both');
+                            onMoveTaskToToday?.(task.title, 'both', task);
                             showAdminFeedback(`Moved "${task.title}" to today!`);
                           }}
                           className="w-7 h-7 rounded-lg bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white transition-colors"

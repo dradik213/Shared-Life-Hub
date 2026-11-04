@@ -23,6 +23,8 @@ export interface CalendarEvent {
   title: string;
   category: EventCategory;
   emoji?: string; // Customizable event emoji
+  isStandaloneTask?: boolean;
+  completed?: boolean;
   startDate: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   startTime?: string; // HH:mm

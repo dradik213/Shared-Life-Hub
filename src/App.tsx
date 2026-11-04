@@ -520,29 +520,43 @@ function CalendarApp() {
   // Aggregate backlog tasks across unfinished past checklist items & Google Tasks
   const availableBacklogTasks = useMemo(() => {
     const todayStr = formatDateToYMD(new Date());
-    const tasksList: Array<{ id: string; title: string; assignedTo?: 'both' | 'him' | 'her' }> = [];
+    const tasksList: Array<{
+      id: string;
+      taskId?: string;
+      eventId?: string;
+      title: string;
+      sourceDetail?: string;
+      assignedTo?: 'both' | 'him' | 'her';
+    }> = [];
+
     events.forEach((evt) => {
       if (evt.startDate < todayStr && evt.tasks) {
         evt.tasks.forEach((t) => {
           if (!t.completed) {
             tasksList.push({
               id: t.id,
+              taskId: t.id,
+              eventId: evt.id,
               title: t.title,
+              sourceDetail: `${formatReadableDate(evt.startDate)} · ${evt.title}`,
               assignedTo: t.assignedTo,
             });
           }
         });
       }
     });
+
     googleTasks.forEach((gt) => {
       if (gt.status !== 'completed') {
         tasksList.push({
-          id: `gt-${gt.id}`,
+          id: gt.id,
           title: gt.title,
+          sourceDetail: gt.due ? `Due ${formatReadableDate(gt.due.split('T')[0])}` : 'Google Tasks',
           assignedTo: 'both',
         });
       }
     });
+
     return tasksList;
   }, [events, googleTasks]);
 
@@ -878,6 +892,16 @@ function CalendarApp() {
     setEvents((prev) => {
       const updated = prev.map((evt) => {
         if (evt.id !== eventId) return evt;
+        if (evt.isStandaloneTask || eventId === taskId) {
+          const nextEvt = {
+            ...evt,
+            completed,
+          };
+          if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
+            saveEventToFirestore(currentHub.id, nextEvt).catch(console.warn);
+          }
+          return nextEvt;
+        }
         const nextEvt = {
           ...evt,
           tasks: (evt.tasks || []).map((t) => (t.id === taskId ? { ...t, completed } : t)),
@@ -889,6 +913,10 @@ function CalendarApp() {
       });
       return updated;
     });
+  };
+
+  const handleToggleStandaloneTask = (eventId: string, completed: boolean) => {
+    handleToggleTask(eventId, eventId, completed);
   };
 
   // Add individual task to specific event
@@ -933,32 +961,69 @@ function CalendarApp() {
     });
   };
 
-  // Copy past incomplete task into a target date
-  const handleCopyTaskToDate = (sourceTaskTitle: string, targetDate: string, assignedTo?: 'both' | 'him' | 'her') => {
-    const dayEvents = events.filter((e) => e.startDate === targetDate);
-    if (dayEvents.length > 0) {
-      handleAddTaskToEvent(dayEvents[0].id, sourceTaskTitle, assignedTo);
-    } else {
-      const newEvt: CalendarEvent = {
-        id: `evt-rollover-${Date.now()}`,
-        title: 'Daily Tasks & Rollover Chores',
-        category: 'other',
-        startDate: targetDate,
-        assignedTo: assignedTo || 'both',
-        tasks: [
-          {
-            id: `t-${Date.now()}`,
-            title: sourceTaskTitle,
-            completed: false,
-            assignedTo: assignedTo || 'both',
-          },
-        ],
-      };
-      setEvents((prev) => [newEvt, ...prev]);
-      if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
-        saveEventToFirestore(currentHub.id, newEvt).catch(console.warn);
+  // Move backlog task into standalone untimed task on target date and remove from source
+  const handleMoveBacklogTaskToDate = (backlogItem: any, targetDate: string) => {
+    const taskTitle = typeof backlogItem === 'string' ? backlogItem : backlogItem?.title;
+    if (!taskTitle || !taskTitle.trim()) return;
+
+    // Step A: Create Standalone Untimed Task on targetDate
+    const standaloneTaskEvt: CalendarEvent = {
+      id: `task-standalone-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title: taskTitle.trim(),
+      category: (typeof backlogItem === 'object' && backlogItem?.category) || 'other',
+      startDate: targetDate,
+      assignedTo: (typeof backlogItem === 'object' && backlogItem?.assignedTo) || 'both',
+      isStandaloneTask: true,
+      completed: false,
+      tasks: [],
+    };
+
+    setEvents((prev) => {
+      let updated = [standaloneTaskEvt, ...prev];
+
+      // Step B: Remove From Backlog Source
+      if (typeof backlogItem === 'object' && backlogItem !== null) {
+        const targetEventId = backlogItem.eventId;
+        const targetTaskId = backlogItem.taskId || backlogItem.id;
+
+        if (targetEventId && targetTaskId) {
+          updated = updated.map((evt) => {
+            if (evt.id !== targetEventId) return evt;
+            const nextTasks = (evt.tasks || []).filter((t) => t.id !== targetTaskId);
+            const nextEvt = { ...evt, tasks: nextTasks };
+            if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
+              saveEventToFirestore(currentHub.id, nextEvt).catch(console.warn);
+            }
+            return nextEvt;
+          });
+        } else if (targetTaskId) {
+          updated = updated.map((evt) => {
+            const hasTask = (evt.tasks || []).some((t) => t.id === targetTaskId);
+            if (!hasTask) return evt;
+            const nextTasks = (evt.tasks || []).filter((t) => t.id !== targetTaskId);
+            const nextEvt = { ...evt, tasks: nextTasks };
+            if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
+              saveEventToFirestore(currentHub.id, nextEvt).catch(console.warn);
+            }
+            return nextEvt;
+          });
+        }
       }
+
+      if (currentHub?.id && currentHub.id !== 'hub-admin-default') {
+        saveEventToFirestore(currentHub.id, standaloneTaskEvt).catch(console.warn);
+      }
+      return updated;
+    });
+
+    if (typeof backlogItem === 'object' && backlogItem?.id) {
+      setGoogleTasks((prev) => prev.filter((g) => g.id !== backlogItem.id && `gt-${g.id}` !== backlogItem.id));
     }
+  };
+
+  // Backward-compatibility wrapper for copying task to date
+  const handleCopyTaskToDate = (sourceTaskTitle: string, targetDate: string, assignedTo?: 'both' | 'him' | 'her') => {
+    handleMoveBacklogTaskToDate({ title: sourceTaskTitle, assignedTo }, targetDate);
   };
 
   const handleOpenAddModal = (dateStr?: string) => {
@@ -1246,12 +1311,14 @@ function CalendarApp() {
               allEvents={events}
               stays={stays}
               googleTasks={googleTasks}
+              availableBacklogTasks={availableBacklogTasks}
               onUpdateStay={handleUpdateStay}
               onUpdateStayNotes={handleUpdateStayNotes}
               onToggleTask={handleToggleTask}
               onAddTaskToEvent={handleAddTaskToEvent}
               onDeleteTaskFromEvent={handleDeleteTaskFromEvent}
               onCopyTaskToDate={handleCopyTaskToDate}
+              onAddBacklogTaskToDate={handleMoveBacklogTaskToDate}
               onUpdateEvent={handleUpdateEvent}
               onDeleteEvent={handleDeleteEvent}
               onOpenFridgePhotos={() => setIsFridgePhotosOpen(true)}
@@ -1315,8 +1382,9 @@ function CalendarApp() {
                   onToggleExpandEvent={handleToggleExpandEvent}
                   onToggleExpandTasks={handleToggleExpandTasks}
                   onUpdateStay={handleUpdateStay}
+                  onUpdateStayNotes={handleUpdateStayNotes}
                   availableBacklogTasks={availableBacklogTasks}
-                  onAddBacklogTaskToDate={(task, targetDate) => handleCopyTaskToDate(task.title, targetDate, task.assignedTo)}
+                  onAddBacklogTaskToDate={handleMoveBacklogTaskToDate}
                   onOpenDayView={(d) => {
                     handleSelectDate(d);
                     setViewMode('agenda');
@@ -1340,6 +1408,8 @@ function CalendarApp() {
                   onAddTaskToEvent={handleAddTaskToEvent}
                   onDeleteTaskFromEvent={handleDeleteTaskFromEvent}
                   onCopyTaskToDate={handleCopyTaskToDate}
+                  onAddBacklogTaskToDate={handleMoveBacklogTaskToDate}
+                  availableBacklogTasks={availableBacklogTasks}
                   onDeleteEvent={handleDeleteEvent}
                   onUpdateEvent={handleUpdateEvent}
                   onOpenFridgePhotos={() => setIsFridgePhotosOpen(true)}
@@ -1414,9 +1484,9 @@ function CalendarApp() {
         templates={templates}
         events={events}
         onToggleTask={handleToggleTask}
-        onMoveTaskToToday={(title, assignedTo) => {
+        onMoveTaskToToday={(title, assignedTo, item) => {
           const todayStr = formatDateToYMD(new Date());
-          handleCopyTaskToDate(title, todayStr, assignedTo);
+          handleMoveBacklogTaskToDate(item || { title, assignedTo }, todayStr);
         }}
         onDismissOverdueTask={handleDismissOverdueTask}
         onUpdateTemplate={handleUpdateTemplate}
@@ -1445,7 +1515,7 @@ function CalendarApp() {
         onOpenInviteModal={() => setIsInviteModalOpen(true)}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onAddEventFromAI={handleSaveEvent}
-        onImportGoogleTaskToBacklog={(taskTitle) => handleCopyTaskToDate(taskTitle, selectedDate, 'both')}
+        onImportGoogleTaskToBacklog={(taskTitle) => handleMoveBacklogTaskToDate(taskTitle, selectedDate)}
         onSyncGoogleTasks={handleSyncGoogleTasks}
         onMessagesUpdated={(msgs) => setChatMessages(msgs)}
         onChatRead={handleChatRead}

@@ -48,6 +48,15 @@ interface InteractiveDayScheduleProps {
   onAddTaskToEvent: (eventId: string, taskTitle: string, assignedTo?: 'both' | 'him' | 'her') => void;
   onDeleteTaskFromEvent: (eventId: string, taskId: string) => void;
   onCopyTaskToDate: (sourceTaskTitle: string, targetDate: string, assignedTo?: 'both' | 'him' | 'her') => void;
+  onAddBacklogTaskToDate?: (backlogItem: any, targetDate: string) => void;
+  availableBacklogTasks?: Array<{
+    id: string;
+    taskId?: string;
+    eventId?: string;
+    title: string;
+    sourceDetail?: string;
+    assignedTo?: 'both' | 'him' | 'her';
+  }>;
   onUpdateEvent?: (updatedEvent: CalendarEvent) => void;
   onDeleteEvent?: (eventId: string) => void;
   onOpenFridgePhotos: () => void;
@@ -70,12 +79,14 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   allEvents,
   stays,
   googleTasks = [],
+  availableBacklogTasks,
   onUpdateStay,
   onUpdateStayNotes,
   onToggleTask,
   onAddTaskToEvent,
   onDeleteTaskFromEvent,
   onCopyTaskToDate,
+  onAddBacklogTaskToDate,
   onUpdateEvent,
   onDeleteEvent,
   onOpenFridgePhotos,
@@ -113,10 +124,12 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [packoutEvent, setPackoutEvent] = useState<CalendarEvent | null>(null);
   const [posEvent, setPosEvent] = useState<CalendarEvent | null>(null);
+  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
   const [showRolloverDrawer, setShowRolloverDrawer] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null);
   const [isNotesExpanded, setIsNotesExpanded] = useState(false);
+  const [isBacklogOpen, setIsBacklogOpen] = useState(false);
+  const [inlineTaskInput, setInlineTaskInput] = useState('');
 
   // Sync day notes when selectedDate changes so notes don't stick across days
   const currentStayNotes = stays[selectedDate]?.notes || '';
@@ -246,10 +259,34 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
     }
   });
 
-  const handleCopyTask = (title: string, assignedTo?: 'both' | 'him' | 'her') => {
-    onCopyTaskToDate(title, selectedDate, assignedTo);
-    setCopyFeedback(`Added "${title}" to today's schedule!`);
+  const effectiveBacklog = availableBacklogTasks && availableBacklogTasks.length > 0 ? availableBacklogTasks : allBacklogTasks;
+
+  const handleMoveBacklog = (item: any) => {
+    if (onAddBacklogTaskToDate) {
+      onAddBacklogTaskToDate(item, selectedDate);
+    } else {
+      onCopyTaskToDate(typeof item === 'string' ? item : item.title, selectedDate, item?.assignedTo);
+    }
+    const title = typeof item === 'string' ? item : item?.title;
+    setCopyFeedback(`Moved "${title}" to schedule!`);
     setTimeout(() => setCopyFeedback(null), 3000);
+  };
+
+  const handleAddInlineTask = () => {
+    const val = inlineTaskInput.trim();
+    if (!val) return;
+    if (onAddBacklogTaskToDate) {
+      onAddBacklogTaskToDate(val, selectedDate);
+    } else {
+      onCopyTaskToDate(val, selectedDate, 'both');
+    }
+    setInlineTaskInput('');
+    setCopyFeedback(`Added "${val}"!`);
+    setTimeout(() => setCopyFeedback(null), 3000);
+  };
+
+  const handleCopyTask = (title: string, assignedTo?: 'both' | 'him' | 'her') => {
+    handleMoveBacklog({ title, assignedTo });
   };
 
   // Save changes to event being edited
@@ -309,70 +346,8 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
         </div>
       )}
 
-      {/* 2-Column Responsive Grid: Stacked on Mobile/Tablet, Side-by-Side with Sticky Notes on PC */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Column: Day Events */}
-        <div className="lg:col-span-8 space-y-3">
-          {allBacklogTasks.length > 0 && (
-            <div className="flex items-center justify-end">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-                  className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
-                  title="Toggle Backlog tasks to copy into today"
-                >
-                  + Backlog ({allBacklogTasks.length})
-                </button>
-                {showRolloverDrawer && (
-                  <div className="absolute right-0 top-full mt-1.5 w-72 max-h-56 overflow-y-auto bg-white dark:bg-[#202329] border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl z-30 p-2 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
-                        Backlog ({allBacklogTasks.length})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowRolloverDrawer(false)}
-                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className="space-y-1">
-                      {allBacklogTasks.map((item) => (
-                        <div
-                          key={item.id}
-                          className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-1.5 text-xs"
-                        >
-                          <div className="truncate flex-1 min-w-0">
-                            <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
-                              {item.title}
-                            </span>
-                            <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
-                              {item.sourceDetail}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleCopyTask(item.title, item.assignedTo);
-                              setShowRolloverDrawer(false);
-                            }}
-                            className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
-                            title="Add to today"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
       {/* Main Interactive Colorful Event Cards List ("Working the Day") */}
+      <div className="w-full space-y-4">
       {dayEvents.length === 0 ? (
         <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-dashed border-[#e4ded5] dark:border-[#2d3139] p-8 sm:p-10 text-center text-xs space-y-3 transition-colors">
           <div className="w-10 h-10 rounded-full bg-stone-100 dark:bg-[#252830] flex items-center justify-center mx-auto text-stone-400">
@@ -401,6 +376,54 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
         <div className="space-y-3 relative w-full">
           {dayEvents.map((evt) => {
             const cfg = CATEGORY_CONFIG[evt.category];
+
+            if (evt.isStandaloneTask) {
+              const partnerBadge = evt.assignedTo === 'her' ? partner1Initial : evt.assignedTo === 'him' ? partner2Initial : `${partner1Initial}&${partner2Initial}`;
+
+              return (
+                <div
+                  key={evt.id}
+                  className="py-2 px-3 rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 flex items-center justify-between gap-2.5 shadow-2xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <TaskToggleSlider
+                      checked={Boolean(evt.completed)}
+                      onChange={(val) => onToggleTask(evt.id, evt.id, val)}
+                    />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor || 'bg-stone-400'}`} />
+                    <span className={`text-xs sm:text-sm font-medium break-words ${evt.completed ? 'line-through opacity-50' : 'text-stone-900 dark:text-stone-100'}`}>
+                      {evt.title}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                      evt.assignedTo === 'her'
+                        ? user1Theme.badgeBg
+                        : evt.assignedTo === 'him'
+                        ? user2Theme.badgeBg
+                        : 'bg-stone-200/80 dark:bg-stone-700/80 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-600'
+                    }`}>
+                      {partnerBadge}
+                    </span>
+                    {onDeleteEvent && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteEvent(evt.id);
+                        }}
+                        className="w-6 h-6 rounded-md text-stone-400 hover:text-rose-500 hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center justify-center cursor-pointer transition-colors"
+                        title="Delete task"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
             const tasks = evt.tasks || [];
             const completedCount = tasks.filter((t) => t.completed).length;
             const isExpanded = Boolean(currentExpandedEventIds[evt.id]);
@@ -704,55 +727,131 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
           })}
         </div>
       )}
-        </div>
 
-        {/* Right Column: Sticky Notes scratchpad on PC */}
-        <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-          <div className="rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] overflow-hidden text-xs shadow-2xs">
-            <div
-              onClick={() => setIsNotesExpanded(!isNotesExpanded)}
-              className="py-2 px-3 flex items-center justify-between cursor-pointer select-none hover:bg-stone-50 dark:hover:bg-[#202329] transition-colors"
+        {/* Bottom 50/50 Split Bar: Half Notes & Half Tasks */}
+        <div className="space-y-2 pt-2">
+          <div className="grid grid-cols-2 gap-2">
+            {/* Left Button (50% width — Notes) */}
+            <button
+              type="button"
+              onClick={() => setIsNotesExpanded((prev) => !prev)}
+              className="py-2 px-3 rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 flex items-center justify-between gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-200 cursor-pointer shadow-2xs hover:bg-stone-50 dark:hover:bg-stone-800/40 transition-colors"
             >
-              <span className="font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 font-mono uppercase tracking-wider text-[11px]">
-                <FileText className="w-3.5 h-3.5 text-stone-500" />
-                Notes
+              <span className="flex items-center gap-1.5">
+                <span>Notes</span>
+                {dayNotes.trim().length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-stone-900 dark:bg-stone-100" />
+                )}
               </span>
-              <div className="flex-1 mx-2 truncate text-stone-400 text-[11px]">
-                {dayNotes.trim() ? dayNotes.split('\n')[0] : 'Notes, feedback, reminders...'}
-              </div>
-              <div className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200">
-                {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </div>
-            </div>
+              {isNotesExpanded ? <ChevronUp className="w-3.5 h-3.5 text-stone-400" /> : <ChevronDown className="w-3.5 h-3.5 text-stone-400" />}
+            </button>
 
-            {isNotesExpanded && (
-              <div className="p-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
-                <div className="flex items-center justify-end gap-1 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={handleInsertBullet}
-                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                  >
-                    + Bullet (•)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleInsertBreak}
-                    className="text-stone-600 dark:text-stone-400 hover:text-stone-900 bg-white dark:bg-[#282c34] px-2 py-0.5 rounded border border-[#e4ded5] dark:border-[#353943] cursor-pointer"
-                  >
-                    + Break
-                  </button>
-                </div>
-                <textarea
-                  rows={4}
-                  value={dayNotes}
-                  onChange={(e) => handleNotesChange(e.target.value)}
-                  placeholder="Add note..."
-                  className="w-full text-xs p-3 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 whitespace-pre-wrap font-sans leading-relaxed"
-                />
-              </div>
-            )}
+            {/* Right Button (50% width — Tasks) */}
+            <button
+              type="button"
+              onClick={() => setIsBacklogOpen((prev) => !prev)}
+              className="py-2 px-3 rounded-xl bg-white dark:bg-[#1a1d24] border border-stone-200/80 dark:border-stone-800 flex items-center justify-between gap-1.5 text-xs font-semibold text-stone-700 dark:text-stone-200 cursor-pointer shadow-2xs hover:bg-stone-50 dark:hover:bg-stone-800/40 transition-colors"
+            >
+              <span>Tasks {effectiveBacklog.length > 0 ? `(${effectiveBacklog.length})` : ''}</span>
+              {isBacklogOpen ? <ChevronUp className="w-3.5 h-3.5 text-stone-400" /> : <ChevronDown className="w-3.5 h-3.5 text-stone-400" />}
+            </button>
           </div>
+
+          {/* Below 50/50 split bar: Notes drawer */}
+          {isNotesExpanded && (
+            <div className="p-3 rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] shadow-2xs space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center justify-end gap-1 text-[11px]">
+                <button
+                  type="button"
+                  onClick={handleInsertBullet}
+                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-50 dark:bg-[#282c34] px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700 cursor-pointer"
+                >
+                  + Bullet (•)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleInsertBreak}
+                  className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-50 dark:bg-[#282c34] px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700 cursor-pointer"
+                >
+                  + Break
+                </button>
+              </div>
+              <textarea
+                rows={3}
+                value={dayNotes}
+                onChange={(e) => handleNotesChange(e.target.value)}
+                placeholder="Add note..."
+                className="w-full text-xs p-2.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100 whitespace-pre-wrap font-sans leading-relaxed"
+              />
+            </div>
+          )}
+
+          {/* Below 50/50 split bar: Tasks drawer */}
+          {isBacklogOpen && (
+            <div className="p-3 rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] shadow-2xs space-y-2.5 animate-in fade-in duration-150">
+              {/* a) Quick inline input (Add task... + + button) */}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Add task..."
+                  value={inlineTaskInput}
+                  onChange={(e) => setInlineTaskInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddInlineTask();
+                    }
+                  }}
+                  className="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-[#1a1d22] text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddInlineTask}
+                  disabled={!inlineTaskInput.trim()}
+                  className="w-7 h-7 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white disabled:opacity-40 transition-colors shrink-0"
+                  title="Add task"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* b) List of availableBacklogTasks */}
+              {effectiveBacklog.length > 0 ? (
+                <div className="space-y-1 max-h-48 overflow-y-auto pt-1 border-t border-stone-100 dark:border-stone-800">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500 pb-0.5">
+                    Backlog ({effectiveBacklog.length})
+                  </div>
+                  {effectiveBacklog.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#202329] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-2 text-xs"
+                    >
+                      <div className="truncate flex-1 min-w-0">
+                        <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                          {item.title}
+                        </span>
+                        {item.sourceDetail && (
+                          <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
+                            {item.sourceDetail}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveBacklog(item)}
+                        className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
+                        title="Move to day"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-stone-400 text-center py-1">No pending backlog tasks.</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
