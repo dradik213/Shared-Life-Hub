@@ -36,7 +36,7 @@ import { CalendarEvent, CalendarViewMode, DayStayInfo, EventCategory, EventSortO
 import { INITIAL_EVENTS, MOCK_STAYS } from './data/mockEvents';
 import { INITIAL_TEMPLATES } from './data/mockTemplates';
 import { formatReadableDate, formatDateToYMD, matchesPartnerFilter, eventOccursOnDate } from './utils/calendarUtils';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Plus, Mic, MicOff, Loader2, Send, Check, X } from 'lucide-react';
 
 function CalendarApp() {
   const { currentUser, currentHub, updateProfile } = useAuth();
@@ -268,6 +268,15 @@ function CalendarApp() {
   const [unifiedWorkspaceTab, setUnifiedWorkspaceTab] = useState<UnifiedWorkspaceTab>('inventory');
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState<boolean>(false);
   const [workspaceInitialTab, setWorkspaceInitialTab] = useState<'ai_logger' | 'calendar' | 'tasks' | 'gmail' | 'chat'>('ai_logger');
+  
+  // Voice Quick Log State
+  const [isVoicePopoverOpen, setIsVoicePopoverOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [isVoiceParsing, setIsVoiceParsing] = useState(false);
+  const [voiceStatusMsg, setVoiceStatusMsg] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>('');
   
   const [googleTasks, setGoogleTasks] = useState<GoogleTaskItem[]>(() => {
     try {
@@ -1133,6 +1142,214 @@ function CalendarApp() {
     }
   };
 
+  // Voice-to-Event and Voice-to-Task Quick Logging
+  const handleProcessVoiceCommand = async (textToParse: string) => {
+    const promptText = (textToParse || voiceTranscript || transcriptRef.current).trim();
+    if (!promptText) return;
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+    }
+    setIsListening(false);
+    setIsVoiceParsing(true);
+    setVoiceStatusMsg('Logging to schedule...');
+
+    let parsed: any = null;
+    try {
+      const resp = await fetch('/api/gemini/parse-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptText, referenceDate: selectedDate }),
+      });
+      if (resp.ok) {
+        parsed = await resp.json();
+      }
+    } catch (err) {
+      console.warn('Remote /api/gemini/parse-event failed, falling back to local heuristic:', err);
+    }
+
+    // Smart local fallback parser if network request failed or returned invalid response
+    if (!parsed || !parsed.title) {
+      const lower = promptText.toLowerCase();
+
+      // Detect standalone task vs scheduled event
+      const isTaskKeyword = /\b(task|todo|to-do|chore|buy|pick up|pack|clean|remind|call|email|order|wash|laundry)\b/i.test(lower);
+      const hasTimePattern = /\b\d{1,2}(:\d{2})?\s*(am|pm)\b/i.test(lower);
+      const isStandalone = isTaskKeyword || !hasTimePattern;
+
+      // Detect partner assignment
+      let assignedTo: 'both' | 'him' | 'her' = 'both';
+      if (/\bdustin\b|\bhim\b|\bhis\b/i.test(lower)) {
+        assignedTo = 'him';
+      } else if (/\bkatherine\b|\bher\b|\bhers\b/i.test(lower)) {
+        assignedTo = 'her';
+      }
+
+      // Detect target date relative to selectedDate
+      let targetDate = selectedDate;
+      const [refY, refM, refD] = selectedDate.split('-').map(Number);
+      const dObj = new Date(refY, refM - 1, refD);
+
+      if (lower.includes('tomorrow')) {
+        dObj.setDate(dObj.getDate() + 1);
+        targetDate = formatDateToYMD(dObj);
+      } else {
+        const dayMap: Record<string, number> = {
+          sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6
+        };
+        for (const [dayName, dayIndex] of Object.entries(dayMap)) {
+          if (lower.includes(dayName)) {
+            const currentDay = dObj.getDay();
+            let diff = (dayIndex - currentDay + 7) % 7;
+            if (diff === 0) diff = 7;
+            dObj.setDate(dObj.getDate() + diff);
+            targetDate = formatDateToYMD(dObj);
+            break;
+          }
+        }
+      }
+
+      // Detect category
+      let category: EventCategory = 'other';
+      if (/\bmarket|booth|craft|vendor\b/i.test(lower)) category = 'market';
+      else if (/\bdinner|date|drinks|lunch|restaurant|nopa\b/i.test(lower)) category = 'dinner_date';
+      else if (/\bgrocery|store|safeway|trader joe|costco|shopping\b/i.test(lower)) category = 'grocery_errand';
+      else if (/\bvet|dog|cat|pet|walk|flea|groom\b/i.test(lower)) category = 'pets';
+      else if (/\bfix|repair|hvac|plumb|clean|maint|contractor\b/i.test(lower)) category = 'maintenance';
+
+      // Clean title
+      let cleanTitle = promptText
+        .replace(/^task\s*[:\-]?\s*/i, '')
+        .replace(/^remind\s+(dustin|katherine|me|us)\s+to\s+/i, '')
+        .trim();
+      if (cleanTitle.length > 0) {
+        cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+      } else {
+        cleanTitle = promptText;
+      }
+
+      parsed = {
+        title: cleanTitle,
+        category,
+        startDate: targetDate,
+        isStandaloneTask: isStandalone,
+        assignedTo,
+        locationName: '',
+        notes: '',
+        tasks: []
+      };
+    }
+
+    const eventDate = parsed.startDate || selectedDate;
+    const isStandalone = Boolean(parsed.isStandaloneTask);
+
+    handleSaveEvent({
+      title: parsed.title || promptText,
+      category: parsed.category || 'other',
+      startDate: eventDate,
+      startTime: isStandalone ? undefined : (parsed.startTime || undefined),
+      endTime: isStandalone ? undefined : (parsed.endTime || undefined),
+      assignedTo: parsed.assignedTo || 'both',
+      locationName: parsed.locationName || '',
+      notes: parsed.notes || '',
+      isStandaloneTask: isStandalone,
+      completed: false,
+      tasks: Array.isArray(parsed.tasks)
+        ? parsed.tasks.map((t: any, idx: number) => ({
+            id: `t-${Date.now()}-${idx}`,
+            title: typeof t === 'string' ? t : t.title || 'Task',
+            completed: false,
+            assignedTo: parsed.assignedTo || 'both',
+          }))
+        : [],
+    });
+
+    handleSelectDate(eventDate);
+    setVoiceStatusMsg(`✓ Added: ${parsed.title || promptText}`);
+    setIsVoiceParsing(false);
+
+    setTimeout(() => {
+      setIsVoicePopoverOpen(false);
+      setVoiceTranscript('');
+      transcriptRef.current = '';
+      setVoiceStatusMsg(null);
+    }, 1200);
+  };
+
+  const handleToggleVoiceMic = () => {
+    setIsVoicePopoverOpen(true);
+    setVoiceStatusMsg(null);
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+      setIsListening(false);
+      return;
+    }
+
+    if (!SpeechRecognition) {
+      setVoiceStatusMsg('Mic blocked or not supported by browser — type or dictate below');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognitionRef.current = recognition;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceStatusMsg(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        let finalStr = '';
+        let interimStr = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalStr += event.results[i][0].transcript;
+          } else {
+            interimStr += event.results[i][0].transcript;
+          }
+        }
+        const text = finalStr || interimStr;
+        if (text) {
+          setVoiceTranscript(text);
+          transcriptRef.current = text;
+        }
+      };
+
+      recognition.onerror = (err: any) => {
+        console.warn('Speech recognition error:', err);
+        setIsListening(false);
+        setVoiceStatusMsg('Mic blocked by browser — type or dictate with keyboard mic');
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        const recorded = transcriptRef.current.trim();
+        if (recorded) {
+          handleProcessVoiceCommand(recorded);
+        }
+      };
+
+      recognition.start();
+    } catch (e) {
+      console.warn('Speech recognition start failed:', e);
+      setIsListening(false);
+      setVoiceStatusMsg('Mic blocked by browser — type or dictate with keyboard mic');
+    }
+  };
+
   // Activity Template Management Handlers (Admin)
   const handleUpdateTemplate = (updated: PlanTemplate) => {
     setTemplates((prev) => {
@@ -1428,16 +1645,125 @@ function CalendarApp() {
         )}
       </main>
  
-      {/* Floating Action Button (+ Add) in bottom-right corner for 1-tap quick add */}
-      <button
-        type="button"
-        onClick={() => handleOpenAddModal(selectedDate)}
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 shadow-xl hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center cursor-pointer group ring-2 ring-white/60 dark:ring-stone-900/40"
-        title="Add new event, task or stay (+)"
-        aria-label="Add new event, task or stay"
-      >
-        <Plus className="w-6 h-6 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
-      </button>
+      {/* Voice / Quick Log Popover Card */}
+      {isVoicePopoverOpen && (
+        <div
+          className="fixed bottom-22 right-4 sm:bottom-24 sm:right-8 z-50 w-[calc(100vw-2rem)] max-w-xs sm:max-w-sm rounded-2xl bg-white dark:bg-[#1a1d24] border border-stone-200 dark:border-stone-700 shadow-2xl p-3 animate-in fade-in slide-in-from-bottom-2 duration-150"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Top Row: Status / Hint + Close */}
+          <div className="flex items-center justify-between pb-1.5 border-b border-stone-100 dark:border-stone-800">
+            <span className="text-xs font-semibold text-stone-800 dark:text-stone-200 flex items-center gap-1.5 truncate">
+              {isListening ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                  <span className="text-rose-600 dark:text-rose-400 truncate">Listening... speak event or task</span>
+                </>
+              ) : isVoiceParsing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-stone-600 dark:text-stone-400 shrink-0" />
+                  <span className="truncate">Logging to schedule...</span>
+                </>
+              ) : voiceStatusMsg ? (
+                <span className="text-emerald-600 dark:text-emerald-400 truncate">{voiceStatusMsg}</span>
+              ) : (
+                <span>Voice / Quick Log</span>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (recognitionRef.current) {
+                  try {
+                    recognitionRef.current.stop();
+                  } catch (e) {}
+                }
+                setIsListening(false);
+                setIsVoicePopoverOpen(false);
+                setVoiceTranscript('');
+                transcriptRef.current = '';
+                setVoiceStatusMsg(null);
+              }}
+              className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 p-0.5 rounded cursor-pointer transition-colors shrink-0 ml-1"
+              title="Close voice logger"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Middle Row: Input + Action Button */}
+          <div className="pt-2 flex items-center gap-1.5">
+            <input
+              type="text"
+              value={voiceTranscript}
+              onChange={(e) => {
+                setVoiceTranscript(e.target.value);
+                transcriptRef.current = e.target.value;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && voiceTranscript.trim() && !isVoiceParsing) {
+                  e.preventDefault();
+                  handleProcessVoiceCommand(voiceTranscript);
+                }
+              }}
+              placeholder="Say or type 'Dinner Friday 7pm' or 'Task buy dog food'"
+              autoFocus
+              className="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-[#202329] text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900 dark:focus:ring-stone-100"
+            />
+            <button
+              type="button"
+              disabled={!voiceTranscript.trim() || isVoiceParsing}
+              onClick={() => handleProcessVoiceCommand(voiceTranscript)}
+              className="px-2.5 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 shrink-0 transition-opacity"
+              title="Save event or task"
+            >
+              {isVoiceParsing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">Add</span>
+            </button>
+          </div>
+
+          {voiceStatusMsg && !isVoiceParsing && !voiceStatusMsg.startsWith('✓') && (
+            <div className="pt-1.5 text-[10.5px] text-stone-500 dark:text-stone-400">
+              {voiceStatusMsg}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Floating Action Button Pair: Voice Mic & + Add in bottom-right corner */}
+      <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={handleToggleVoiceMic}
+          title="Voice log event or task"
+          aria-label="Voice log event or task"
+          className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-white/60 dark:ring-stone-900/40 ${
+            isListening
+              ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-500/30'
+              : 'bg-white text-stone-800 border border-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:border-stone-700'
+          }`}
+        >
+          {isVoiceParsing ? (
+            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
+          ) : (
+            <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleOpenAddModal(selectedDate)}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-white text-white dark:text-stone-900 shadow-xl hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center cursor-pointer group ring-2 ring-white/60 dark:ring-stone-900/40"
+          title="Add new event, task or stay (+)"
+          aria-label="Add new event, task or stay"
+        >
+          <Plus className="w-6 h-6 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
+        </button>
+      </div>
 
       {/* Add Activity Modal with dynamic templates & edit button */}
       <AddEventModal

@@ -46,12 +46,12 @@ app.post('/api/gemini/parse-event', async (req, res) => {
     const refDate = referenceDate || new Date().toISOString().split('T')[0];
 
     const systemInstruction = `You are an expert shared calendar assistant for couples and shared households.
-Your job is to parse the user's natural language request or email/message snippet into a structured calendar event.
+Your job is to parse the user's natural language request, voice command, or email/message snippet into a structured calendar event or standalone untimed task.
 Today's reference date is: ${refDate}.
 
 You must return valid JSON with the following structure:
 {
-  "title": "Clean, descriptive event title",
+  "title": "Clean, descriptive event or task title",
   "category": "market" | "dinner_date" | "maintenance" | "pets" | "grocery_errand" | "other",
   "emoji": "🎪" | "🍽️" | "🔨" | "🐾" | "🛒" | "📅",
   "startDate": "YYYY-MM-DD",
@@ -61,8 +61,13 @@ You must return valid JSON with the following structure:
   "assignedTo": "both" | "her" | "him",
   "notes": "Any helpful context, instructions, or highlights from the email/prompt",
   "tasks": ["Task 1", "Task 2"],
+  "isStandaloneTask": boolean,
   "summaryExplanation": "Brief 1-sentence explanation of what was extracted"
 }
+
+Task vs Event Classification Guide:
+- Set "isStandaloneTask": true (and omit/leave empty startTime and endTime) when the user's prompt describes a to-do, chore, reminder, or general task without a specific time of day (e.g., "Task buy dog food", "Remind Dustin to call the vet tomorrow", "Pack shirts for market on Friday", "Clean the kitchen").
+- Set "isStandaloneTask": false when the user specifies a time or a scheduled appointment/event (e.g., "Dinner date Friday at 7pm", "Farmers market Saturday 8am to 2pm", "Flight Monday morning at 10").
 
 Category matching guide:
 - "market": Pop-up markets, craft shows, vendor booths, sales.
@@ -95,7 +100,8 @@ Strictly output ONLY the JSON object, no Markdown code fences, no extra text.`;
     const text = response.text || '{}';
     let parsed;
     try {
-      parsed = JSON.parse(text);
+      const cleaned = text.replace(/```json|```/gi, '').trim();
+      parsed = JSON.parse(cleaned);
     } catch (e) {
       // Clean up markdown fences if model included them
       const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
