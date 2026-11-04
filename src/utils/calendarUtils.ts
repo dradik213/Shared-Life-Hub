@@ -465,11 +465,9 @@ export function compareEvents(a: { startDate?: string; startTime?: string; title
 export function sortEventsForDay(
   events: CalendarEvent[],
   sortOption: EventSortOption = 'time',
-  sortDirection: SortDirection = 'none'
+  sortDirection: SortDirection = 'asc'
 ): CalendarEvent[] {
-  if (sortDirection === 'none') {
-    return [...events];
-  }
+  const effectiveDirection = sortDirection === 'desc' ? 'desc' : 'asc';
 
   const sorted = [...events].sort((a, b) => {
     let diff = 0;
@@ -484,18 +482,18 @@ export function sortEventsForDay(
         other: 6
       };
       diff = (catOrder[a.category] || 99) - (catOrder[b.category] || 99);
-      if (diff === 0) diff = compareEventsInDay(a, b);
+      if (diff === 0) diff = (a.startTime || '').localeCompare(b.startTime || '');
     } else if (sortOption === 'partner') {
       const partOrder = { both: 1, her: 2, him: 3 };
       diff = (partOrder[a.assignedTo] || 99) - (partOrder[b.assignedTo] || 99);
-      if (diff === 0) diff = compareEventsInDay(a, b);
+      if (diff === 0) diff = (a.startTime || '').localeCompare(b.startTime || '');
     } else if (sortOption === 'tasks') {
       const aTasks = a.tasks?.length || 0;
       const bTasks = b.tasks?.length || 0;
       diff = bTasks - aTasks;
-      if (diff === 0) diff = compareEventsInDay(a, b);
+      if (diff === 0) diff = (a.startTime || '').localeCompare(b.startTime || '');
     } else {
-      // Default 'time'
+      // Default 'time' strictly ascending: morning first (09:00 AM), evening last (09:30 PM)
       const hasTimeA = Boolean(a.startTime && a.startTime.trim().length > 0);
       const hasTimeB = Boolean(b.startTime && b.startTime.trim().length > 0);
       if (hasTimeA && !hasTimeB) return -1;
@@ -506,7 +504,7 @@ export function sortEventsForDay(
       if (diff === 0) diff = a.title.localeCompare(b.title);
     }
 
-    return sortDirection === 'desc' ? -diff : diff;
+    return effectiveDirection === 'desc' ? -diff : diff;
   });
 
   return sorted;

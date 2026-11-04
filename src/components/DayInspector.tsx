@@ -13,7 +13,8 @@ import {
   X,
   Barcode,
   ShoppingBag,
-  MapPin
+  MapPin,
+  Plus
 } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, EventTask, MarketPackoutItem, MarketSaleRecord, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatReadableDate, sortEventsForDay, formatTimeRange, formatDateToYMD } from '../utils/calendarUtils';
@@ -191,7 +192,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
   const activeDayEvents = (allEvents && allEvents.length > 0 ? allEvents : events).filter(
     (e) => e.startDate <= selectedDate && (e.endDate || e.startDate) >= selectedDate
   );
-  const dayEvents = sortEventsForDay(activeDayEvents, sortOption, sortDirection);
+  const dayEvents = sortEventsForDay(activeDayEvents, sortOption, sortDirection === 'none' ? 'asc' : sortDirection);
 
   // Unified Backlog: Checklist tasks marked not completed from past dates + Google Tasks
   const TODAY_STR = formatDateToYMD(new Date());
@@ -313,7 +314,7 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
             <button
               type="button"
               onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-stone-200/80 hover:bg-stone-300/80 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors cursor-pointer shrink-0"
+              className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
               title="Toggle Backlog tasks to copy into this day"
             >
               + Backlog ({allBacklogTasks.length})
@@ -371,9 +372,10 @@ export const DayInspector: React.FC<DayInspectorProps> = ({
                     onClick={() => {
                       onCopyTaskToDate(item.title, selectedDate, item.assignedTo);
                     }}
-                    className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs transition-colors shrink-0 flex items-center gap-1 cursor-pointer hover:bg-stone-800 dark:hover:bg-white"
+                    className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
+                    title="Add to day"
                   >
-                    <span>+ Add</span>
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}

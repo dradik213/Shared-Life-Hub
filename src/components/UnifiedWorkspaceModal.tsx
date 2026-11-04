@@ -145,7 +145,7 @@ interface UnifiedWorkspaceModalProps {
 export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
   isOpen,
   onClose,
-  initialTab = 'templates',
+  initialTab = 'inventory',
   selectedDate,
   templates,
   onUpdateTemplate,
@@ -187,7 +187,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
 
   const normalizeTab = (tab?: string): UnifiedWorkspaceTab => {
     if (tab === 'calendar' || tab === 'gmail') return 'google_sync';
-    return (tab as UnifiedWorkspaceTab) || 'templates';
+    return (tab as UnifiedWorkspaceTab) || 'inventory';
   };
 
   const [activeTab, setActiveTab] = useState<UnifiedWorkspaceTab>(() => normalizeTab(initialTab));
@@ -470,7 +470,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
   const handleLoadGmail = async () => {
     setIsLoadingGmail(true);
     try {
-      const msgs = await fetchRecentGmailMessages(10);
+      const msgs = await fetchRecentGmailMessages(15);
       setGmailMessages(msgs);
       generateGmailInsights(msgs);
     } catch (err: any) {
@@ -484,7 +484,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
     setIsAnalyzingEmails(true);
 
     const fallbackParser = () => {
-      return msgs.slice(0, 5).map((m, idx) => {
+      return msgs.slice(0, 10).map((m, idx) => {
         const sub = m.subject.toLowerCase();
         let cat: GmailInsightItem['category'] = 'reminder';
         let importance: GmailInsightItem['importance'] = 'medium';
@@ -521,7 +521,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
     };
 
     try {
-      const emailSnippets = msgs.slice(0, 8).map((m) => ({
+      const emailSnippets = msgs.slice(0, 15).map((m) => ({
         id: m.id,
         subject: m.subject,
         from: m.from,
@@ -1371,24 +1371,14 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
               TAB 4: TASKS & BACKLOG
              ======================================================== */}
           {activeTab === 'tasks' && (
-            <div className="space-y-5 max-w-4xl">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                    <CheckSquare className="w-4 h-4 text-emerald-600" />
-                    <span>Tasks & Shared Backlog</span>
-                  </h3>
-                  <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Syncs directly with Google Tasks and rolls over unfinished event checklist items.
-                  </p>
-                </div>
-
+            <div className="space-y-4 max-w-4xl">
+              <div className="flex items-center justify-between gap-3">
                 {googleUser && (
                   <button
                     type="button"
                     onClick={handleLoadGoogleTasks}
                     disabled={isLoadingTasks}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-300 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-[#e4ded5] dark:border-[#353943] bg-white dark:bg-[#252830] hover:bg-stone-100 dark:hover:bg-[#2e323c] text-stone-700 dark:text-stone-300 cursor-pointer ml-auto"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoadingTasks ? 'animate-spin' : ''}`} />
                     <span>Refresh Google Tasks</span>
@@ -1417,36 +1407,37 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
               {/* Missed Past Checklist Tasks */}
               {missedTasks.length > 0 && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between pb-1 border-b border-stone-200/60 dark:border-stone-800">
+                  <div className="pb-1 border-b border-stone-200/60 dark:border-stone-800">
                     <h4 className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider">
-                      Overdue Checklist Tasks ({missedTasks.length})
+                      Missed Tasks ({missedTasks.length})
                     </h4>
-                    <span className="text-[11px] text-stone-500">Uncompleted from past events</span>
                   </div>
                   <div className="space-y-2">
                     {missedTasks.map((item) => (
                       <div
                         key={`${item.eventId}-${item.taskId}`}
-                        className="p-3 rounded-xl border border-amber-200/90 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs"
+                        className="p-2.5 rounded-xl border border-amber-200/90 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-2xs flex items-center justify-between gap-2.5 text-xs"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <TaskToggleSlider
-                            checked={item.completed}
-                            onChange={(checked: boolean) => {
-                              onToggleTask?.(item.eventId, item.taskId, checked);
-                            }}
-                          />
-                          <div className="min-w-0 truncate">
-                            <span className="font-semibold text-stone-900 dark:text-stone-100 block truncate">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <div className="pt-0.5">
+                            <TaskToggleSlider
+                              checked={item.completed}
+                              onChange={(checked: boolean) => {
+                                onToggleTask?.(item.eventId, item.taskId, checked);
+                              }}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-xs sm:text-sm font-medium text-stone-900 dark:text-stone-100 break-words leading-snug block">
                               {item.title}
                             </span>
-                            <span className="text-[10px] text-stone-500 dark:text-stone-400 block truncate">
+                            <span className="text-[11px] text-stone-500 break-words block mt-0.5">
                               {formatReadableDate(item.eventDate)} · {item.eventTitle}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => {
@@ -1454,9 +1445,10 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                               onDismissOverdueTask?.(item.taskId);
                               showAdminFeedback(`Moved "${item.title}" to today!`);
                             }}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors cursor-pointer"
+                            className="w-7 h-7 rounded-lg bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white transition-colors"
+                            title="Add to Today"
                           >
-                            <span>+ Move to Today</span>
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
@@ -1464,10 +1456,10 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                               onDismissOverdueTask?.(item.taskId);
                               showAdminFeedback(`Dismissed overdue task notice.`);
                             }}
-                            className="text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 text-xs px-2 py-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
-                            title="Dismiss notification"
+                            className="w-7 h-7 rounded-lg text-stone-400 hover:text-red-500 hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center justify-center cursor-pointer transition-colors"
+                            title="Dismiss"
                           >
-                            Dismiss ×
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -1478,7 +1470,7 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
 
               {/* Tasks List */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between pb-1 border-b border-stone-200/60 dark:border-stone-800">
+                <div className="pb-1 border-b border-stone-200/60 dark:border-stone-800">
                   <h4 className="text-xs font-bold text-stone-800 dark:text-stone-200 uppercase tracking-wider">
                     Backlog & Google Tasks ({googleTasksList.length})
                   </h4>
@@ -1493,13 +1485,13 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                   googleTasksList.map((task) => (
                     <div
                       key={task.id}
-                      className="p-3 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#1f2229] shadow-2xs flex items-center justify-between gap-3 text-xs"
+                      className="p-2.5 rounded-xl border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#1f2229] shadow-2xs flex items-center justify-between gap-2.5 text-xs"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
                         <button
                           type="button"
                           onClick={() => handleToggleTaskCompletion(task.id)}
-                          className={`w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 cursor-pointer transition-colors ${
+                          className={`w-4 h-4 rounded-xs border flex items-center justify-center shrink-0 cursor-pointer transition-colors mt-0.5 ${
                             task.status === 'completed'
                               ? 'bg-emerald-600 border-emerald-600 text-white'
                               : 'border-stone-400 dark:border-stone-500 bg-white dark:bg-black/40 hover:border-emerald-500'
@@ -1508,35 +1500,38 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                         >
                           {task.status === 'completed' && <Check className="w-3 h-3 stroke-[3]" />}
                         </button>
-                        <span className={`font-semibold truncate ${
-                          task.status === 'completed' 
-                            ? 'line-through opacity-60 text-stone-400 dark:text-stone-500' 
-                            : 'text-stone-900 dark:text-stone-100'
-                        }`}>
-                          {task.title}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <span className={`text-xs sm:text-sm font-medium break-words leading-snug block ${
+                            task.status === 'completed' 
+                              ? 'line-through opacity-60 text-stone-400 dark:text-stone-500' 
+                              : 'text-stone-900 dark:text-stone-100'
+                          }`}>
+                            {task.title}
+                          </span>
+                          {task.due && (
+                            <span className="text-[11px] text-stone-500 dark:text-stone-400 font-mono block mt-0.5">
+                              Due: {formatReadableDate(task.due.split('T')[0])}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {task.due && (
-                          <span className="text-[11px] text-stone-500 dark:text-stone-400 font-mono">
-                            Due: {formatReadableDate(task.due.split('T')[0])}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => {
                             onMoveTaskToToday?.(task.title, 'both');
                             showAdminFeedback(`Moved "${task.title}" to today!`);
                           }}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 transition-colors cursor-pointer"
+                          className="w-7 h-7 rounded-lg bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white transition-colors"
+                          title="Add to Today"
                         >
-                          + Move to Today
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteTask(task.id)}
-                          className="p-1 text-stone-400 hover:text-rose-500 transition-colors cursor-pointer"
+                          className="w-7 h-7 rounded-lg text-stone-400 hover:text-rose-500 hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center justify-center cursor-pointer transition-colors"
                           title="Delete backlog task"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1558,14 +1553,11 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                 <div>
                   <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                     <CalendarIcon className="w-4 h-4 text-purple-600" />
-                    <span>Google Sync (Calendar & Gmail Insights)</span>
+                    <span>Google Sync</span>
                   </h3>
-                  <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Direct integration with Google Calendar to view upcoming schedules and Gmail to extract reservation details into shared calendar events.
-                  </p>
                 </div>
 
-                {googleUser ? (
+                {googleUser && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs">
                       <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -1592,15 +1584,6 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                       <LogOut className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isSigningIn}
-                    className="px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer shadow-xs inline-flex items-center gap-1.5"
-                  >
-                    <span>{isSigningIn ? 'Connecting...' : 'Connect Google Account'}</span>
-                  </button>
                 )}
               </div>
 
@@ -1648,30 +1631,86 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                       ) : googleCalendarEvents.length === 0 ? (
                         <p className="text-xs text-stone-400 py-4 text-center">No upcoming events found on Google Calendar.</p>
                       ) : (
-                        googleCalendarEvents.map((evt) => (
-                          <div
-                            key={evt.id}
-                            className="p-3 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#202329] shadow-2xs flex items-center justify-between gap-3 text-xs"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <p className="font-bold text-stone-900 dark:text-stone-100 truncate">{evt.summary}</p>
-                              <p className="text-[11px] text-stone-500 font-mono">
-                                {evt.start?.dateTime ? new Date(evt.start.dateTime).toLocaleString() : evt.start?.date}
-                              </p>
+                        googleCalendarEvents.map((evt) => {
+                          const rawStart = evt.start?.dateTime || evt.start?.date;
+                          const dt = rawStart ? new Date(rawStart) : null;
+                          const formattedDate = dt
+                            ? dt.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: evt.start?.dateTime ? 'numeric' : undefined,
+                                minute: evt.start?.dateTime ? '2-digit' : undefined,
+                              })
+                            : evt.start?.date || '';
+
+                          return (
+                            <div
+                              key={evt.id}
+                              className="p-3 rounded-lg border border-[#e4ded5] dark:border-[#2d3139] bg-white dark:bg-[#202329] shadow-2xs flex items-center justify-between gap-3 text-xs"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-stone-900 dark:text-stone-100 truncate">{evt.summary || '(Untitled Event)'}</p>
+                                <p className="text-[11px] text-stone-500 font-mono">
+                                  {formattedDate}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {evt.htmlLink && (
+                                  <a
+                                    href={evt.htmlLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer"
+                                    title="Open in Google Calendar"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (onAddEventFromAI) {
+                                      const rawS = evt.start?.dateTime || evt.start?.date || '';
+                                      let startDate = '';
+                                      let startTime = '09:00';
+                                      if (rawS.includes('T')) {
+                                        const [d, t] = rawS.split('T');
+                                        startDate = d;
+                                        startTime = t.slice(0, 5);
+                                      } else if (rawS) {
+                                        startDate = rawS;
+                                      } else {
+                                        startDate = new Date().toISOString().split('T')[0];
+                                      }
+                                      const rawE = evt.end?.dateTime || evt.end?.date || '';
+                                      let endTime: string | undefined;
+                                      if (rawE.includes('T')) {
+                                        endTime = rawE.split('T')[1].slice(0, 5);
+                                      }
+                                      onAddEventFromAI({
+                                        title: evt.summary || 'Google Calendar Event',
+                                        startDate,
+                                        startTime,
+                                        endTime,
+                                        category: 'other',
+                                        assignedTo: 'both',
+                                        tasks: [],
+                                        notes: evt.description || evt.location || '',
+                                        locationName: evt.location || '',
+                                      });
+                                      showAdminFeedback(`Added "${evt.summary || 'Event'}" to calendar!`);
+                                    }
+                                  }}
+                                  className="w-7 h-7 rounded-lg bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white transition-colors"
+                                  title="Add to Hub Calendar"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
-                            {evt.htmlLink && (
-                              <a
-                                href={evt.htmlLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 cursor-pointer shrink-0"
-                                title="Open in Google Calendar"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            )}
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </div>
@@ -1731,9 +1770,10 @@ export const UnifiedWorkspaceModal: React.FC<UnifiedWorkspaceModalProps> = ({
                                       showAdminFeedback(`Scheduled "${insight.suggestedEvent.title}"!`);
                                     }
                                   }}
-                                  className="text-[11px] font-bold text-purple-600 hover:underline cursor-pointer shrink-0"
+                                  className="w-7 h-7 rounded-lg bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center cursor-pointer hover:bg-stone-800 dark:hover:bg-white transition-colors shrink-0"
+                                  title="Add to Calendar"
                                 >
-                                  + Schedule
+                                  <Plus className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             )}

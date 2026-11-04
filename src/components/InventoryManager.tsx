@@ -363,32 +363,7 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
   const allAvailableCategories = ['All', ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))];
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e4ded5] dark:border-[#353943] pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
-              <Package className="w-4 h-4" />
-            </span>
-            <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">
-              Inventory & Price Tiers
-            </h2>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => handleOpenAdd()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white shadow-xs transition-colors cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Inventory Item</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* Temporary Status Toast Banner */}
       {statusMessage && (
         <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between font-medium">
@@ -421,10 +396,10 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
           <button
             type="button"
             onClick={() => handleOpenAdd()}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white shadow-xs transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-semibold hover:bg-stone-800 dark:hover:bg-white shadow-xs transition-colors cursor-pointer shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>+ Add Item</span>
+            <span>Add</span>
           </button>
         </div>
       </div>
@@ -453,10 +428,9 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                 key={categoryName}
                 className="bg-white dark:bg-[#1f2228] rounded-xl border border-[#e4ded5] dark:border-[#353943] shadow-2xs overflow-hidden"
               >
-                {/* Category Header Strip */}
-                <div className="px-4 py-3 bg-stone-50/90 dark:bg-[#252830] border-b border-[#e4ded5] dark:border-[#353943] flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                {/* Category Header Strip - Single Non-Wrapping Row */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 flex-nowrap bg-stone-50/90 dark:bg-[#252830] border-b border-[#e4ded5] dark:border-[#353943]">
+                  <div className="flex items-center gap-2 min-w-0">
                     {renamingCategory === categoryName ? (
                       <form
                         onSubmit={(e) => {
@@ -487,10 +461,13 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                         </button>
                       </form>
                     ) : (
-                      <div className="inline-flex items-center gap-1.5">
-                        <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                      <>
+                        <h3 className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100 truncate">
                           {categoryName}
                         </h3>
+                        <span className="text-xs text-stone-400 dark:text-stone-500 shrink-0">
+                          ({categoryQuantity} · ${categoryValue.toFixed(0)})
+                        </span>
                         <button
                           type="button"
                           onClick={() => {
@@ -498,30 +475,21 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                             setRenameInput(categoryName);
                           }}
                           title={`Rename ${categoryName}`}
-                          className="inline-flex items-center gap-1 text-[11px] text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 px-1.5 py-0.5 rounded hover:bg-stone-200/60 dark:hover:bg-stone-700/60 transition-colors cursor-pointer"
+                          className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded transition-colors cursor-pointer shrink-0"
                         >
                           <Edit3 className="w-3 h-3" />
-                          <span>Rename</span>
                         </button>
-                      </div>
+                      </>
                     )}
-                    <span className="text-stone-400">·</span>
-                    <span className="text-xs text-stone-600 dark:text-stone-400">
-                      <strong>{categoryQuantity}</strong> items in inventory
-                    </span>
-                    <span className="text-stone-400">·</span>
-                    <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                      ${categoryValue.toFixed(2)} total value
-                    </span>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => handleOpenAdd(categoryName)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white dark:bg-[#1a1d22] border border-[#e4ded5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#282c35] text-stone-800 dark:text-stone-200 cursor-pointer shadow-2xs transition-colors"
+                    className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-white dark:bg-[#1a1d22] border border-[#e4ded5] dark:border-[#353943] hover:bg-stone-100 dark:hover:bg-[#282c35] text-stone-800 dark:text-stone-200 cursor-pointer shadow-2xs transition-colors shrink-0"
                   >
                     <Plus className="w-3 h-3 text-amber-600" />
-                    <span>+ Add {categoryName} Tier</span>
+                    <span>Tier</span>
                   </button>
                 </div>
 
@@ -529,26 +497,22 @@ export const InventoryManager: React.FC<InventoryManagerProps> = ({ onClose }) =
                 <div className="divide-y divide-[#f0ece5] dark:divide-[#2a2e36]">
                   {items.map((product) => {
                     const isDeleting = confirmDeleteId === product.id;
-                    const tierTotal = product.price * (product.defaultStock || 0);
 
                     return (
                       <div
                         key={product.id}
                         className="p-3 hover:bg-stone-50/60 dark:hover:bg-[#22252c] transition-colors flex items-center justify-between gap-3 text-xs"
                       >
-                        {/* Left: Bold $Price + optional description + subtle muted SKU */}
-                        <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-bold text-stone-900 dark:text-stone-100 tabular-nums">
+                        {/* Left: Bold $Price + optional description on single line (no SKU) */}
+                        <div className="min-w-0 flex-1 flex items-center gap-2">
+                          <span className="text-sm font-bold text-stone-900 dark:text-stone-100 tabular-nums shrink-0">
                             ${product.price.toFixed(2)}
                           </span>
                           {product.description && (
-                            <span className="text-xs text-stone-600 dark:text-stone-300 truncate max-w-xs">
+                            <span className="text-xs text-stone-600 dark:text-stone-300 truncate max-w-md">
                               {product.description}
                             </span>
                           )}
-                          <span className="text-[11px] font-mono text-stone-400 dark:text-stone-500">
-                            {product.sku}
-                          </span>
                         </div>
 
                         {/* Right: Quantity Stepper, Edit, and Inline Delete */}

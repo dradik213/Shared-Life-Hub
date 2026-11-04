@@ -270,24 +270,8 @@ export const ReflectionDashboard: React.FC<ReflectionDashboardProps> = ({
   return (
     <div className="space-y-4">
       {/* Timeframe Selector Bar: Daily / Weekly / Monthly / All Time */}
-      <div className="bg-[#fcfaf7] dark:bg-[#1a1d22] rounded-xl border border-[#e4ded5] dark:border-[#2d3139] p-3.5 sm:p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3.5 transition-colors">
-        <div>
-          <span className="text-xs font-mono uppercase tracking-wider text-stone-500 dark:text-stone-400 font-semibold block">
-            Couple Reflection & Performance Roll-Up
-          </span>
-          <h2 className="text-base sm:text-lg font-serif font-bold text-stone-900 dark:text-stone-100 mt-0.5">
-            {timeframe === 'day'
-              ? `Daily: ${formatReadableDate(selectedDate)}`
-              : timeframe === 'week'
-              ? `Weekly: ${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-              : timeframe === 'month'
-              ? `Monthly: ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
-              : 'All Time: Couple Performance'}
-          </h2>
-        </div>
-
-        {/* Dynamic Timeframe Selector matching user request (Daily / Weekly / Monthly / All Time) */}
-        <div className="flex items-center bg-stone-200/60 dark:bg-[#24272f] p-0.5 rounded-lg text-xs font-medium text-stone-600 dark:text-stone-300">
+      <div className="flex items-center justify-center sm:justify-start">
+        <div className="flex items-center bg-stone-200/60 dark:bg-[#24272f] p-0.5 rounded-lg text-xs font-medium text-stone-600 dark:text-stone-300 shadow-2xs">
           <button
             type="button"
             onClick={() => onTimeframeChange('day')}

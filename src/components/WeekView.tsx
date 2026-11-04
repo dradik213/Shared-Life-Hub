@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, ChevronDown, ChevronUp, X, Trash2 } from 'lucide-react';
+import { Home, ChevronDown, ChevronUp, X, Trash2, Plus } from 'lucide-react';
 import { CalendarEvent, DayStayInfo, EventCategory, EventSortOption, SortDirection, StayLocation } from '../types/calendar';
 import { CATEGORY_CONFIG, formatDateToYMD, sortEventsForDay, formatTimeRange, formatUsTime, matchesPartnerFilter, eventOccursOnDate } from '../utils/calendarUtils';
 import { useAuth } from '../context/AuthContext';
@@ -162,20 +162,17 @@ export const WeekView: React.FC<WeekViewProps> = ({
         {weekDays.map((col, idx) => {
           const isSelected = selectedDate === col.dateStr;
           const matching = filteredEvents.filter((e) => eventOccursOnDate(e, col.dateStr));
-          const dayEvents = sortDirection === 'none'
-            ? [...matching].sort((a, b) => {
-                const timeA = a.startTime?.trim() || '';
-                const timeB = b.startTime?.trim() || '';
-                if (!timeA && timeB) return -1;
-                if (timeA && !timeB) return 1;
-                if (timeA && timeB) {
-                  const diff = timeA.localeCompare(timeB);
-                  if (diff !== 0) return diff;
-                }
-                return a.title.localeCompare(b.title);
-              })
-            : sortEventsForDay(matching, sortOption, sortDirection);
+          const dayEvents = sortEventsForDay(matching, sortOption, sortDirection === 'none' ? 'asc' : sortDirection);
           const stayInfo = stays[col.dateStr];
+          const shortDateLabel = col.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const stayPillColor = 
+            stayInfo?.stayAt === 'her_home'
+              ? user1Theme.badgeBg
+              : stayInfo?.stayAt === 'his_home'
+              ? user2Theme.badgeBg
+              : stayInfo?.stayAt === 'our_home'
+              ? 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600'
+              : 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700';
 
           return (
             <div
@@ -190,24 +187,30 @@ export const WeekView: React.FC<WeekViewProps> = ({
               }`}
             >
               <div>
-                {/* Column Day Header */}
-                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#e4ded5] dark:border-[#2d3139]">
-                  <div className="flex items-center gap-1.5 min-w-0">
+                {/* Column Day Header - Unified Single Line Row */}
+                <div className="flex items-center justify-between pb-1.5 mb-2 border-b border-[#e4ded5] dark:border-[#2d3139] gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                    {/* Consistent [🏠 Tue, Nov 3] Stay Pill */}
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (onOpenDayView) {
-                          onOpenDayView(col.dateStr);
-                        } else {
-                          onSelectDate(col.dateStr);
+                        if (onUpdateStay) {
+                          const cycle: StayLocation[] = ['our_home', 'her_home', 'his_home'];
+                          const currentStay: StayLocation = stayInfo?.stayAt || 'our_home';
+                          const currentIndex = cycle.indexOf(currentStay);
+                          const nextStay = cycle[(currentIndex + 1) % cycle.length];
+                          onUpdateStay(col.dateStr, nextStay);
                         }
                       }}
-                      title="Open in Day View"
-                      className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 uppercase tracking-wider block font-mono hover:underline cursor-pointer text-left transition-colors"
+                      title={stayInfo ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : `${partner1Label} & ${partner2Label}`}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 cursor-pointer transition-all hover:opacity-90 active:scale-95 shrink-0 ${stayPillColor}`}
                     >
-                      {col.dayName}
+                      <Home className="w-3 h-3 shrink-0 opacity-80" />
+                      <span>{shortDateLabel}</span>
                     </button>
+
+                    {/* Consistent + Backlog ({count}) Pill */}
                     {availableBacklogTasks && availableBacklogTasks.length > 0 && onAddBacklogTaskToDate && (
                       <div className="relative">
                         <button
@@ -216,40 +219,51 @@ export const WeekView: React.FC<WeekViewProps> = ({
                             e.stopPropagation();
                             setOpenBacklogPopoverDate(openBacklogPopoverDate === col.dateStr ? null : col.dateStr);
                           }}
-                          className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer"
+                          className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
                           title={`Add task from Backlog (${availableBacklogTasks.length} available)`}
                         >
-                          + Backlog
+                          + Backlog ({availableBacklogTasks.length})
                         </button>
                         {openBacklogPopoverDate === col.dateStr && (
                           <div
-                            className="absolute left-0 top-full mt-1 w-56 max-h-48 overflow-y-auto bg-white dark:bg-[#1f2228] border border-stone-200 dark:border-stone-700 rounded-lg shadow-lg z-30 p-1.5 text-xs"
+                            className="absolute left-0 top-full mt-1.5 w-72 max-h-56 overflow-y-auto bg-white dark:bg-[#202329] border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl z-30 p-2 space-y-1.5 text-xs"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <div className="flex items-center justify-between px-1.5 py-1 text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider border-b border-stone-100 dark:border-stone-800">
-                              <span>Backlog ({availableBacklogTasks.length})</span>
+                            <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                                Backlog ({availableBacklogTasks.length})
+                              </span>
                               <button
                                 type="button"
                                 onClick={() => setOpenBacklogPopoverDate(null)}
-                                className="hover:text-stone-800 dark:hover:text-stone-200 cursor-pointer"
+                                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
                               >
                                 ✕
                               </button>
                             </div>
-                            <div className="space-y-1 mt-1">
+                            <div className="space-y-1">
                               {availableBacklogTasks.map((t) => (
-                                <button
+                                <div
                                   key={t.id}
-                                  type="button"
-                                  onClick={() => {
-                                    onAddBacklogTaskToDate(t, col.dateStr);
-                                    setOpenBacklogPopoverDate(null);
-                                  }}
-                                  className="w-full text-left px-2 py-1.5 rounded hover:bg-stone-100 dark:hover:bg-stone-800 text-[11px] text-stone-800 dark:text-stone-200 flex items-center justify-between group cursor-pointer"
+                                  className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-1.5 text-xs"
                                 >
-                                  <span className="truncate pr-1">{t.title}</span>
-                                  <span className="text-[10px] text-stone-400 group-hover:text-stone-900 dark:group-hover:text-white shrink-0 font-bold">+</span>
-                                </button>
+                                  <div className="truncate flex-1 min-w-0">
+                                    <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                                      {t.title}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onAddBacklogTaskToDate(t, col.dateStr);
+                                      setOpenBacklogPopoverDate(null);
+                                    }}
+                                    className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
+                                    title="Add to day"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -257,50 +271,26 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       </div>
                     )}
                   </div>
-                  {(() => {
-                    let weekDayNumColor = '';
-                    if (stayInfo) {
-                      if (stayInfo.stayAt === 'her_home') {
-                        weekDayNumColor = user1Theme.badgeBg;
-                      } else if (stayInfo.stayAt === 'his_home') {
-                        weekDayNumColor = user2Theme.badgeBg;
-                      } else if (stayInfo.stayAt === 'our_home') {
-                        weekDayNumColor = 'bg-stone-200/90 text-stone-700 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
-                      } else {
-                        weekDayNumColor = 'bg-stone-200/80 text-stone-800 dark:bg-stone-700 dark:text-stone-200 border border-stone-300 dark:border-stone-600';
-                      }
 
-                      if (col.isToday) {
-                        weekDayNumColor += ' ring-2 ring-stone-900 dark:ring-white ring-offset-1 font-extrabold shadow-2xs';
-                      }
-                    } else {
-                      if (col.isToday) {
-                        weekDayNumColor = 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-2xs font-bold';
-                      } else {
-                        weekDayNumColor = 'text-stone-900 dark:text-stone-100';
-                      }
-                    }
-
-                    return (
+                  {/* Right side: Item count & Day View link */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                      {dayEvents.length} {dayEvents.length === 1 ? 'event' : 'events'}
+                    </span>
+                    {onOpenDayView && (
                       <button
                         type="button"
                         onClick={(e) => {
-                          if (onUpdateStay) {
-                            e.stopPropagation();
-                            const cycle: StayLocation[] = ['our_home', 'her_home', 'his_home', 'travel'];
-                            const currentStay: StayLocation = stayInfo?.stayAt || 'our_home';
-                            const currentIndex = cycle.indexOf(currentStay);
-                            const nextStay = cycle[(currentIndex + 1) % cycle.length];
-                            onUpdateStay(col.dateStr, nextStay);
-                          }
+                          e.stopPropagation();
+                          onOpenDayView(col.dateStr);
                         }}
-                        title={stayInfo ? `Stay: ${stayInfo.stayAt === 'her_home' ? partner1Label : stayInfo.stayAt === 'his_home' ? partner2Label : stayInfo.stayAt === 'our_home' ? `${partner1Label} & ${partner2Label}` : 'Away'}${onUpdateStay ? ' (Click to change stay)' : ''}` : onUpdateStay ? 'Click to set stay' : undefined}
-                        className={`text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center transition-all cursor-pointer ${weekDayNumColor}`}
+                        className="text-[11px] font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:underline cursor-pointer"
+                        title="Open in Day View"
                       >
-                        {col.dayNum}
+                        Day View →
                       </button>
-                    );
-                  })()}
+                    )}
+                  </div>
                 </div>
 
                 {/* Day events with subtle category color coding */}

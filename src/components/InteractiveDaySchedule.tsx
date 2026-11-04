@@ -132,7 +132,7 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
       return matchesPartnerFilter(e.assignedTo, partnerFilter);
     });
 
-  const dayEvents = sortEventsForDay(filteredDayEvents, sortOption, sortDirection);
+  const dayEvents = sortEventsForDay(filteredDayEvents, sortOption, sortDirection === 'none' ? 'asc' : sortDirection);
 
   const toggleEventExpanded = (id: string) => {
     if (onToggleExpandEvent) {
@@ -313,6 +313,64 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column: Day Events */}
         <div className="lg:col-span-8 space-y-3">
+          {allBacklogTasks.length > 0 && (
+            <div className="flex items-center justify-end">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
+                  className="text-[11px] font-medium px-2 py-0.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer shrink-0"
+                  title="Toggle Backlog tasks to copy into today"
+                >
+                  + Backlog ({allBacklogTasks.length})
+                </button>
+                {showRolloverDrawer && (
+                  <div className="absolute right-0 top-full mt-1.5 w-72 max-h-56 overflow-y-auto bg-white dark:bg-[#202329] border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl z-30 p-2 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                        Backlog ({allBacklogTasks.length})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowRolloverDrawer(false)}
+                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {allBacklogTasks.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-1.5 text-xs"
+                        >
+                          <div className="truncate flex-1 min-w-0">
+                            <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
+                              {item.title}
+                            </span>
+                            <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
+                              {item.sourceDetail}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleCopyTask(item.title, item.assignedTo);
+                              setShowRolloverDrawer(false);
+                            }}
+                            className="w-6 h-6 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 flex items-center justify-center shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white text-xs font-bold"
+                            title="Add to today"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
       {/* Main Interactive Colorful Event Cards List ("Working the Day") */}
       {dayEvents.length === 0 ? (
@@ -650,66 +708,6 @@ export const InteractiveDaySchedule: React.FC<InteractiveDayScheduleProps> = ({
 
         {/* Right Column: Sticky Notes scratchpad on PC */}
         <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
-          {/* Subtle per-day + Backlog pill bar above notes card */}
-          {allBacklogTasks.length > 0 && (
-            <div className="rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] p-2.5 px-3 flex items-center justify-between text-xs shadow-2xs">
-              <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">
-                Backlog Tasks
-              </span>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowRolloverDrawer(!showRolloverDrawer)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-stone-100 hover:bg-stone-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 transition-colors cursor-pointer"
-                  title="Toggle Backlog tasks to copy into today"
-                >
-                  + Backlog ({allBacklogTasks.length})
-                </button>
-                {showRolloverDrawer && (
-                  <div className="absolute right-0 top-full mt-1.5 w-64 max-h-56 overflow-y-auto bg-white dark:bg-[#202329] border border-stone-200 dark:border-stone-700 rounded-xl shadow-xl z-30 p-2 space-y-1.5">
-                    <div className="flex items-center justify-between pb-1 border-b border-stone-100 dark:border-stone-800">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
-                        Backlog ({allBacklogTasks.length})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowRolloverDrawer(false)}
-                        className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 cursor-pointer"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {allBacklogTasks.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-1.5 rounded-lg bg-stone-50 dark:bg-[#282c35] border border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-1.5 text-xs"
-                      >
-                        <div className="truncate flex-1 min-w-0">
-                          <span className="font-medium text-stone-800 dark:text-stone-200 block truncate text-[11px]">
-                            {item.title}
-                          </span>
-                          <span className="text-[9px] text-stone-500 dark:text-stone-400 block truncate">
-                            {item.sourceDetail}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleCopyTask(item.title, item.assignedTo);
-                            setShowRolloverDrawer(false);
-                          }}
-                          className="bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs transition-colors shrink-0 cursor-pointer hover:bg-stone-800 dark:hover:bg-white"
-                        >
-                          + Add
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           <div className="rounded-xl border border-stone-200/80 dark:border-stone-800 bg-white dark:bg-[#1a1d24] overflow-hidden text-xs shadow-2xs">
             <div
               onClick={() => setIsNotesExpanded(!isNotesExpanded)}

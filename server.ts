@@ -167,13 +167,14 @@ Strictly return ONLY the JSON array.`;
       },
     });
 
-    const text = response.text || '[]';
-    let parsed;
+    const rawText = response.text || '[]';
+    let parsed: any[] = [];
     try {
-      parsed = JSON.parse(text);
-    } catch (e) {
-      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const cleaned = rawText.replace(/```json|```/gi, '').trim();
       parsed = JSON.parse(cleaned);
+    } catch (e) {
+      console.warn('Failed to parse Gemini analyze-emails JSON:', rawText);
+      parsed = [];
     }
 
     return res.json(parsed);

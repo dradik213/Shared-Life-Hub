@@ -241,24 +241,33 @@ export interface GmailMessageSummary {
   snippet: string;
 }
 
-export async function fetchRecentGmailMessages(maxResults = 10): Promise<GmailMessageSummary[]> {
+export async function fetchRecentGmailMessages(maxResults = 15): Promise<GmailMessageSummary[]> {
   const token = await getAccessToken();
   if (!token) throw new Error('Not authenticated with Google');
 
-  const listRes = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=label:INBOX`,
+  const queryKeywords = 'label:INBOX (reservation OR ticket OR appointment OR flight OR schedule OR confirmation OR invite OR event OR order)';
+  let listRes = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=${encodeURIComponent(queryKeywords)}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     }
   );
 
-  if (!listRes.ok) {
-    const err = await listRes.text();
-    throw new Error(`Gmail API list error: ${err}`);
-  }
+  let listData = listRes.ok ? await listRes.json() : null;
+  let messages = listData?.messages || [];
 
-  const listData = await listRes.json();
-  const messages = listData.messages || [];
+  if (messages.length === 0) {
+    listRes = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=label:INBOX`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    if (listRes.ok) {
+      listData = await listRes.json();
+      messages = listData?.messages || [];
+    }
+  }
 
   const summaries: GmailMessageSummary[] = [];
 

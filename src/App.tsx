@@ -203,7 +203,7 @@ function CalendarApp() {
         return saved as SortDirection;
       }
     } catch (e) {}
-    return 'none';
+    return 'asc';
   });
 
   // Remember preferred sorting attribute and direction
@@ -265,7 +265,7 @@ function CalendarApp() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isUnifiedWorkspaceOpen, setIsUnifiedWorkspaceOpen] = useState<boolean>(false);
-  const [unifiedWorkspaceTab, setUnifiedWorkspaceTab] = useState<UnifiedWorkspaceTab>('templates');
+  const [unifiedWorkspaceTab, setUnifiedWorkspaceTab] = useState<UnifiedWorkspaceTab>('inventory');
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState<boolean>(false);
   const [workspaceInitialTab, setWorkspaceInitialTab] = useState<'ai_logger' | 'calendar' | 'tasks' | 'gmail' | 'chat'>('ai_logger');
   
@@ -1157,7 +1157,7 @@ function CalendarApp() {
         }}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenUnifiedWorkspace={() => {
-          setUnifiedWorkspaceTab('templates');
+          setUnifiedWorkspaceTab('inventory');
           setIsUnifiedWorkspaceOpen(true);
           handleTemplatesViewed();
           markPartnerInviteSeen();

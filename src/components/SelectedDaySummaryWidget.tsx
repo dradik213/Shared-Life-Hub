@@ -477,17 +477,13 @@ export const SelectedDaySummaryWidget: React.FC<SelectedDaySummaryWidgetProps> =
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Filter & Sort</span>
-              {partnerFilter !== 'all' ? (
+              {partnerFilter !== 'all' && (
                 <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
                   partnerFilter === 'her' ? user1Theme.badgeBg : user2Theme.badgeBg
                 }`}>
                   {partnerFilter === 'her' ? partner1Initial : partner2Initial}
                 </span>
-              ) : (activeFilterCount || 0) > 0 ? (
-                <span className="w-4 h-4 rounded-full bg-amber-500 text-stone-950 text-[10px] font-bold flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              ) : null}
+              )}
               <span className="hidden sm:inline">
                 {isFilterSortOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               </span>
